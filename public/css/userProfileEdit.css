@@ -1,0 +1,199 @@
+/* User Profile Edit CSS */
+
+/* --- NAVBAR PROFILE AVATAR --- */
+.profile-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+    text-decoration: none;
+}
+
+.profile-avatar:hover {
+    transform: scale(1.1);
+}
+
+.avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Purple gradient placeholder for navbar */
+.avatar-placeholder-nav {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+}
+
+/* Container Card Style */
+.profile-header-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 24px;
+    padding: 32px;
+}
+
+/* Section Headers */
+.section-header {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a202c;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.section-header i {
+    color: #667eea;
+}
+
+/* Avatar Upload Row */
+.avatar-upload-row {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    margin-bottom: 32px;
+}
+
+.avatar-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #e5e7eb;
+}
+
+/* Placeholder for users without images */
+.avatar-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid #e5e7eb;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+}
+
+/* Form Grid Layout */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.form-full-width {
+    grid-column: span 2;
+}
+
+/* Form Label & Input Styling Override */
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: white;
+    transition: all 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.error-msg {
+    color: #ef4444;
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .form-full-width {
+        grid-column: span 1;
+    }
+    .avatar-upload-row {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+/* ========== OVERRIDE STYLES - MUST BE AT THE END ========== */
+
+/* Back to Profile Button - Minimal Design (No Border) */
+a.btn-secondary {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    color: #6b7280 !important;
+    border: none !important;
+    text-decoration: none !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    font-family: 'Inter', sans-serif !important;
+    transition: color 0.2s !important;
+    box-shadow: none !important;
+    outline: none !important;
+    cursor: pointer !important;
+}
+
+a.btn-secondary:hover,
+a.btn-secondary:focus,
+a.btn-secondary:active {
+    color: #667eea !important;
+    background: transparent !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Cancel Button at Bottom - With Border */
+div[style*="border-top"] a.btn-secondary {
+    padding: 12px 30px !important;
+    background: white !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 8px !important;
+}
+
+div[style*="border-top"] a.btn-secondary:hover,
+div[style*="border-top"] a.btn-secondary:focus,
+div[style*="border-top"] a.btn-secondary:active {
+    background: #f9fafb !important;
+    color: #667eea !important;
+    border-color: #667eea !important;
+}

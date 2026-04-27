@@ -1,0 +1,300 @@
+/* ================================================================
+   classEventParticipants.css
+   All styles are namespaced with "participants-" to avoid
+   clashing with existing classEvent.css rules.
+   ================================================================ */
+
+/* ── Participant count badge on each card ──────────────────────── */
+.participant-count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.07));
+    border: 1px solid rgba(102, 126, 234, 0.25);
+    color: #667eea;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    width: fit-content;
+}
+
+.participant-count-badge i {
+    font-size: 0.72rem;
+}
+
+/* ── Participants action button on card overlay ────────────────── */
+.btn-action.btn-participants {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+}
+
+.btn-action.btn-participants:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: scale(1.08);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+}
+
+/* ── Participants modal — wider than default modal ─────────────── */
+.participants-modal-content {
+    max-width: 720px !important;
+    width: 95%;
+}
+
+.participants-modal-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.participants-modal-subtitle {
+    font-size: 0.82rem;
+    color: #9ca3af;
+    margin: 0;
+    font-weight: 400;
+    padding-left: 32px; /* align with title text after icon */
+}
+
+/* ── Summary bar ───────────────────────────────────────────────── */
+.participants-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.04));
+    border: 1px solid rgba(102, 126, 234, 0.18);
+    border-radius: 12px;
+}
+
+.participants-summary-stat {
+    display: flex;
+    flex-direction: column;
+}
+
+.participants-summary-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #667eea;
+    line-height: 1;
+}
+
+.participants-summary-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ── Loading spinner ───────────────────────────────────────────── */
+.participants-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 48px 20px;
+    color: #9ca3af;
+    font-size: 0.9rem;
+}
+
+.participants-spinner {
+    width: 38px;
+    height: 38px;
+    border: 3px solid rgba(102, 126, 234, 0.2);
+    border-top-color: #667eea;
+    border-radius: 50%;
+    animation: participants-spin 0.7s linear infinite;
+}
+
+@keyframes participants-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Empty state ───────────────────────────────────────────────── */
+.participants-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 48px 20px;
+    color: #9ca3af;
+    text-align: center;
+}
+
+.participants-empty-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(102, 126, 234, 0.08);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #a5b4fc;
+    margin-bottom: 6px;
+}
+
+.participants-empty h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin: 0;
+}
+
+.participants-empty p {
+    font-size: 0.85rem;
+    margin: 0;
+    color: #9ca3af;
+}
+
+/* ── Table wrapper ─────────────────────────────────────────────── */
+.participants-table-wrapper {
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid rgba(102, 126, 234, 0.15);
+}
+
+/* ── Table ─────────────────────────────────────────────────────── */
+.participants-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.participants-table thead tr {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.09), rgba(118, 75, 162, 0.05));
+}
+
+.participants-table thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #667eea;
+    border-bottom: 1px solid rgba(102, 126, 234, 0.15);
+    white-space: nowrap;
+}
+
+.participants-table tbody tr {
+    border-bottom: 1px solid rgba(102, 126, 234, 0.07);
+    transition: background 0.15s ease;
+}
+
+.participants-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.participants-table tbody tr:hover {
+    background: rgba(102, 126, 234, 0.04);
+}
+
+.participants-table td {
+    padding: 13px 16px;
+    color: #374151;
+    vertical-align: middle;
+}
+
+/* Row number */
+.participants-row-number {
+    color: #9ca3af;
+    font-size: 0.8rem;
+    font-weight: 600;
+    width: 36px;
+    text-align: center;
+}
+
+/* Name cell */
+.participants-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Avatar circle with initials */
+.participants-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #a78bfa);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: 0.03em;
+}
+
+/* Email cell */
+.participants-email-cell {
+    color: #6b7280;
+    font-size: 0.83rem;
+}
+
+/* Date cell */
+.participants-date-cell {
+    color: #6b7280;
+    font-size: 0.83rem;
+    white-space: nowrap;
+}
+
+.participants-date-cell i {
+    color: #a5b4fc;
+    margin-right: 6px;
+    font-size: 0.75rem;
+}
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+    /* Hide booking date column on small screens */
+    .participants-table thead th:nth-child(4),
+    .participants-table td:nth-child(4) {
+        display: none;
+    }
+
+    .participants-email-cell {
+        font-size: 0.78rem;
+        word-break: break-all;
+    }
+
+    .participants-modal-content {
+        max-width: 100% !important;
+    }
+}
+
+/* ── Drop participant button ───────────────────────────────────── */
+.participants-action-cell {
+    text-align: center;
+    width: 60px;
+}
+
+.btn-drop-participant {
+    background: none;
+    border: 1px solid #fca5a5;
+    color: #ef4444;
+    border-radius: 6px;
+    padding: 5px 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.btn-drop-participant:hover:not(:disabled) {
+    background: #fef2f2;
+    border-color: #ef4444;
+    transform: scale(1.1);
+}
+
+.btn-drop-participant:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
