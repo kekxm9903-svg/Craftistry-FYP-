@@ -179,9 +179,9 @@
             @else
                 <div class="request-list">
                     @foreach($bulkOrders as $bulk)
-                    <div class="request-row" style="cursor:default;">
+                    @php $order = $bulk->order; @endphp
+                    <a href="{{ route('artist.bulk-orders.show', $bulk->id) }}" class="request-row">
 
-                        {{-- Artwork thumbnail --}}
                         <div class="request-thumb">
                             @if($bulk->artworkSell->image_path)
                                 <img src="{{ asset('storage/' . $bulk->artworkSell->image_path) }}" alt="">
@@ -190,7 +190,6 @@
                             @endif
                         </div>
 
-                        {{-- Body --}}
                         <div class="request-body">
                             <div class="request-title">{{ $bulk->artworkSell->product_name }}</div>
                             <div class="request-meta">
@@ -198,9 +197,20 @@
                                 <span><i class="fas fa-boxes"></i> {{ number_format($bulk->quantity) }} pcs</span>
                                 <span><i class="fas fa-calendar-alt"></i> Ship by {{ $bulk->last_ship_date->format('d M Y') }}</span>
                                 <span><i class="fas fa-clock"></i> {{ $bulk->created_at->diffForHumans() }}</span>
-                                @if($bulk->status === 'pending')
+                                @if($bulk->isPending())
                                     <span style="color:#d97706;font-weight:700;">
                                         <i class="fas fa-exclamation-circle"></i> Needs your response
+                                    </span>
+                                @endif
+                                @if($bulk->isAccepted() && !$bulk->order_id)
+                                    <span style="color:#2563eb;font-weight:700;">
+                                        <i class="fas fa-credit-card"></i> Awaiting payment
+                                    </span>
+                                @endif
+                                @if($bulk->order_id && $order)
+                                    <span class="order-status-chip order-status-{{ $order->status }}">
+                                        <i class="fas fa-box"></i>
+                                        {{ ucfirst(str_replace('_', ' ', $order->status)) }}
                                     </span>
                                 @endif
                             </div>
@@ -211,35 +221,20 @@
                             @endif
                         </div>
 
-                        {{-- Right --}}
                         <div class="request-right">
-                            <div class="request-price">RM {{ number_format($bulk->discounted_price * $bulk->quantity, 2) }}</div>
-                            <span class="status-badge {{ $bulk->status === 'pending' ? 'orange' : ($bulk->status === 'accepted' ? 'green' : 'red') }}">
-                                {{ ucfirst($bulk->status) }}
-                            </span>
-
-                            {{-- Accept / Refuse actions for pending --}}
-                            @if($bulk->status === 'pending')
-                            <div style="display:flex;gap:6px;margin-top:8px;" onclick="event.stopPropagation()">
-                                <form action="{{ route('artist.bulk-orders.accept', $bulk->id) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="action-btn action-btn-accept"
-                                            onclick="return confirm('Accept this bulk order?')">
-                                        <i class="fas fa-check"></i> Accept
-                                    </button>
-                                </form>
-                                <form action="{{ route('artist.bulk-orders.refuse', $bulk->id) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="action-btn action-btn-refuse"
-                                            onclick="return confirm('Refuse this bulk order?')">
-                                        <i class="fas fa-times"></i> Refuse
-                                    </button>
-                                </form>
-                            </div>
+                            <div class="request-price">RM {{ number_format($bulk->total_price, 2) }}</div>
+                            @if($bulk->order_id && $order)
+                                <span class="order-status-chip order-status-{{ $order->status }}">
+                                    {{ ucfirst(str_replace('_', ' ', $order->status)) }}
+                                </span>
+                            @else
+                                <span class="status-badge {{ $bulk->statusColor() }}">
+                                    {{ $bulk->statusLabel() }}
+                                </span>
                             @endif
                         </div>
 
-                    </div>
+                    </a>
                     @endforeach
                 </div>
             @endif

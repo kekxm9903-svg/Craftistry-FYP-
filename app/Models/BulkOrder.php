@@ -18,6 +18,9 @@ class BulkOrder extends Model
         'unit_price',
         'discounted_price',
         'status',
+        'seller_reason',
+        'order_id',
+        'stripe_session_id',
     ];
 
     protected $casts = [
@@ -38,21 +41,60 @@ class BulkOrder extends Model
         return $this->belongsTo(User::class, 'buyer_id');
     }
 
-    // ── Computed Attributes ──────────────────────────────────────────────────
-
-    public function getTotalPriceAttribute(): float
+    public function order()
     {
-        return round($this->discounted_price * $this->quantity, 2);
+        return $this->belongsTo(Order::class, 'order_id');
     }
 
-    public function getStatusLabelAttribute(): string
+    // ── Status Helpers ───────────────────────────────────────────────────────
+
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    public function isAccepted(): bool
+    {
+        return $this->status === 'accepted';
+    }
+
+    public function isRefused(): bool
+    {
+        return $this->status === 'refused';
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->status === 'paid';
+    }
+
+    public function statusLabel(): string
     {
         return match($this->status) {
             'pending'  => 'Pending',
             'accepted' => 'Accepted',
             'refused'  => 'Refused',
+            'paid'     => 'Paid',
             default    => 'Pending',
         };
+    }
+
+    public function statusColor(): string
+    {
+        return match($this->status) {
+            'pending'  => 'orange',
+            'accepted' => 'blue',
+            'refused'  => 'red',
+            'paid'     => 'green',
+            default    => 'gray',
+        };
+    }
+
+    // ── Computed Attributes ──────────────────────────────────────────────────
+
+    public function getTotalPriceAttribute(): float
+    {
+        return round($this->discounted_price * $this->quantity, 2);
     }
 
     public function getIsDiscountedAttribute(): bool

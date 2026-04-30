@@ -92,12 +92,12 @@ Route::middleware('auth')->group(function () {
 
     // --- USER PROFILE ROUTES ---
     Route::prefix('profile')->group(function () {
-        Route::get('/',                [UserProfileController::class, 'show'])               ->name('user.profile.show');
-        Route::get('/edit',            [UserProfileController::class, 'edit'])               ->name('user.profile.edit');
-        Route::put('/update',          [UserProfileController::class, 'update'])             ->name('user.profile.update');
-        Route::post('/update-image',   [UserProfileController::class, 'updateProfileImage'])->name('user.profile.image.update');
+        Route::get('/',                [UserProfileController::class, 'show'])                  ->name('user.profile.show');
+        Route::get('/edit',            [UserProfileController::class, 'edit'])                  ->name('user.profile.edit');
+        Route::put('/update',          [UserProfileController::class, 'update'])                ->name('user.profile.update');
+        Route::post('/update-image',   [UserProfileController::class, 'updateProfileImage'])   ->name('user.profile.image.update');
         Route::get('/change-password', [UserProfileController::class, 'showChangePasswordForm'])->name('user.profile.change-password');
-        Route::put('/change-password', [UserProfileController::class, 'updatePassword'])    ->name('user.profile.update-password');
+        Route::put('/change-password', [UserProfileController::class, 'updatePassword'])        ->name('user.profile.update-password');
     });
 
     // --- STUDIO ROUTES ---
@@ -142,9 +142,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/custom-orders/{customOrder}/refuse', [ArtistCustomOrderController::class, 'refuse'])->name('artist.custom-orders.refuse');
 
         // --- BULK ORDER ROUTES (seller) ---
-        Route::get('/bulk-orders',                   [BulkOrderController::class, 'sellerIndex'])->name('artist.bulk-orders.index');
-        Route::post('/bulk-orders/{id}/accept',      [BulkOrderController::class, 'accept'])     ->name('artist.bulk-orders.accept');
-        Route::post('/bulk-orders/{id}/refuse',      [BulkOrderController::class, 'refuse'])     ->name('artist.bulk-orders.refuse');
+        Route::get('/bulk-orders',              [BulkOrderController::class, 'sellerIndex'])->name('artist.bulk-orders.index');
+        Route::get('/bulk-orders/{id}',         [BulkOrderController::class, 'sellerShow']) ->name('artist.bulk-orders.show');
+        Route::post('/bulk-orders/{id}/accept', [BulkOrderController::class, 'accept'])     ->name('artist.bulk-orders.accept');
+        Route::post('/bulk-orders/{id}/refuse', [BulkOrderController::class, 'refuse'])     ->name('artist.bulk-orders.refuse');
     });
 
     // --- CLASS AND EVENT ROUTES ---
@@ -170,10 +171,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/product/{id}', [ProductController::class, 'show'])      ->name('product.show');
 
     // --- BULK ORDER ROUTES (buyer) ---
-    Route::get('/bulk-orders/create/{artwork}', [BulkOrderController::class, 'create'])->name('bulk-orders.create');
-    Route::post('/bulk-orders/store/{artwork}', [BulkOrderController::class, 'store']) ->name('bulk-orders.store');
-    Route::get('/bulk-orders/{id}',             [BulkOrderController::class, 'show'])  ->name('bulk-orders.show');
-    Route::get('/bulk-orders',                  [BulkOrderController::class, 'index']) ->name('bulk-orders.index');
+    Route::get('/bulk-orders/create/{artwork}',    [BulkOrderController::class, 'create'])     ->name('bulk-orders.create');
+    Route::post('/bulk-orders/store/{artwork}',    [BulkOrderController::class, 'store'])      ->name('bulk-orders.store');
+    Route::get('/bulk-orders/{id}/pay',            [BulkOrderController::class, 'pay'])        ->name('bulk-orders.pay');
+    Route::get('/bulk-orders/{id}/pay/success',    [BulkOrderController::class, 'paySuccess']) ->name('bulk-orders.pay.success');
+    Route::get('/bulk-orders/{id}',                [BulkOrderController::class, 'show'])       ->name('bulk-orders.show');
+    Route::get('/bulk-orders',                     [BulkOrderController::class, 'index'])      ->name('bulk-orders.index');
 
     // --- FAVORITE ROUTES ---
     Route::post('/artist/{user}/favorite', [FavoriteController::class, 'toggle'])->name('artist.favorite');
@@ -196,9 +199,9 @@ Route::middleware('auth')->group(function () {
     Route::prefix('admin')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
 
-        Route::get('/users',               [AdminController::class, 'users'])   ->name('admin.users');
-        Route::post('/users/{user}/ban',   [AdminController::class, 'banUser']) ->name('admin.users.ban');
-        Route::post('/users/{user}/unban', [AdminController::class, 'unbanUser'])->name('admin.users.unban');
+        Route::get('/users',                [AdminController::class, 'users'])      ->name('admin.users');
+        Route::post('/users/{user}/ban',    [AdminController::class, 'banUser'])    ->name('admin.users.ban');
+        Route::post('/users/{user}/unban',  [AdminController::class, 'unbanUser'])  ->name('admin.users.unban');
 
         Route::get('/feedbacks',                  [AdminController::class, 'feedbacks'])       ->name('admin.feedbacks');
         Route::post('/feedbacks/{feedback}/read', [AdminController::class, 'markFeedbackRead'])->name('admin.feedbacks.read');
@@ -207,8 +210,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports',                  [AdminController::class, 'reports'])           ->name('admin.reports');
         Route::post('/reports/{report}/status', [AdminController::class, 'updateReportStatus'])->name('admin.reports.status');
 
-        Route::get('/admins',              [AdminController::class, 'admins'])    ->name('admin.admins');
-        Route::post('/admins/add',         [AdminController::class, 'addAdmin'])  ->name('admin.admins.add');
+        Route::get('/admins',               [AdminController::class, 'admins'])     ->name('admin.admins');
+        Route::post('/admins/add',          [AdminController::class, 'addAdmin'])   ->name('admin.admins.add');
         Route::post('/admins/{user}/remove',[AdminController::class, 'removeAdmin'])->name('admin.admins.remove');
     });
 
