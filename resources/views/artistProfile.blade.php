@@ -22,22 +22,22 @@
         <div class="artist-header-content">
             <div class="artist-avatar">
                 @if($artist->user->profile_image)
-                    <img src="{{ asset('storage/' . $artist->user->profile_image) }}?v={{ time() }}" 
+                    <img src="{{ asset('storage/' . $artist->user->profile_image) }}?v={{ time() }}"
                          alt="{{ $artist->user->fullname }}">
                 @else
                     <div class="avatar-placeholder">
                         {{ strtoupper(substr($artist->user->fullname, 0, 1)) }}
                     </div>
                 @endif
-                
+
                 <div class="verification-badge" title="Verified Artist">
                     <i class="fas fa-check-circle"></i>
                 </div>
             </div>
-            
+
             <div class="artist-info">
                 <h1 class="artist-name">{{ $artist->user->fullname }}</h1>
-                
+
                 <div class="artist-meta">
                     <div class="meta-item">
                         <i class="fas fa-star"></i>
@@ -91,7 +91,7 @@
             <i class="fas fa-bolt"></i>
             Quick Actions
         </h2>
-        
+
         <div class="quick-actions-grid">
             <div class="action-card purple">
                 <div class="card-icon">
@@ -128,7 +128,6 @@
                 <p>Create and share new tutorials and events</p>
                 <a href="{{ route('class.event.index') }}" class="card-link">Create Class <i class="fas fa-arrow-right"></i></a>
             </div>
-            
         </div>
     </div>
 
@@ -227,6 +226,12 @@
                             Free Shipping
                         </div>
                         @endif
+                        @if($artwork->bulk_sell_enabled)
+                        <div style="font-size: 0.78rem; color: #764ba2; margin-top: 2px;">
+                            <i class="fas fa-tags" style="color:#764ba2;"></i>
+                            Bulk: {{ $artwork->bulk_sell_discount }}% off ≥{{ $artwork->bulk_sell_min_qty }} pcs
+                        </div>
+                        @endif
                         <div>
                             <span class="status-badge status-{{ $artwork->status }}">
                                 @if($artwork->status === 'available')
@@ -264,7 +269,7 @@
             <h2><i class="fas fa-upload"></i> Upload Demo Artwork</h2>
             <button class="modal-close" onclick="closeUploadModal()"><i class="fas fa-times"></i></button>
         </div>
-        
+
         <form id="uploadForm" action="{{ route('artist.demo.upload') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="modal-body">
@@ -326,8 +331,7 @@
                         <label>Shipping Fee (RM)</label>
                         <div style="position:relative;">
                             <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#718096;font-weight:600;font-size:0.9rem;">RM</span>
-                            <input type="number" name="shipping_fee" placeholder="0.00" step="0.01" min="0" value="0"
-                                   style="padding-left:40px;">
+                            <input type="number" name="shipping_fee" placeholder="0.00" step="0.01" min="0" value="0" style="padding-left:40px;">
                         </div>
                         <small style="color:#718096;font-size:0.8rem;margin-top:4px;display:block;">
                             <i class="fas fa-info-circle"></i> Enter 0 for free shipping
@@ -388,7 +392,7 @@
             <h2><i class="fas fa-shopping-cart"></i> List Artwork for Sale</h2>
             <button class="modal-close" onclick="closeSellModal()"><i class="fas fa-times"></i></button>
         </div>
-        
+
         <form id="sellForm" action="{{ route('artist.artwork.sell') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="modal-body">
@@ -497,6 +501,47 @@
                         <span class="cross-post-label">Also show in Demo/Portfolio Gallery?</span>
                     </label>
                 </div>
+
+                {{-- ── BULK SELL ── --}}
+                <div class="form-group bulk-sell-box">
+                    <label class="radio-label" style="margin-bottom:0;">
+                        <input type="checkbox" id="bulkSellEnabled" name="bulk_sell_enabled" value="1"
+                               onchange="toggleBulkSellFields('bulkSellFields')">
+                        <span class="bulk-sell-label"><i class="fas fa-tags"></i> Enable Bulk Sell Discount</span>
+                    </label>
+                    <small style="color:#718096;font-size:0.8rem;margin-top:4px;display:block;margin-left:23px;">
+                        Offer a discount when buyers purchase above a certain quantity
+                    </small>
+                </div>
+
+                <div id="bulkSellFields" style="display:none; border:1px solid #ddd6fe; border-radius:8px; padding:16px; margin-top:-8px; background:#faf9ff;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="bulkMinQty">Minimum Quantity <span class="required">*</span></label>
+                            <input type="number" id="bulkMinQty" name="bulk_sell_min_qty"
+                                   placeholder="e.g. 50" min="2" step="1">
+                            <small style="color:#718096;font-size:0.78rem;margin-top:4px;display:block;">
+                                Discount applies when buyer orders this many or more
+                            </small>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="bulkDiscount">Discount (%) <span class="required">*</span></label>
+                            <div style="position:relative;">
+                                <input type="number" id="bulkDiscount" name="bulk_sell_discount"
+                                       placeholder="e.g. 10" min="1" max="99" step="0.1"
+                                       style="padding-right:36px;">
+                                <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#718096;font-weight:600;font-size:0.9rem;">%</span>
+                            </div>
+                            <small style="color:#718096;font-size:0.78rem;margin-top:4px;display:block;">
+                                Percentage off the unit price
+                            </small>
+                        </div>
+                    </div>
+                    <div id="bulkSellPreview" style="display:none; margin-top:12px; padding:10px 14px; background:#ede9fe; border-radius:6px; font-size:0.82rem; color:#5b21b6;">
+                        <i class="fas fa-tag"></i> <span id="bulkSellPreviewText"></span>
+                    </div>
+                </div>
+
             </div>
 
             <div class="modal-footer">
@@ -515,11 +560,11 @@
             <h2><i class="fas fa-edit"></i> Edit Demo Artwork</h2>
             <button class="modal-close" onclick="closeEditDemoModal()"><i class="fas fa-times"></i></button>
         </div>
-        
+
         <form id="editDemoForm" method="POST" enctype="multipart/form-data">
             @csrf
             <input type="hidden" id="editDemoId" name="demo_id">
-            
+
             <div class="modal-body">
                 <div class="form-group">
                     <label>Current Image</label>
@@ -573,11 +618,11 @@
             <h2><i class="fas fa-edit"></i> Edit Artwork for Sale</h2>
             <button class="modal-close" onclick="closeEditSellModal()"><i class="fas fa-times"></i></button>
         </div>
-        
+
         <form id="editSellForm" method="POST" enctype="multipart/form-data">
             @csrf
             <input type="hidden" id="editArtworkId" name="artwork_id">
-            
+
             <div class="modal-body">
                 <div class="form-group">
                     <label>Current Image</label>
@@ -685,6 +730,47 @@
                     <textarea id="editProductDescription" name="product_description" rows="4" maxlength="2000"></textarea>
                     <span class="char-count" id="editSellDescCount">0 / 2000 characters</span>
                 </div>
+
+                {{-- ── BULK SELL ── --}}
+                <div class="form-group bulk-sell-box">
+                    <label class="radio-label" style="margin-bottom:0;">
+                        <input type="checkbox" id="editBulkSellEnabled" name="bulk_sell_enabled" value="1"
+                               onchange="toggleBulkSellFields('editBulkSellFields')">
+                        <span class="bulk-sell-label"><i class="fas fa-tags"></i> Enable Bulk Sell Discount</span>
+                    </label>
+                    <small style="color:#718096;font-size:0.8rem;margin-top:4px;display:block;margin-left:23px;">
+                        Offer a discount when buyers purchase above a certain quantity
+                    </small>
+                </div>
+
+                <div id="editBulkSellFields" style="display:none; border:1px solid #ddd6fe; border-radius:8px; padding:16px; margin-top:-8px; background:#faf9ff;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="editBulkMinQty">Minimum Quantity <span class="required">*</span></label>
+                            <input type="number" id="editBulkMinQty" name="bulk_sell_min_qty"
+                                   placeholder="e.g. 50" min="2" step="1">
+                            <small style="color:#718096;font-size:0.78rem;margin-top:4px;display:block;">
+                                Discount applies when buyer orders this many or more
+                            </small>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="editBulkDiscount">Discount (%) <span class="required">*</span></label>
+                            <div style="position:relative;">
+                                <input type="number" id="editBulkDiscount" name="bulk_sell_discount"
+                                       placeholder="e.g. 10" min="1" max="99" step="0.1"
+                                       style="padding-right:36px;">
+                                <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#718096;font-weight:600;font-size:0.9rem;">%</span>
+                            </div>
+                            <small style="color:#718096;font-size:0.78rem;margin-top:4px;display:block;">
+                                Percentage off the unit price
+                            </small>
+                        </div>
+                    </div>
+                    <div id="editBulkSellPreview" style="display:none; margin-top:12px; padding:10px 14px; background:#ede9fe; border-radius:6px; font-size:0.82rem; color:#5b21b6;">
+                        <i class="fas fa-tag"></i> <span id="editBulkSellPreviewText"></span>
+                    </div>
+                </div>
+
             </div>
 
             <div class="modal-footer">
@@ -698,24 +784,16 @@
 <!-- SUCCESS POPUP -->
 <div class="success-popup" id="successPopup">
     <div class="success-content">
-        <div class="success-icon">
-            <i class="fas fa-check-circle"></i>
-        </div>
-        <div>
-            <p id="successMessage">Success!</p>
-        </div>
+        <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+        <div><p id="successMessage">Success!</p></div>
     </div>
 </div>
 
 <!-- DELETE POPUP -->
 <div class="delete-popup" id="deletePopup">
     <div class="delete-content">
-        <div class="delete-icon">
-            <i class="fas fa-trash-alt"></i>
-        </div>
-        <div>
-            <p id="deleteMessage">Deleted successfully!</p>
-        </div>
+        <div class="delete-icon"><i class="fas fa-trash-alt"></i></div>
+        <div><p id="deleteMessage">Deleted successfully!</p></div>
     </div>
 </div>
 
@@ -775,7 +853,51 @@ function syncFreeShippingCheckbox() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+// ── Bulk Sell Toggle ──
+function toggleBulkSellFields(fieldsId) {
+    const checkbox  = event.target;
+    const fields    = document.getElementById(fieldsId);
+    fields.style.display = checkbox.checked ? 'block' : 'none';
+
+    // clear values when disabled
+    if (!checkbox.checked) {
+        fields.querySelectorAll('input[type="number"]').forEach(i => i.value = '');
+        const preview = fields.querySelector('[id$="BulkSellPreview"]');
+        if (preview) preview.style.display = 'none';
+    }
+}
+
+// ── Live preview of bulk deal ──
+function updateBulkPreview(qtyId, discountId, previewId, previewTextId) {
+    const qty      = parseInt(document.getElementById(qtyId)?.value) || 0;
+    const discount = parseFloat(document.getElementById(discountId)?.value) || 0;
+    const preview  = document.getElementById(previewId);
+    const text     = document.getElementById(previewTextId);
+
+    if (qty >= 2 && discount > 0 && discount < 100 && preview && text) {
+        text.textContent = `Buy ${qty} or more and get ${discount}% off each item`;
+        preview.style.display = 'block';
+    } else if (preview) {
+        preview.style.display = 'none';
+    }
+}
+
+// Attach live preview listeners after DOM ready
+document.addEventListener('DOMContentLoaded', function () {
+    // New sell modal
+    ['bulkMinQty', 'bulkDiscount'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', () =>
+            updateBulkPreview('bulkMinQty', 'bulkDiscount', 'bulkSellPreview', 'bulkSellPreviewText')
+        );
+    });
+
+    // Edit sell modal
+    ['editBulkMinQty', 'editBulkDiscount'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', () =>
+            updateBulkPreview('editBulkMinQty', 'editBulkDiscount', 'editBulkSellPreview', 'editBulkSellPreviewText')
+        );
+    });
+
     @if(session('success'))
         showSuccessPopup('{{ session('success') }}');
     @endif

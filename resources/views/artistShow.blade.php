@@ -25,7 +25,7 @@
     {{-- ══ PROFILE HEADER CARD ══ --}}
     <div class="profile-header">
 
-        {{-- Row 1: Avatar + Name + Specialization --}}
+        {{-- Row 1: Avatar + Name + Specialization + Artwork Types --}}
         <div class="profile-top">
             <div class="artist-avatar">
                 @if($user->profile_image)
@@ -41,20 +41,33 @@
 
             <div class="profile-identity">
                 <h1 class="artist-name">{{ $user->fullname ?? $user->name ?? 'Unknown Artist' }}</h1>
+
+                {{-- Specialization --}}
                 @if($user->artist && $user->artist->specialization)
                     <div class="artist-specialization">
-                        <i class="fas fa-palette"></i>
+                        <i class="fas fa-star"></i>
+                        <span class="specialization-label">Specialization:</span>
                         {{ $user->artist->specialization }}
+                    </div>
+                @endif
+
+                {{-- Artwork Types --}}
+                @if($user->artist && $user->artist->artworkTypes->count() > 0)
+                    <div class="artist-artwork-types">
+                        <i class="fas fa-tags"></i>
+                        @foreach($user->artist->artworkTypes as $artworkType)
+                            <span class="artwork-type-tag">{{ $artworkType->name }}</span>
+                        @endforeach
                     </div>
                 @endif
             </div>
         </div>
 
-        {{-- Row 2: Stats + Action Buttons on same line --}}
+        {{-- Row 2: Stats + Action Buttons --}}
         <div class="profile-actions-row">
             <div class="artist-meta">
                 <div class="meta-item">
-                    <strong>{{ number_format($user->artist->rating ?? 5.0, 1) }}</strong>
+                    <strong>{{ number_format($user->seller_rating, 1) }}</strong>
                     <span>Rating</span>
                 </div>
                 <div class="meta-divider"></div>
@@ -127,24 +140,14 @@
             </div>
         </div>
 
-        {{-- Row 3: Tags + Bio --}}
-        @if(($user->artist && $user->artist->artworkTypes->count() > 0) || ($user->artist && $user->artist->bio))
+        {{-- Row 3: Bio only --}}
+        @if($user->artist && $user->artist->bio)
         <div class="profile-body">
-            @if($user->artist && $user->artist->artworkTypes->count() > 0)
-                <div class="skills-tags">
-                    @foreach($user->artist->artworkTypes as $artworkType)
-                        <span class="skill-tag">{{ $artworkType->name }}</span>
-                    @endforeach
-                </div>
-            @endif
-            @if($user->artist && $user->artist->bio)
-                <div class="bio-section">
-                    <div class="bio-label">About</div>
-                    <p class="bio-content">{{ $user->artist->bio }}</p>
-                </div>
-            @endif
+            <div class="bio-label">About</div>
+            <p class="bio-content">{{ $user->artist->bio }}</p>
         </div>
         @endif
+
     </div>
 
     {{-- ══ DEMO ARTWORKS ══ --}}

@@ -39,6 +39,11 @@ class ArtistBrowseController extends Controller
             });
         }
 
+        // Filter by artwork type (digital / physical)
+        if ($request->filled('type')) {
+            $query->where('artwork_type', $request->type);
+        }
+
         // Sort options
         switch ($request->get('sort', 'latest')) {
             case 'name':
@@ -79,7 +84,7 @@ class ArtistBrowseController extends Controller
         ]);
 
         $user = User::with([
-            'artist',
+            'artist.artworkTypes',
             'demoArtworks' => function ($q) {
                 $q->orderBy('order', 'asc');
             },

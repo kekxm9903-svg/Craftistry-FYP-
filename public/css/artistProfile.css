@@ -491,6 +491,7 @@ body {
     line-height: 1.5;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -697,6 +698,32 @@ body {
 }
 
 .cross-post-label { font-weight: 700; color: var(--primary); }
+
+
+/* ══════════════════════════════
+   BULK SELL BOX
+══════════════════════════════ */
+
+.bulk-sell-box {
+    background: #faf9ff;
+    border: 1px solid #ddd6fe;
+    border-radius: var(--radius-sm);
+    padding: var(--sp-md);
+    margin-top: var(--sp-md);
+}
+
+.bulk-sell-label {
+    color: var(--primary-2);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-xs);
+}
+
+.bulk-sell-label i {
+    color: var(--primary);
+    font-size: 12px;
+}
 
 
 /* ══════════════════════════════

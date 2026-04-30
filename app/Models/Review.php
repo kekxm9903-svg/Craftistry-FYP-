@@ -26,6 +26,8 @@ class Review extends Model
         'rating'       => 'integer',
     ];
 
+    // ── Relationships ────────────────────────────────────────────────────────
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -39,5 +41,10 @@ class Review extends Model
     public function artist()
     {
         return $this->belongsTo(Artist::class, 'artist_id');
+    }
+
+    public function artworkSell()
+    {
+        return $this->belongsTo(ArtworkSell::class, 'artwork_sell_id');
     }
 }

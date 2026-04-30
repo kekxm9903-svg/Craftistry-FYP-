@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\CustomOrderRequest;
+use App\Models\BulkOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ArtistCustomOrderController extends Controller
 {
-    /* ── Seller: list incoming requests ── */
+    /* ── Seller: list incoming requests (custom + bulk) ── */
     public function index()
     {
         $requests = CustomOrderRequest::with('buyer', 'order')
@@ -16,7 +17,14 @@ class ArtistCustomOrderController extends Controller
             ->latest()
             ->paginate(12);
 
-        return view('artistRequestList', compact('requests'));
+        $bulkOrders = BulkOrder::with(['artworkSell', 'buyer'])
+            ->whereHas('artworkSell', function ($q) {
+                $q->where('artist_id', Auth::user()->artist->id ?? 0);
+            })
+            ->latest()
+            ->get();
+
+        return view('artistRequestList', compact('requests', 'bulkOrders'));
     }
 
     /* ── Seller: view a single request ── */

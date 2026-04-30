@@ -47,6 +47,24 @@ class User extends Authenticatable
         return null;
     }
 
+    /**
+     * Passthrough: average seller rating via the artist profile.
+     * Usage: $user->seller_rating
+     */
+    public function getSellerRatingAttribute(): float
+    {
+        return $this->artist?->seller_rating ?? 0.0;
+    }
+
+    /**
+     * Passthrough: total review count via the artist profile.
+     * Usage: $user->seller_review_count
+     */
+    public function getSellerReviewCountAttribute(): int
+    {
+        return $this->artist?->seller_review_count ?? 0;
+    }
+
     // ── Relationships ────────────────────────────────────────────────────────
 
     public function artist()
@@ -84,8 +102,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Artists this user has favorited
-     * Usage: auth()->user()->favorites
+     * Artists this user has favorited.
      */
     public function favorites()
     {
@@ -93,16 +110,15 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the actual favorited artist User models (many-to-many shortcut)
-     * Usage: auth()->user()->favoriteArtists
+     * Get the actual favorited artist User models (many-to-many shortcut).
      */
     public function favoriteArtists()
     {
         return $this->belongsToMany(
-            User::class,        // related model
-            'favorites',        // pivot table
-            'user_id',          // foreign key on favorites (this user)
-            'artist_id'         // foreign key on favorites (the artist)
+            User::class,
+            'favorites',
+            'user_id',
+            'artist_id'
         )->withTimestamps();
     }
 
@@ -119,8 +135,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if this user has favorited a specific artist
-     * Usage: auth()->user()->hasFavorited($artistUser)
+     * Check if this user has favorited a specific artist.
      */
     public function hasFavorited(User $artist): bool
     {

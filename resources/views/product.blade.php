@@ -6,9 +6,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-    /* ═══════════════════════════════════════
-       DESIGN TOKENS — single source of truth
-    ═══════════════════════════════════════ */
     :root {
         --primary:    #667eea;
         --primary-2:  #764ba2;
@@ -16,31 +13,27 @@
         --ink:        #1a1a2e;
         --muted:      #6b6b8a;
         --border:     #e0e0ee;
-        --divider:    #f0f0f5;   /* lighter internal dividers */
+        --divider:    #f0f0f5;
         --bg:         #f0f0f5;
         --white:      #ffffff;
         --success:    #2e7d32;
 
-        /* Typography scale — 3 sizes only */
-        --fs-sm:   12px;   /* meta, labels, hints       */
-        --fs-base: 13px;   /* body, values, buttons     */
-        --fs-md:   15px;   /* section headings           */
-        --fs-lg:   20px;   /* product title              */
-        --fs-xl:   28px;   /* price                      */
+        --fs-sm:   12px;
+        --fs-base: 13px;
+        --fs-md:   15px;
+        --fs-lg:   20px;
+        --fs-xl:   28px;
 
-        /* Spacing scale */
         --sp-xs:  6px;
         --sp-sm:  10px;
         --sp-md:  16px;
         --sp-lg:  20px;
         --sp-xl:  24px;
 
-        /* Borders */
         --radius-sm:  6px;
         --radius-md: 10px;
         --radius-lg: 14px;
 
-        /* Label column width — used everywhere for alignment */
         --label-w: 110px;
     }
 
@@ -55,9 +48,6 @@
         -webkit-font-smoothing: antialiased;
     }
 
-    /* ══════════════════════════════
-       BREADCRUMB
-    ══════════════════════════════ */
     .bc-bar {
         background: var(--white);
         border-bottom: 1px solid var(--border);
@@ -78,7 +68,6 @@
     .bc-inner .sep { color: #ccc; }
     .bc-inner .cur { color: var(--ink); font-weight: 500; }
 
-    /* ── Back button ── */
     .back-btn {
         display: inline-flex;
         align-items: center;
@@ -93,9 +82,6 @@
     .back-btn:hover { color: var(--primary); }
     .back-btn svg { flex-shrink: 0; }
 
-    /* ══════════════════════════════
-       PAGE WRAPPER
-    ══════════════════════════════ */
     .sp-page {
         max-width: 1100px;
         margin: 0 auto;
@@ -105,16 +91,12 @@
         gap: var(--sp-sm);
     }
 
-    /* ══════════════════════════════
-       WHITE CARD BASE
-    ══════════════════════════════ */
     .sp-card {
         background: var(--white);
         border-radius: var(--radius-lg);
         box-shadow: 0 1px 3px rgba(0,0,0,.07);
         overflow: hidden;
     }
-
     .sp-card-header {
         padding: var(--sp-md) var(--sp-lg);
         font-size: var(--fs-base);
@@ -132,18 +114,13 @@
         border-radius: 2px;
         flex-shrink: 0;
     }
-
     .sp-card-body { padding: var(--sp-lg); }
 
-    /* ══════════════════════════════
-       PRODUCT CARD — top section
-    ══════════════════════════════ */
     .sp-product-card {
         display: grid;
         grid-template-columns: 360px 1fr;
     }
 
-    /* ── Image pane ── */
     .sp-img-pane {
         padding: var(--sp-lg);
         border-right: 1px solid var(--divider);
@@ -163,12 +140,7 @@
         align-items: center;
         justify-content: center;
     }
-    .sp-main-img img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        display: block;
-    }
+    .sp-main-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
     .sp-img-placeholder {
         width: 100%; height: 100%;
         display: flex; align-items: center; justify-content: center;
@@ -177,7 +149,6 @@
         font-size: 3.5rem;
     }
 
-    /* Artist strip */
     .sp-artist-strip {
         display: flex;
         align-items: center;
@@ -213,7 +184,6 @@
     }
     .sp-artist-btn:hover { background: var(--primary); color: #fff; }
 
-    /* ── Info pane ── */
     .sp-info-pane {
         padding: var(--sp-xl);
         display: flex;
@@ -221,7 +191,6 @@
         gap: 0;
     }
 
-    /* Category tag */
     .sp-cat-tag {
         display: inline-block;
         font-size: var(--fs-sm);
@@ -235,7 +204,6 @@
         margin-bottom: var(--sp-sm);
     }
 
-    /* Title */
     .sp-title {
         font-size: var(--fs-lg);
         font-weight: 700;
@@ -244,7 +212,6 @@
         margin-bottom: var(--sp-sm);
     }
 
-    /* Rating row */
     .sp-rating-row {
         display: flex;
         align-items: center;
@@ -262,14 +229,9 @@
         line-height: 1.2;
     }
     .sp-dot { color: #ddd; font-size: 8px; }
-    .sp-rating-link {
-        font-size: var(--fs-sm);
-        color: var(--muted);
-        text-decoration: none;
-    }
+    .sp-rating-link { font-size: var(--fs-sm); color: var(--muted); text-decoration: none; }
     .sp-rating-link:hover { color: var(--primary); }
 
-    /* Price strip */
     .sp-price-strip {
         background: linear-gradient(135deg, #f5f3ff 0%, #faf9ff 100%);
         padding: var(--sp-md) var(--sp-xl);
@@ -303,7 +265,21 @@
         background-clip: text;
     }
 
-    /* Meta rows */
+    /* ── Bulk deal banner ── */
+    .sp-bulk-banner {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-sm);
+        padding: var(--sp-sm) var(--sp-xl);
+        margin: 0 calc(-1 * var(--sp-xl));
+        background: var(--lavender);
+        border-bottom: 1px solid #ddd6fe;
+        font-size: var(--fs-sm);
+        color: var(--primary-2);
+    }
+    .sp-bulk-banner i { color: var(--primary); font-size: 12px; flex-shrink: 0; }
+    .sp-bulk-banner strong { font-weight: 700; }
+
     .sp-meta-section {
         padding: var(--sp-md) 0;
         border-bottom: 1px solid var(--divider);
@@ -331,7 +307,6 @@
         font-size: var(--fs-sm); font-weight: 600;
     }
 
-    /* Qty + total */
     .sp-purchase-section {
         padding: var(--sp-md) 0;
         border-bottom: 1px solid var(--divider);
@@ -388,7 +363,7 @@
         font-weight: 400;
     }
 
-    /* CTA row */
+    /* ── CTA rows ── */
     .sp-cta-row {
         display: flex;
         gap: var(--sp-sm);
@@ -396,7 +371,10 @@
         align-items: stretch;
     }
 
-    /* Shared button base */
+    .sp-cta-row-bulk {
+        padding-top: var(--sp-xs);
+    }
+
     .sp-btn {
         display: flex; align-items: center; justify-content: center; gap: var(--sp-xs);
         padding: 11px var(--sp-md);
@@ -408,6 +386,7 @@
         transition: all .15s;
         border: none;
         white-space: nowrap;
+        text-decoration: none;
     }
     .sp-btn-cart {
         flex: 1;
@@ -427,6 +406,36 @@
     }
     .sp-btn-buy:hover { opacity: .9; box-shadow: 0 5px 16px rgba(102,126,234,.38); }
     .sp-btn-buy:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+
+    /* ── Bulk Order button ── */
+    .sp-btn-bulk {
+        width: 100%;
+        background: #faf9ff;
+        color: var(--primary);
+        border: 1.5px solid var(--primary);
+        justify-content: center;
+        gap: var(--sp-sm);
+        box-shadow: none;
+    }
+    .sp-btn-bulk:hover {
+        background: var(--lavender);
+        border-style: solid;
+        color: var(--primary-2);
+    }
+
+    /* Bulk badge inside button */
+    .bulk-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: var(--lavender);
+        color: var(--primary-2);
+        padding: 2px var(--sp-sm);
+        border-radius: 20px;
+        font-size: var(--fs-sm);
+        font-weight: 700;
+        border: 1px solid #ddd6fe;
+    }
 
     .sp-btn-contact {
         background: var(--white);
@@ -453,9 +462,6 @@
         display: flex; align-items: center; justify-content: center; gap: var(--sp-xs);
     }
 
-    /* ══════════════════════════════
-       SPECS TABLE
-    ══════════════════════════════ */
     .sp-spec-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -474,9 +480,6 @@
     .sp-spec-key { width: var(--label-w); flex-shrink: 0; color: var(--muted); font-weight: 400; }
     .sp-spec-val { color: var(--ink); font-weight: 500; flex: 1; }
 
-    /* ══════════════════════════════
-       DESCRIPTION
-    ══════════════════════════════ */
     .sp-desc {
         font-size: var(--fs-base);
         line-height: 1.8;
@@ -484,9 +487,6 @@
         white-space: pre-line;
     }
 
-    /* ══════════════════════════════
-       REVIEWS
-    ══════════════════════════════ */
     .sp-reviews-summary {
         display: flex;
         align-items: center;
@@ -516,12 +516,8 @@
     .sp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-2)); border-radius: 10px; }
     .sp-bar-count { width: 20px; color: var(--muted); flex-shrink: 0; }
 
-    /* Review list */
     .sp-review-list { padding: 0 var(--sp-xl); }
-    .sp-review-item {
-        padding: var(--sp-md) 0;
-        border-bottom: 1px solid var(--divider);
-    }
+    .sp-review-item { padding: var(--sp-md) 0; border-bottom: 1px solid var(--divider); }
     .sp-review-item:last-child { border-bottom: none; }
 
     .sp-reviewer-row { display: flex; align-items: center; gap: var(--sp-sm); margin-bottom: var(--sp-sm); }
@@ -557,24 +553,17 @@
     }
     .sp-rev-vid-ov i { color: #fff; font-size: var(--fs-base); }
 
-    /* No reviews */
     .sp-no-reviews { text-align: center; padding: 36px var(--sp-lg); color: var(--muted); }
     .sp-no-reviews i { font-size: 2rem; color: #d1d5db; display: block; margin-bottom: var(--sp-sm); }
     .sp-no-reviews h4 { font-size: var(--fs-base); font-weight: 700; color: var(--ink); margin-bottom: var(--sp-xs); }
     .sp-no-reviews p { font-size: var(--fs-sm); }
 
-    /* ══════════════════════════════
-       LIGHTBOX
-    ══════════════════════════════ */
     .lightbox { display: none; position: fixed; inset: 0; z-index: 9998; background: rgba(0,0,0,.93); align-items: center; justify-content: center; padding: var(--sp-xl); }
     .lightbox.open { display: flex; }
     .lightbox img, .lightbox video { max-width: 90vw; max-height: 85vh; border-radius: var(--radius-md); object-fit: contain; }
     .lightbox-close { position: absolute; top: var(--sp-md); right: var(--sp-lg); color: #fff; font-size: 1.6rem; cursor: pointer; background: none; border: none; line-height: 1; opacity: .7; transition: opacity .15s; }
     .lightbox-close:hover { opacity: 1; }
 
-    /* ══════════════════════════════
-       TOAST
-    ══════════════════════════════ */
     .toast {
         position: fixed; bottom: var(--sp-xl); right: var(--sp-xl);
         background: var(--ink); color: #fff;
@@ -592,13 +581,10 @@
     .t-info    { color: #60a5fa; }
     .toast-link { color: #a78bfa; font-weight: 700; font-size: var(--fs-sm); text-decoration: none; margin-left: var(--sp-xs); white-space: nowrap; }
 
-    /* ══════════════════════════════
-       RESPONSIVE
-    ══════════════════════════════ */
     @media (max-width: 860px) {
         .sp-product-card { grid-template-columns: 1fr; }
         .sp-img-pane { border-right: none; border-bottom: 1px solid var(--divider); }
-        .sp-price-strip { margin: 0 calc(-1 * var(--sp-xl)); }
+        .sp-price-strip, .sp-bulk-banner { margin: 0 calc(-1 * var(--sp-xl)); }
     }
     @media (max-width: 600px) {
         .sp-page { padding: var(--sp-sm) var(--sp-sm) 48px; }
@@ -643,7 +629,6 @@
         Back
     </a>
 
-
     {{-- ══ MAIN PRODUCT CARD ══ --}}
     <div class="sp-card sp-product-card">
 
@@ -673,7 +658,17 @@
                 </div>
                 <div class="sp-artist-info">
                     <div class="sp-artist-name">{{ $aUser->fullname ?? 'Unknown Artist' }}</div>
-                    <div class="sp-artist-role">Craftistry Artist</div>
+                    <div class="sp-artist-role">
+                        @php $sellerRating = $aUser->seller_rating; @endphp
+                        @if($sellerRating > 0)
+                            @for($i = 1; $i <= 5; $i++)
+                                <i class="fas fa-star" style="font-size:10px;color:{{ $i <= round($sellerRating) ? '#f59e0b' : '#e5e7eb' }}"></i>
+                            @endfor
+                            <span style="font-size:11px;color:var(--muted);margin-left:3px;">{{ number_format($sellerRating, 1) }}</span>
+                        @else
+                            <span>Craftistry Artist</span>
+                        @endif
+                    </div>
                 </div>
                 <a href="{{ route('artist.browse.show', $artwork->artist->user_id) }}" class="sp-artist-btn">
                     View Shop
@@ -713,11 +708,25 @@
             </div>
             @endif
 
+            {{-- Bulk deal banner --}}
+            @if($artwork->bulk_sell_enabled && $artwork->bulk_sell_min_qty && $artwork->bulk_sell_discount)
+            <div class="sp-bulk-banner">
+                <i class="fas fa-tags"></i>
+                <span>Buy <strong>{{ $artwork->bulk_sell_min_qty }} or more</strong> and get <strong>{{ $artwork->bulk_sell_discount }}% off</strong> each item</span>
+            </div>
+            @endif
+
             {{-- Meta rows --}}
             <div class="sp-meta-section">
                 <div class="sp-row">
                     <span class="sp-row-key">Shipping</span>
-                    <span class="sp-row-val">Varies by location</span>
+                    <span class="sp-row-val">
+                        @if($artwork->shipping_fee && $artwork->shipping_fee > 0)
+                            RM {{ number_format($artwork->shipping_fee, 2) }}
+                        @else
+                            Free Shipping
+                        @endif
+                    </span>
                 </div>
                 <div class="sp-row">
                     <span class="sp-row-key">Availability</span>
@@ -727,12 +736,6 @@
                         @else
                             <span class="in-stock"><i class="fas fa-check-circle" style="font-size:11px;margin-right:3px;"></i>In Stock</span>
                         @endif
-                    </span>
-                </div>
-                <div class="sp-row">
-                    <span class="sp-row-key">Guarantee</span>
-                    <span class="sp-row-val">
-                        <span class="guarantee-badge"><i class="fas fa-shield-alt"></i> Buyer Protection</span>
                     </span>
                 </div>
                 @if($artwork->material)
@@ -761,18 +764,23 @@
 
                 <div class="sp-row" style="align-items:center;">
                     <span class="sp-row-key">Total</span>
-                    <div style="display:flex;align-items:baseline;">
+                    <div style="display:flex;align-items:baseline;gap:var(--sp-xs);">
                         <span class="sp-total-price" id="total-price">
                             RM {{ number_format($artwork->product_price ?? 0, 2) }}
                         </span>
                         <span class="sp-total-hint" id="total-hint" style="display:none;">
                             (RM {{ number_format($artwork->product_price ?? 0, 2) }} × <span id="qty-hint-val">1</span>)
                         </span>
+                        @if($artwork->bulk_sell_enabled && $artwork->bulk_sell_min_qty && $artwork->bulk_sell_discount)
+                        <span id="bulk-discount-note" style="display:none;font-size:var(--fs-sm);color:var(--primary-2);font-weight:600;">
+                            — {{ $artwork->bulk_sell_discount }}% bulk discount applied
+                        </span>
+                        @endif
                     </div>
                 </div>
             </div>
 
-            {{-- CTA --}}
+            {{-- CTA row 1: Add to Cart + Buy Now + Contact --}}
             <div class="sp-cta-row">
                 @if($isSoldOut)
                     <div class="sp-sold-notice"><i class="fas fa-ban"></i> This artwork has been sold</div>
@@ -785,10 +793,36 @@
                         <i class="fas fa-bolt"></i> Buy Now
                     </button>
                 @endif
-                <button class="sp-btn sp-btn-contact" onclick="handleContact()">
-                    <i class="fas fa-envelope"></i>
-                </button>
             </div>
+
+            {{-- CTA row 2: Bulk Order (only if enabled and not sold out) --}}
+            @if(!$isSoldOut && $artwork->bulk_sell_enabled)
+            <div class="sp-cta-row-bulk">
+                @auth
+                <a href="{{ route('bulk-orders.create', $artwork->id) }}" class="sp-btn sp-btn-bulk">
+                    <i class="fas fa-boxes"></i>
+                    Bulk Order
+                    @if($artwork->bulk_sell_min_qty && $artwork->bulk_sell_discount)
+                    <span class="bulk-badge">
+                        <i class="fas fa-tag"></i>
+                        {{ $artwork->bulk_sell_discount }}% off ≥{{ $artwork->bulk_sell_min_qty }} pcs
+                    </span>
+                    @endif
+                </a>
+                @else
+                <a href="{{ route('login') }}" class="sp-btn sp-btn-bulk">
+                    <i class="fas fa-boxes"></i>
+                    Bulk Order
+                    @if($artwork->bulk_sell_min_qty && $artwork->bulk_sell_discount)
+                    <span class="bulk-badge">
+                        <i class="fas fa-tag"></i>
+                        {{ $artwork->bulk_sell_discount }}% off ≥{{ $artwork->bulk_sell_min_qty }} pcs
+                    </span>
+                    @endif
+                </a>
+                @endauth
+            </div>
+            @endif
 
         </div>{{-- /sp-info-pane --}}
     </div>{{-- /sp-product-card --}}
@@ -822,16 +856,8 @@
                 </div>
                 @endif
                 <div class="sp-spec-cell">
-                    <span class="sp-spec-key">Condition</span>
-                    <span class="sp-spec-val">Brand New · Original</span>
-                </div>
-                <div class="sp-spec-cell">
                     <span class="sp-spec-key">Status</span>
                     <span class="sp-spec-val">{{ $isSoldOut ? 'Sold Out' : 'Available' }}</span>
-                </div>
-                <div class="sp-spec-cell">
-                    <span class="sp-spec-key">Platform</span>
-                    <span class="sp-spec-val">Craftistry Marketplace</span>
                 </div>
             </div>
         </div>
@@ -957,16 +983,30 @@
 </div>
 
 <script>
-    const UNIT_PRICE = {{ $artwork->product_price ?? 0 }};
+    const UNIT_PRICE    = {{ $artwork->product_price ?? 0 }};
+    const BULK_ENABLED  = {{ $artwork->bulk_sell_enabled ? 'true' : 'false' }};
+    const BULK_MIN_QTY  = {{ $artwork->bulk_sell_min_qty ?? 0 }};
+    const BULK_DISCOUNT = {{ $artwork->bulk_sell_discount ?? 0 }};
     let qty = 1;
 
     function changeQty(delta) {
         qty = Math.max(1, qty + delta);
         document.getElementById('qty-value').textContent = qty;
         document.getElementById('qty-minus').disabled = qty <= 1;
-        const total = UNIT_PRICE * qty;
+
+        let unitPrice = UNIT_PRICE;
+        const bulkNote = document.getElementById('bulk-discount-note');
+        if (BULK_ENABLED && BULK_MIN_QTY > 0 && qty >= BULK_MIN_QTY) {
+            unitPrice = UNIT_PRICE * (1 - BULK_DISCOUNT / 100);
+            if (bulkNote) bulkNote.style.display = 'inline';
+        } else {
+            if (bulkNote) bulkNote.style.display = 'none';
+        }
+
+        const total = unitPrice * qty;
         document.getElementById('total-price').textContent =
             'RM ' + total.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
         const hint = document.getElementById('total-hint');
         if (qty > 1) { hint.style.display = 'inline'; document.getElementById('qty-hint-val').textContent = qty; }
         else         { hint.style.display = 'none'; }

@@ -38,12 +38,13 @@
 
     {{-- Filter bar --}}
     <div class="sp-card filter-card">
-        <form action="{{ route('artist.browse') }}" method="GET" class="filter-form">
+        <form action="{{ route('artist.browse') }}" method="GET" class="filter-form" id="filter-form">
 
             @if(request('specialty'))
                 <input type="hidden" name="specialty" value="{{ request('specialty') }}">
             @endif
 
+            {{-- Search --}}
             <div class="search-box">
                 <i class="fas fa-search search-icon"></i>
                 <input type="text"
@@ -53,7 +54,29 @@
                        value="{{ request('search') }}">
             </div>
 
-            <select name="sort" class="filter-select">
+            {{-- Artwork type toggle --}}
+            <div class="type-filter-group">
+                @php $currentType = request('type', ''); @endphp
+                <input type="hidden" name="type" id="type-input" value="{{ $currentType }}">
+                <button type="button"
+                        class="type-toggle {{ $currentType === '' ? 'active' : '' }}"
+                        onclick="setType('')">
+                    All
+                </button>
+                <button type="button"
+                        class="type-toggle type-toggle--digital {{ $currentType === 'digital' ? 'active' : '' }}"
+                        onclick="setType('digital')">
+                    <i class="fas fa-desktop"></i> Digital
+                </button>
+                <button type="button"
+                        class="type-toggle type-toggle--physical {{ $currentType === 'physical' ? 'active' : '' }}"
+                        onclick="setType('physical')">
+                    <i class="fas fa-box"></i> Physical
+                </button>
+            </div>
+
+            {{-- Sort --}}
+            <select name="sort" class="filter-select" onchange="document.getElementById('filter-form').submit()">
                 <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Latest</option>
                 <option value="name"   {{ request('sort') == 'name'   ? 'selected' : '' }}>Name (A-Z)</option>
                 <option value="price"  {{ request('sort') == 'price'  ? 'selected' : '' }}>Price (Low-High)</option>
@@ -71,6 +94,9 @@
             <div class="sp-card-header-left">
                 <div class="hline"></div>
                 Browse Artworks
+                @if(request('type'))
+                    <span class="active-type-badge">{{ ucfirst(request('type')) }}</span>
+                @endif
             </div>
             @if($artworks->count() > 0)
                 <span class="section-count">{{ $artworks->total() }} artwork{{ $artworks->total() !== 1 ? 's' : '' }}</span>
@@ -181,4 +207,14 @@
     </div>
 
 </div>
+
+<script>
+function setType(value) {
+    document.getElementById('type-input').value = value;
+    document.querySelectorAll('.type-toggle').forEach(btn => btn.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    document.getElementById('filter-form').submit();
+}
+</script>
+
 @endsection

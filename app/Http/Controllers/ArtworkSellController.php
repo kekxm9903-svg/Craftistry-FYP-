@@ -19,7 +19,7 @@ class ArtworkSellController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             if (!$user->artist) {
                 if ($request->expectsJson()) {
                     return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
@@ -27,7 +27,6 @@ class ArtworkSellController extends Controller
                 return redirect()->back()->with('error', 'Unauthorized');
             }
 
-            // Validation
             $validated = $request->validate([
                 'product_name'        => 'required|string|max:255',
                 'product_description' => 'nullable|string|max:2000',
@@ -42,6 +41,9 @@ class ArtworkSellController extends Controller
                 'unit'                => 'required|in:cm,inch,px',
                 'status'              => 'required|in:available,sold_out',
                 'also_demo'           => 'nullable',
+                'bulk_sell_enabled'   => 'nullable|boolean',
+                'bulk_sell_min_qty'   => 'nullable|integer|min:2',
+                'bulk_sell_discount'  => 'nullable|numeric|min:1|max:99',
             ]);
 
             // Upload Image
@@ -54,6 +56,8 @@ class ArtworkSellController extends Controller
 
             DB::beginTransaction();
 
+            $bulkEnabled = $request->boolean('bulk_sell_enabled');
+
             // 1. Create Demo Record (if checkbox checked)
             $newDemo = null;
             if ($request->has('also_demo')) {
@@ -61,39 +65,42 @@ class ArtworkSellController extends Controller
                 $order    = $maxOrder !== null ? $maxOrder + 1 : 0;
 
                 $newDemo = DemoArtwork::create([
-                    'artist_id'      => $user->id,
-                    'title'          => $validated['product_name'],
-                    'description'    => $validated['product_description'] ?? null,
-                    'image_path'     => $path,
-                    'order'          => $order,
-                    'artwork_type'   => $validated['artwork_type'],
-                    'material'       => $validated['material'],
-                    'height'         => $validated['height'],
-                    'width'          => $validated['width'],
-                    'depth'          => $request->input('depth'),
-                    'unit'           => $validated['unit'],
-                    'price'          => $validated['product_price'],
+                    'artist_id'       => $user->id,
+                    'title'           => $validated['product_name'],
+                    'description'     => $validated['product_description'] ?? null,
+                    'image_path'      => $path,
+                    'order'           => $order,
+                    'artwork_type'    => $validated['artwork_type'],
+                    'material'        => $validated['material'],
+                    'height'          => $validated['height'],
+                    'width'           => $validated['width'],
+                    'depth'           => $request->input('depth'),
+                    'unit'            => $validated['unit'],
+                    'price'           => $validated['product_price'],
                     'is_cross_posted' => false,
                 ]);
             }
 
             // 2. Create Sell Record
             $artworkSell = ArtworkSell::create([
-                'artist_id'           => $user->id,
-                'product_name'        => $validated['product_name'],
-                'product_description' => $validated['product_description'] ?? null,
-                'product_price'       => $validated['product_price'],
-                'shipping_fee'        => $request->input('shipping_fee', 0),
-                'image_path'          => $path,
-                'status'              => $validated['status'],
-                'artwork_type'        => $validated['artwork_type'],
-                'material'            => $validated['material'],
-                'height'              => $validated['height'],
-                'width'               => $validated['width'],
-                'depth'               => $request->input('depth'),
-                'unit'                => $validated['unit'],
-                'is_cross_posted'     => $newDemo ? true : false,
+                'artist_id'            => $user->id,
+                'product_name'         => $validated['product_name'],
+                'product_description'  => $validated['product_description'] ?? null,
+                'product_price'        => $validated['product_price'],
+                'shipping_fee'         => $request->input('shipping_fee') ?? 0,
+                'image_path'           => $path,
+                'status'               => $validated['status'],
+                'artwork_type'         => $validated['artwork_type'],
+                'material'             => $validated['material'],
+                'height'               => $validated['height'],
+                'width'                => $validated['width'],
+                'depth'                => $request->input('depth'),
+                'unit'                 => $validated['unit'],
+                'is_cross_posted'      => $newDemo ? true : false,
                 'cross_posted_from_id' => $newDemo ? $newDemo->id : null,
+                'bulk_sell_enabled'    => $bulkEnabled,
+                'bulk_sell_min_qty'    => $bulkEnabled ? $request->input('bulk_sell_min_qty') : null,
+                'bulk_sell_discount'   => $bulkEnabled ? $request->input('bulk_sell_discount') : null,
             ]);
 
             // 3. Link Demo to Sell Record
@@ -110,14 +117,17 @@ class ArtworkSellController extends Controller
                     'success' => true,
                     'message' => 'Artwork listed successfully!',
                     'artwork' => [
-                        'id'             => $artworkSell->id,
-                        'product_name'   => $artworkSell->product_name,
-                        'formatted_price' => $artworkSell->formatted_price,
-                        'shipping_fee'   => $artworkSell->shipping_fee,
-                        'image_url'      => $artworkSell->image_url,
-                        'status'         => $artworkSell->status,
-                        'status_label'   => $artworkSell->status_label,
-                        'artwork_type'   => $artworkSell->artwork_type,
+                        'id'                 => $artworkSell->id,
+                        'product_name'       => $artworkSell->product_name,
+                        'formatted_price'    => $artworkSell->formatted_price,
+                        'shipping_fee'       => $artworkSell->shipping_fee,
+                        'image_url'          => $artworkSell->image_url,
+                        'status'             => $artworkSell->status,
+                        'status_label'       => $artworkSell->status_label,
+                        'artwork_type'       => $artworkSell->artwork_type,
+                        'bulk_sell_enabled'  => $artworkSell->bulk_sell_enabled,
+                        'bulk_sell_min_qty'  => $artworkSell->bulk_sell_min_qty,
+                        'bulk_sell_discount' => $artworkSell->bulk_sell_discount,
                     ]
                 ]);
             }
@@ -163,22 +173,25 @@ class ArtworkSellController extends Controller
                 ->firstOrFail();
 
             return response()->json([
-                'success'         => true,
-                'id'              => $artwork->id,
-                'product_name'    => $artwork->product_name,
-                'product_description' => $artwork->product_description,
-                'product_price'   => $artwork->product_price,
-                'shipping_fee'    => $artwork->shipping_fee ?? 0,
-                'image_url'       => $artwork->image_url,
-                'image_path'      => $artwork->image_path,
-                'artwork_type'    => $artwork->artwork_type,
-                'material'        => $artwork->material,
-                'height'          => $artwork->height,
-                'width'           => $artwork->width,
-                'depth'           => $artwork->depth,
-                'unit'            => $artwork->unit,
-                'status'          => $artwork->status,
-                'is_cross_posted' => $artwork->is_cross_posted,
+                'success'              => true,
+                'id'                   => $artwork->id,
+                'product_name'         => $artwork->product_name,
+                'product_description'  => $artwork->product_description,
+                'product_price'        => $artwork->product_price,
+                'shipping_fee'         => $artwork->shipping_fee ?? 0,
+                'image_url'            => $artwork->image_url,
+                'image_path'           => $artwork->image_path,
+                'artwork_type'         => $artwork->artwork_type,
+                'material'             => $artwork->material,
+                'height'               => $artwork->height,
+                'width'                => $artwork->width,
+                'depth'                => $artwork->depth,
+                'unit'                 => $artwork->unit,
+                'status'               => $artwork->status,
+                'is_cross_posted'      => $artwork->is_cross_posted,
+                'bulk_sell_enabled'    => (bool) $artwork->bulk_sell_enabled,
+                'bulk_sell_min_qty'    => $artwork->bulk_sell_min_qty,
+                'bulk_sell_discount'   => $artwork->bulk_sell_discount,
             ]);
 
         } catch (\Exception $e) {
@@ -217,6 +230,9 @@ class ArtworkSellController extends Controller
                 'depth'               => 'nullable|numeric|min:0',
                 'unit'                => 'required|in:cm,inch,px',
                 'status'              => 'required|in:available,sold_out',
+                'bulk_sell_enabled'   => 'nullable|boolean',
+                'bulk_sell_min_qty'   => 'nullable|integer|min:2',
+                'bulk_sell_discount'  => 'nullable|numeric|min:1|max:99',
             ]);
 
             $artwork = ArtworkSell::where('id', $id)
@@ -225,11 +241,12 @@ class ArtworkSellController extends Controller
 
             DB::beginTransaction();
 
-            // Update artwork sell fields
+            $bulkEnabled = $request->boolean('bulk_sell_enabled');
+
             $artwork->product_name        = $validated['product_name'];
             $artwork->product_description = $validated['product_description'];
             $artwork->product_price       = $validated['product_price'];
-            $artwork->shipping_fee        = $request->input('shipping_fee', 0);
+            $artwork->shipping_fee        = $request->input('shipping_fee') ?? 0;
             $artwork->artwork_type        = $validated['artwork_type'];
             $artwork->material            = $validated['material'];
             $artwork->height              = $validated['height'];
@@ -237,6 +254,9 @@ class ArtworkSellController extends Controller
             $artwork->depth               = $request->input('depth');
             $artwork->unit                = $validated['unit'];
             $artwork->status              = $validated['status'];
+            $artwork->bulk_sell_enabled   = $bulkEnabled;
+            $artwork->bulk_sell_min_qty   = $bulkEnabled ? $request->input('bulk_sell_min_qty') : null;
+            $artwork->bulk_sell_discount  = $bulkEnabled ? $request->input('bulk_sell_discount') : null;
 
             // Handle image update
             $imageUpdated = false;
@@ -253,7 +273,7 @@ class ArtworkSellController extends Controller
 
                 if ($newPath) {
                     $artwork->image_path = $newPath;
-                    $imageUpdated = true;
+                    $imageUpdated        = true;
                     Log::info('New image saved: ' . $newPath);
                 }
             }
@@ -290,6 +310,9 @@ class ArtworkSellController extends Controller
                         'artwork_type'        => $artwork->artwork_type,
                         'status'              => $artwork->status,
                         'status_label'        => $artwork->status_label,
+                        'bulk_sell_enabled'   => $artwork->bulk_sell_enabled,
+                        'bulk_sell_min_qty'   => $artwork->bulk_sell_min_qty,
+                        'bulk_sell_discount'  => $artwork->bulk_sell_discount,
                     ]
                 ]);
             }
@@ -332,7 +355,7 @@ class ArtworkSellController extends Controller
             $artworkSell = ArtworkSell::where('id', $id)
                 ->where('artist_id', $user->id)
                 ->first();
-                
+
             if (!$artworkSell) {
                 if ($request->expectsJson()) {
                     return response()->json(['success' => false, 'message' => 'Not found'], 404);
@@ -385,7 +408,7 @@ class ArtworkSellController extends Controller
             $artworkSell = ArtworkSell::where('id', $id)
                 ->where('artist_id', $user->id)
                 ->first();
-                
+
             if (!$artworkSell || !$artworkSell->is_cross_posted) {
                 return response()->json(['success' => false, 'message' => 'Not cross-posted'], 404);
             }
@@ -393,8 +416,8 @@ class ArtworkSellController extends Controller
             DB::beginTransaction();
 
             if ($artworkSell->crossPostedFrom) {
-                $demo                    = $artworkSell->crossPostedFrom;
-                $demo->is_cross_posted   = false;
+                $demo                     = $artworkSell->crossPostedFrom;
+                $demo->is_cross_posted    = false;
                 $demo->cross_posted_to_id = null;
                 $demo->save();
             }

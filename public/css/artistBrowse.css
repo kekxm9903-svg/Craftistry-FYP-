@@ -95,7 +95,7 @@ body {
 
 
 /* ══════════════════════════════
-   CATEGORY PILLS  (MiHuaShi tab row)
+   CATEGORY PILLS
 ══════════════════════════════ */
 
 .category-bar {
@@ -131,9 +131,7 @@ body {
     white-space: nowrap;
 }
 
-.cat-pill:hover {
-    color: var(--primary);
-}
+.cat-pill:hover { color: var(--primary); }
 
 .cat-pill.active {
     color: var(--primary);
@@ -300,9 +298,73 @@ body {
 }
 
 
+/* ── Artwork Type Filter Toggles ── */
+
+.type-filter-group {
+    display: inline-flex;
+    align-items: center;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.type-toggle {
+    padding: 7px var(--sp-sm);
+    background: var(--white);
+    border: none;
+    border-right: 1px solid var(--border);
+    font-family: 'Inter', sans-serif;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all .15s;
+    white-space: nowrap;
+}
+
+.type-toggle:last-child {
+    border-right: none;
+}
+
+.type-toggle:hover {
+    background: var(--divider);
+    color: var(--ink);
+}
+
+.type-toggle.active {
+    background: var(--lavender);
+    color: var(--primary-2);
+    font-weight: 700;
+}
+
+.type-toggle--digital.active {
+    background: #eef2ff;
+    color: var(--primary);
+}
+
+.type-toggle--physical.active {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+/* Active type badge in card header */
+.active-type-badge {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    padding: 2px var(--sp-sm);
+    border-radius: 20px;
+    background: var(--lavender);
+    color: var(--primary-2);
+    margin-left: 4px;
+}
+
+
 /* ══════════════════════════════
    ARTIST GRID
-   — tall portrait cards like MiHuaShi
 ══════════════════════════════ */
 
 .artists-grid {
@@ -334,7 +396,7 @@ body {
 }
 
 
-/* ── Cover image — tall portrait like MiHuaShi ── */
+/* ── Cover image ── */
 
 .card-cover {
     width: 100%;
@@ -357,7 +419,6 @@ body {
     transform: scale(1.04);
 }
 
-/* Empty cover placeholder */
 .cover-empty {
     width: 100%;
     height: 100%;
@@ -369,7 +430,6 @@ body {
     background: linear-gradient(135deg, #f5f3ff, #ede9fe);
 }
 
-/* Badge overlaid on bottom-right of image */
 .cover-badge {
     position: absolute;
     bottom: var(--sp-sm);
@@ -572,6 +632,15 @@ body {
     .sp-card-body {
         padding: var(--sp-sm);
     }
+
+    .type-filter-group {
+        width: 100%;
+    }
+
+    .type-toggle {
+        flex: 1;
+        justify-content: center;
+    }
 }
 
 @media (max-width: 400px) {
@@ -643,20 +712,21 @@ body {
     white-space: nowrap;
 }
 
+
 /* ── Artwork type colour variants ── */
 
 .type-badge.type-digital {
-    background: rgba(102, 126, 234, .88);  /* purple — digital */
+    background: rgba(102, 126, 234, .88);
 }
 
 .type-badge.type-physical {
-    background: rgba(234, 126, 102, .88);  /* warm orange — physical */
+    background: rgba(234, 126, 102, .88);
 }
 
 .type-badge.type-traditional {
-    background: rgba(46, 125, 50, .88);    /* green — traditional */
+    background: rgba(46, 125, 50, .88);
 }
 
 .type-badge.type-mixed {
-    background: rgba(118, 75, 162, .88);   /* deep purple — mixed media */
+    background: rgba(118, 75, 162, .88);
 }
