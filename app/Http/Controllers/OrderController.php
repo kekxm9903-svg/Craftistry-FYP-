@@ -31,7 +31,7 @@ class OrderController extends Controller
 
         // ── Main query ───────────────────────────────────────────────────────
         $query = Order::where('user_id', $userId)
-            ->with(['artist.user', 'items.artwork'])
+            ->with(['artist.user', 'items.artwork.artist.user'])  // deeper load for image + artist name
             ->latest();
 
         // Category tab filter
@@ -58,7 +58,7 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         abort_if($order->user_id !== Auth::id(), 403);
-        $order->load(['artist.user', 'items.artwork']);
+        $order->load(['artist.user', 'items.artwork.artist.user']);  // deeper load
         return view('myOrderDetail', compact('order'));
     }
 
@@ -74,17 +74,14 @@ class OrderController extends Controller
 
     public function downloadReceipt(Order $order)
     {
-        // Only the buyer who placed this order can download it
         abort_if($order->user_id !== Auth::id(), 403);
 
-        // Receipt only available for completed orders
         if ($order->status !== 'completed') {
             return back()->with('error', 'Receipt is only available for completed orders.');
         }
 
         $order->load(['artist.user', 'items.artwork.artist.user']);
 
-        // Resolve artist name (same logic as index/show)
         $firstArtwork = $order->items->first()?->artwork;
         $artistUser   = $order->artist?->user ?? $firstArtwork?->artist?->user;
         $artistName   = $artistUser?->fullname

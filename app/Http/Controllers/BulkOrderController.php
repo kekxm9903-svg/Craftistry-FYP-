@@ -14,9 +14,6 @@ use Stripe\Checkout\Session as StripeSession;
 
 class BulkOrderController extends Controller
 {
-    /**
-     * Show the bulk order form (buyer)
-     */
     public function create($artworkId)
     {
         $artwork = ArtworkSell::with(['artist.user'])
@@ -28,9 +25,6 @@ class BulkOrderController extends Controller
         return view('bulkOrderCreate', compact('artwork'));
     }
 
-    /**
-     * Store the bulk order request (buyer)
-     */
     public function store(Request $request, $artworkId)
     {
         $artwork = ArtworkSell::where('id', $artworkId)
@@ -70,9 +64,6 @@ class BulkOrderController extends Controller
             ->with('success', 'Bulk order request submitted! The seller will review it shortly.');
     }
 
-    /**
-     * Show a single bulk order (buyer)
-     */
     public function show($id)
     {
         $bulkOrder = BulkOrder::with(['artworkSell.artist.user', 'buyer'])
@@ -83,9 +74,6 @@ class BulkOrderController extends Controller
         return view('bulkOrderShow', compact('bulkOrder'));
     }
 
-    /**
-     * List all bulk orders for the buyer
-     */
     public function index()
     {
         $bulkOrders = BulkOrder::with(['artworkSell'])
@@ -96,9 +84,6 @@ class BulkOrderController extends Controller
         return view('bulkOrderIndex', compact('bulkOrders'));
     }
 
-    /**
-     * Initiate Stripe payment for an accepted bulk order (buyer)
-     */
     public function pay($id)
     {
         $bulkOrder = BulkOrder::with('artworkSell')
@@ -107,7 +92,6 @@ class BulkOrderController extends Controller
             ->where('status', 'accepted')
             ->firstOrFail();
 
-        // Already paid — redirect straight to the order
         if ($bulkOrder->order_id) {
             return redirect()->route('orders.show', $bulkOrder->order_id)
                 ->with('success', 'This bulk order has already been paid.');
@@ -141,9 +125,6 @@ class BulkOrderController extends Controller
         return redirect($session->url);
     }
 
-    /**
-     * Stripe payment success callback — create real Order + OrderItem (buyer)
-     */
     public function paySuccess($id)
     {
         $bulkOrder = BulkOrder::with('artworkSell')
@@ -160,10 +141,8 @@ class BulkOrderController extends Controller
         $artwork = $bulkOrder->artworkSell;
         $total   = $bulkOrder->discounted_price * $bulkOrder->quantity;
 
-        // Resolve the seller's artist record
         $artist = Artist::find($artwork->artist_id);
 
-        // Create a real Order so it appears in both buyer and seller order lists
         $order = Order::create([
             'user_id'        => $bulkOrder->buyer_id,
             'artist_id'      => $artist?->id,
@@ -173,7 +152,6 @@ class BulkOrderController extends Controller
             'notes'          => "Bulk Order: {$bulkOrder->quantity}× {$artwork->product_name}",
         ]);
 
-        // Create an OrderItem so order detail page renders the artwork correctly
         OrderItem::create([
             'order_id'        => $order->id,
             'artwork_sell_id' => $artwork->id,
@@ -182,9 +160,9 @@ class BulkOrderController extends Controller
             'quantity'        => $bulkOrder->quantity,
         ]);
 
-        // Link the order back to the bulk request and mark it paid
+        // ✅ FIXED: was 'paid' — not a valid ENUM value, changed to 'completed'
         $bulkOrder->update([
-            'status'   => 'paid',
+            'status'   => 'completed',
             'order_id' => $order->id,
         ]);
 
@@ -192,9 +170,6 @@ class BulkOrderController extends Controller
             ->with('success', 'Payment successful! Your bulk order is confirmed and the seller is preparing it.');
     }
 
-    /**
-     * Accept a bulk order (seller)
-     */
     public function accept($id)
     {
         $bulkOrder = BulkOrder::with('artworkSell')
@@ -210,9 +185,6 @@ class BulkOrderController extends Controller
         return redirect()->back()->with('success', 'Bulk order accepted. The buyer will be notified to complete payment.');
     }
 
-    /**
-     * Refuse a bulk order (seller)
-     */
     public function refuse(Request $request, $id)
     {
         $bulkOrder = BulkOrder::with('artworkSell')
@@ -235,9 +207,6 @@ class BulkOrderController extends Controller
         return redirect()->back()->with('success', 'Bulk order refused.');
     }
 
-    /**
-     * List all bulk orders for the seller (standalone page)
-     */
     public function sellerIndex()
     {
         $bulkOrders = BulkOrder::with(['artworkSell', 'buyer'])
@@ -250,9 +219,6 @@ class BulkOrderController extends Controller
         return view('bulkOrderSellerIndex', compact('bulkOrders'));
     }
 
-    /**
-     * Show a single bulk order detail page (seller)
-     */
     public function sellerShow($id)
     {
         $bulk = BulkOrder::with(['artworkSell', 'buyer'])

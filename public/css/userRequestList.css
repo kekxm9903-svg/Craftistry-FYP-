@@ -93,6 +93,74 @@ body {
 }
 .page-subtitle { font-size: var(--fs-sm); color: var(--muted); }
 
+/* ── Pending pill (header right) ── */
+.pending-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    padding: 8px 16px;
+    background: rgba(249,115,22,.1);
+    color: #ea580c;
+    border-radius: 30px;
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    white-space: nowrap;
+}
+.pending-pill i { font-size: 13px; }
+
+/* ── Tab bar — underline style (matches screenshot) ── */
+.tab-bar {
+    display: flex;
+    gap: 0;
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 1px 3px rgba(0,0,0,.07);
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.tab-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-xs);
+    padding: var(--sp-md) var(--sp-lg);
+    font-size: var(--fs-base);
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    transition: all .15s;
+    background: transparent;
+}
+.tab-item:hover {
+    color: var(--primary);
+    background: #faf9ff;
+    text-decoration: none;
+}
+.tab-item.active {
+    color: var(--primary);
+    font-weight: 700;
+    border-bottom-color: var(--primary);
+    background: #faf9ff;
+}
+
+.tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: #f97316;
+    color: #fff;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+}
+
 /* ── White card ── */
 .sp-card {
     background: var(--white);
@@ -163,7 +231,7 @@ body {
 
 .request-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--sp-md);
     padding: var(--sp-md) 0;
     border-bottom: 1px solid var(--divider);
@@ -182,9 +250,10 @@ body {
     text-decoration: none;
 }
 
+/* ── Thumbnail ── */
 .request-thumb {
-    width: 60px;
-    height: 60px;
+    width: 62px;
+    height: 62px;
     border-radius: var(--radius-md);
     overflow: hidden;
     flex-shrink: 0;
@@ -195,19 +264,21 @@ body {
     color: var(--primary);
     font-size: 1.3rem;
     border: 1px solid var(--border);
+    margin-top: 2px;
 }
 .request-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+/* ── Body ── */
 .request-body { flex: 1; min-width: 0; }
 
 .request-title {
-    font-size: var(--fs-base);
+    font-size: var(--fs-md);
     font-weight: 700;
     color: var(--ink);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-bottom: 3px;
+    margin-bottom: 4px;
 }
 
 .request-meta {
@@ -217,16 +288,42 @@ body {
     font-size: var(--fs-sm);
     color: var(--muted);
     flex-wrap: wrap;
+    margin-bottom: 5px;
 }
 .request-meta i { color: var(--primary); font-size: 10px; }
 
+/* Inline meta status highlights */
+.meta-urgent {
+    color: #d97706;
+    font-weight: 700;
+    font-size: var(--fs-sm);
+}
+.meta-payment {
+    color: var(--primary);
+    font-weight: 700;
+    font-size: var(--fs-sm);
+}
+
+/* Description snippet */
+.request-desc {
+    font-size: var(--fs-sm);
+    color: var(--muted);
+    line-height: 1.45;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 480px;
+}
+
+/* ── Right column ── */
 .request-right {
     flex-shrink: 0;
     text-align: right;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 5px;
+    gap: 6px;
+    padding-top: 2px;
 }
 
 .request-price {
@@ -239,6 +336,15 @@ body {
     white-space: nowrap;
 }
 
+.bulk-qty-note {
+    font-size: var(--fs-sm);
+    color: var(--muted);
+    white-space: nowrap;
+    font-weight: 500;
+    margin-top: -4px;
+}
+
+/* ── Action buttons ── */
 .pay-btn {
     display: inline-flex;
     align-items: center;
@@ -256,7 +362,24 @@ body {
 }
 .pay-btn:hover { opacity: .88; color: #fff; text-decoration: none; }
 
-/* Order status chips — mirrors normal order status colours */
+.view-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: opacity .15s;
+    box-shadow: 0 2px 8px rgba(102,126,234,.25);
+}
+.view-btn:hover { opacity: .88; color: #fff; text-decoration: none; }
+
+/* ── Order status chips ── */
 .order-status-chip {
     display: inline-flex;
     align-items: center;
@@ -319,5 +442,7 @@ body {
 @media (max-width: 768px) {
     .co-page { padding: var(--sp-sm) var(--sp-sm) 80px; }
     .page-header-card { flex-direction: column; align-items: flex-start; padding: var(--sp-md); gap: var(--sp-sm); }
+    .tab-item { padding: var(--sp-sm); font-size: var(--fs-sm); }
     .request-meta { gap: var(--sp-xs); }
+    .request-desc { max-width: 100%; }
 }

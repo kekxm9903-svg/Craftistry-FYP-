@@ -4,7 +4,7 @@
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/bulkOrderDetail.css') }}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 @endsection
 
 @section('content')
@@ -27,7 +27,7 @@
 <div class="co-page-narrow">
 
     @if(session('success'))
-        <div class="alert alert-success"><i class="fas fa-check-circle"></i> {{ session('success') }}</div>
+        <div class="alert alert-success"><i class="bi bi-check-circle-fill"></i> {{ session('success') }}</div>
     @endif
 
     {{-- ══ PAGE HEADER ══ --}}
@@ -39,10 +39,10 @@
             </div>
         </div>
         <span class="status-badge {{ $bulkOrder->statusColor() }}">
-            @if($bulkOrder->isPending())      <i class="fas fa-clock"></i>
-            @elseif($bulkOrder->isAccepted()) <i class="fas fa-check-circle"></i>
-            @elseif($bulkOrder->isPaid())     <i class="fas fa-check-double"></i>
-            @else                             <i class="fas fa-times-circle"></i>
+            @if($bulkOrder->isPending())      <i class="bi bi-clock"></i>
+            @elseif($bulkOrder->isAccepted()) <i class="bi bi-check-circle-fill"></i>
+            @elseif($bulkOrder->isPaid())     <i class="bi bi-check2-all"></i>
+            @else                             <i class="bi bi-x-circle-fill"></i>
             @endif
             {{ $bulkOrder->statusLabel() }}
         </span>
@@ -59,13 +59,13 @@
                     @if($bulkOrder->artworkSell->image_path)
                         <img src="{{ asset('storage/' . $bulkOrder->artworkSell->image_path) }}" alt="">
                     @else
-                        <i class="fas fa-image"></i>
+                        <i class="bi bi-image"></i>
                     @endif
                 </div>
                 <div class="artwork-info">
                     <div class="artwork-name">{{ $bulkOrder->artworkSell->product_name }}</div>
                     <div class="artwork-unit-price">
-                        <i class="fas fa-tag"></i> Unit Price: <strong>RM {{ number_format($bulkOrder->artworkSell->product_price, 2) }}</strong>
+                        <i class="bi bi-tag-fill"></i> Unit Price: <strong>RM {{ number_format($bulkOrder->artworkSell->product_price, 2) }}</strong>
                     </div>
                 </div>
             </div>
@@ -80,15 +80,15 @@
         <div class="sp-card-body" style="display:flex;flex-direction:column;gap:var(--sp-md);">
             <div>
                 <div class="detail-row">
-                    <span class="detail-key"><i class="fas fa-boxes"></i> Quantity</span>
+                    <span class="detail-key"><i class="bi bi-boxes"></i> Quantity</span>
                     <span class="detail-val">{{ number_format($bulkOrder->quantity) }} pieces</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-key"><i class="fas fa-calendar-alt"></i> Ship By</span>
+                    <span class="detail-key"><i class="bi bi-calendar3"></i> Ship By</span>
                     <span class="detail-val">{{ $bulkOrder->last_ship_date->format('d M Y') }}</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-key"><i class="fas fa-clock"></i> Submitted</span>
+                    <span class="detail-key"><i class="bi bi-clock"></i> Submitted</span>
                     <span class="detail-val">{{ $bulkOrder->created_at->format('d M Y, g:i A') }}</span>
                 </div>
             </div>
@@ -101,7 +101,7 @@
                 </div>
                 @if($bulkOrder->is_discounted)
                 <div class="pricing-row discount">
-                    <span><i class="fas fa-percentage"></i> Bulk Discount</span>
+                    <span><i class="bi bi-percent"></i> Bulk Discount</span>
                     <span class="discount-tag">- RM {{ number_format(($bulkOrder->unit_price - $bulkOrder->discounted_price) * $bulkOrder->quantity, 2) }}</span>
                 </div>
                 <div class="pricing-row">
@@ -131,7 +131,7 @@
     {{-- ══ PENDING — waiting for seller ══ --}}
     @if($bulkOrder->isPending())
     <div class="alert" style="background:rgba(245,158,11,.1);color:#92400e;border:1px solid rgba(245,158,11,.25);">
-        <i class="fas fa-hourglass-half"></i>
+        <i class="bi bi-hourglass-split"></i>
         Waiting for the seller to review your request.
     </div>
     @endif
@@ -144,7 +144,7 @@
         </div>
         <div class="sp-card-body" style="display:flex;flex-direction:column;gap:var(--sp-md);">
             <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
+                <i class="bi bi-check-circle-fill"></i>
                 The seller accepted your request! Please complete payment to confirm your order.
             </div>
             <div class="pricing-box">
@@ -153,8 +153,10 @@
                     <span class="total-price">RM {{ number_format($bulkOrder->total_price, 2) }}</span>
                 </div>
             </div>
-            <a href="{{ route('bulk-orders.pay', $bulkOrder->id) }}" class="btn btn-primary">
-                <i class="fas fa-credit-card"></i> Pay Now
+            <a href="{{ route('bulk-orders.pay', $bulkOrder->id) }}"
+               style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:10px;font-size:15px;font-weight:700;text-decoration:none;box-shadow:0 4px 15px rgba(102,126,234,.35);transition:opacity .15s;"
+               onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+                <i class="bi bi-credit-card-fill"></i> Pay Now
             </a>
         </div>
     </div>
@@ -168,15 +170,21 @@
         </div>
         <div class="sp-card-body" style="display:flex;flex-direction:column;gap:var(--sp-md);">
             <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
+                <i class="bi bi-check-circle-fill"></i>
                 Payment complete! The seller is preparing your order.
             </div>
             <div class="detail-row">
-                <span class="detail-key"><i class="fas fa-box"></i> Order Status</span>
+                <span class="detail-key"><i class="bi bi-box-seam"></i> Order Status</span>
                 <span class="detail-val">{{ ucfirst(str_replace('_', ' ', $bulkOrder->order->status)) }}</span>
             </div>
-            <a href="{{ route('orders.show', $bulkOrder->order_id) }}" class="btn btn-primary">
-                <i class="fas fa-clipboard-list"></i> View Order
+            <div class="detail-row">
+                <span class="detail-key"><i class="bi bi-calendar3"></i> Order Date</span>
+                <span class="detail-val">{{ $bulkOrder->order->created_at->format('d M Y, g:i A') }}</span>
+            </div>
+            <a href="{{ route('orders.show', $bulkOrder->order_id) }}"
+               style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:10px;font-size:15px;font-weight:700;text-decoration:none;box-shadow:0 4px 15px rgba(102,126,234,.35);transition:opacity .15s;"
+               onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+                <i class="bi bi-eye-fill"></i> View Full Order
             </a>
         </div>
     </div>
@@ -185,7 +193,7 @@
     {{-- ══ REFUSED ══ --}}
     @if($bulkOrder->isRefused())
     <div class="alert alert-danger">
-        <i class="fas fa-times-circle"></i>
+        <i class="bi bi-x-circle-fill"></i>
         The seller could not fulfil this bulk order.
         @if($bulkOrder->seller_reason)
             <span style="display:block;margin-top:4px;font-weight:400;">Reason: {{ $bulkOrder->seller_reason }}</span>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Artist;
+use App\Models\BulkOrder;
 use App\Models\CustomOrderRequest;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -64,16 +65,21 @@ class CustomOrderController extends Controller
     }
 
     /**
-     * List all custom order requests for the buyer
+     * List all custom + bulk order requests for the buyer
      */
     public function index()
     {
-        $requests = CustomOrderRequest::with(['order'])
+        $requests = CustomOrderRequest::with(['seller', 'order'])
             ->where('buyer_id', Auth::id())
             ->latest()
-            ->paginate(12);
+            ->paginate(10, ['*'], 'custom_page');
 
-        return view('userRequestList', compact('requests'));
+        $bulkOrders = BulkOrder::with(['artworkSell', 'order'])
+            ->where('buyer_id', Auth::id())
+            ->latest()
+            ->paginate(10, ['*'], 'bulk_page');
+
+        return view('userRequestList', compact('requests', 'bulkOrders'));
     }
 
     /**

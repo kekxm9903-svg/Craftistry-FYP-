@@ -28,6 +28,9 @@ body {
     line-height: 1.5;
 }
 
+/* ── Bootstrap Icons sizing fix ── */
+.bi { font-size: inherit; line-height: 1; vertical-align: -0.125em; }
+
 /* ── Breadcrumb ── */
 .bc-bar { background: var(--white); border-bottom: 1px solid var(--border); padding: var(--sp-xs) 0; font-size: var(--fs-sm); }
 .bc-inner { max-width: 1100px; margin: 0 auto; padding: 0 var(--sp-lg); display: flex; align-items: center; gap: var(--sp-xs); }
@@ -123,7 +126,7 @@ body {
 }
 .artwork-desc { font-size: var(--fs-sm); color: var(--muted); line-height: 1.5; margin-bottom: 6px; }
 .artwork-unit-price { font-size: var(--fs-sm); color: var(--muted); }
-.artwork-unit-price i { color: var(--primary); margin-right: 2px; }
+.artwork-unit-price .bi { color: var(--primary); margin-right: 2px; }
 .artwork-unit-price strong { color: var(--ink); }
 
 /* ── Detail rows ── */
@@ -136,7 +139,7 @@ body {
 }
 .detail-row:last-child { border-bottom: none; }
 .detail-key { font-size: var(--fs-sm); color: var(--muted); display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.detail-key i { color: var(--primary); width: 12px; }
+.detail-key .bi { color: var(--primary); width: 12px; }
 .detail-val { font-size: var(--fs-base); font-weight: 600; color: var(--ink); text-align: right; }
 
 /* ── Pricing box ── */

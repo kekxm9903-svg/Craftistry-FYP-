@@ -194,21 +194,31 @@
                 <div class="oc-body">
                     <div class="oc-item-row">
 
-                        {{-- Thumbnail --}}
-                        <div class="oc-thumb">
-                            @php $thumb = $order->items->first()?->artwork; @endphp
-                            @if($thumb?->image_path)
-                                <img src="{{ asset('storage/' . $thumb->image_path) }}"
-                                     alt="{{ $thumb->product_name ?? 'Artwork' }}">
-                            @else
-                                <i class="fas fa-palette" style="font-size:22px;color:#b0a8e0;"></i>
-                            @endif
-                        </div>
+                    {{-- Thumbnail --}}
+                    <div class="oc-thumb">
+                        @php
+                            $firstItem = $order->items->first();
+                            $thumb     = $firstItem?->artwork;
+                            $isCustom  = $firstItem?->artwork_sell_id === null;
+                            $imgSrc    = $thumb?->image_path
+                                        ? asset('storage/' . $thumb->image_path)
+                                        : ($isCustom && $firstItem?->image_path
+                                            ? asset('storage/' . $firstItem->image_path)
+                                            : null);
+                        @endphp
+                        @if($imgSrc)
+                            <img src="{{ $imgSrc }}" alt="{{ $firstItem->name ?? 'Artwork' }}">
+                        @elseif($isCustom)
+                            <i class="fas fa-paint-brush" style="font-size:22px;color:#b0a8e0;"></i>
+                        @else
+                            <i class="fas fa-palette" style="font-size:22px;color:#b0a8e0;"></i>
+                        @endif
+                    </div>
 
                         {{-- Info --}}
                         <div class="oc-item-info">
                             <p class="oc-item-title">
-                                {{ $order->title ?? $order->items->first()?->name ?? 'Artwork Order' }}
+                                {{ $order->items->first()?->name ?? $order->notes ?? 'Artwork Order' }}
                             </p>
                             <p class="oc-item-artist">
                                 <i class="fas fa-palette" style="font-size:10px;"></i>
