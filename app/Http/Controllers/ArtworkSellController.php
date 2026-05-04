@@ -12,9 +12,11 @@ use Illuminate\Support\Facades\DB;
 
 class ArtworkSellController extends Controller
 {
-    /**
-     * Store a new artwork for sale
-     */
+    public function sellPage()
+    {
+        return view('sellUploadPage');
+    }
+
     public function store(Request $request)
     {
         try {
@@ -32,7 +34,8 @@ class ArtworkSellController extends Controller
                 'product_description' => 'nullable|string|max:2000',
                 'product_price'       => 'required|numeric|min:0.01|max:999999.99',
                 'shipping_fee'        => 'nullable|numeric|min:0|max:9999.99',
-                'image'               => 'required|image|mimes:jpeg,jpg,png,gif,webp|max:5120',
+                'images'              => 'required|array|min:1',
+                'images.*'            => 'image|mimes:jpeg,jpg,png,gif,webp|max:5120',
                 'artwork_type'        => 'required|in:physical,digital',
                 'material'            => 'required|string|max:255',
                 'height'              => 'required|numeric|min:0',
@@ -44,21 +47,35 @@ class ArtworkSellController extends Controller
                 'bulk_sell_enabled'   => 'nullable|boolean',
                 'bulk_sell_min_qty'   => 'nullable|integer|min:2',
                 'bulk_sell_discount'  => 'nullable|numeric|min:1|max:99',
+            ], [
+                'images.required' => 'At least one image is required',
+                'images.min'      => 'At least one image is required',
+                'images.*.image'  => 'Each file must be an image',
+                'images.*.mimes'  => 'Images must be jpeg, jpg, png, gif, or webp',
+                'images.*.max'    => 'Each image must be under 5MB',
             ]);
 
-            // Upload Image
+            // Upload first image as main cover
             $path = null;
-            if ($request->hasFile('image')) {
-                $image    = $request->file('image');
-                $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-                $path     = $image->storeAs('artwork-sells', $filename, 'public');
+            if ($request->hasFile('images')) {
+                $images   = $request->file('images');
+                $main     = $images[0];
+                $filename = time() . '_' . uniqid() . '.' . $main->getClientOriginalExtension();
+                $path     = $main->storeAs('artwork-sells', $filename, 'public');
+
+                // Store additional images
+                $extraPaths = [];
+                foreach (array_slice($images, 1) as $extra) {
+                    $extraFilename = time() . '_' . uniqid() . '.' . $extra->getClientOriginalExtension();
+                    $extraPath     = $extra->storeAs('artwork-sells', $extraFilename, 'public');
+                    if ($extraPath) $extraPaths[] = $extraPath;
+                }
             }
 
             DB::beginTransaction();
 
             $bulkEnabled = $request->boolean('bulk_sell_enabled');
 
-            // 1. Create Demo Record (if checkbox checked)
             $newDemo = null;
             if ($request->has('also_demo')) {
                 $maxOrder = DemoArtwork::where('artist_id', $user->id)->max('order');
@@ -81,7 +98,6 @@ class ArtworkSellController extends Controller
                 ]);
             }
 
-            // 2. Create Sell Record
             $artworkSell = ArtworkSell::create([
                 'artist_id'            => $user->id,
                 'product_name'         => $validated['product_name'],
@@ -96,6 +112,7 @@ class ArtworkSellController extends Controller
                 'width'                => $validated['width'],
                 'depth'                => $request->input('depth'),
                 'unit'                 => $validated['unit'],
+                'extra_images'         => !empty($extraPaths) ? $extraPaths : null,
                 'is_cross_posted'      => $newDemo ? true : false,
                 'cross_posted_from_id' => $newDemo ? $newDemo->id : null,
                 'bulk_sell_enabled'    => $bulkEnabled,
@@ -103,7 +120,6 @@ class ArtworkSellController extends Controller
                 'bulk_sell_discount'   => $bulkEnabled ? $request->input('bulk_sell_discount') : null,
             ]);
 
-            // 3. Link Demo to Sell Record
             if ($newDemo) {
                 $newDemo->is_cross_posted    = true;
                 $newDemo->cross_posted_to_id = $artworkSell->id;
@@ -132,7 +148,7 @@ class ArtworkSellController extends Controller
                 ]);
             }
 
-            return redirect()->back()->with('success', 'Artwork listed successfully!');
+            return redirect()->route('artist.profile')->with('success', 'Artwork listed successfully!');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
@@ -157,9 +173,6 @@ class ArtworkSellController extends Controller
         }
     }
 
-    /**
-     * Get artwork data for editing (AJAX)
-     */
     public function edit($id)
     {
         try {
@@ -167,42 +180,34 @@ class ArtworkSellController extends Controller
             if (!$user->artist) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
-
-            $artwork = ArtworkSell::where('id', $id)
-                ->where('artist_id', $user->id)
-                ->firstOrFail();
-
+            $artwork = ArtworkSell::where('id', $id)->where('artist_id', $user->id)->firstOrFail();
             return response()->json([
-                'success'              => true,
-                'id'                   => $artwork->id,
-                'product_name'         => $artwork->product_name,
-                'product_description'  => $artwork->product_description,
-                'product_price'        => $artwork->product_price,
-                'shipping_fee'         => $artwork->shipping_fee ?? 0,
-                'image_url'            => $artwork->image_url,
-                'image_path'           => $artwork->image_path,
-                'artwork_type'         => $artwork->artwork_type,
-                'material'             => $artwork->material,
-                'height'               => $artwork->height,
-                'width'                => $artwork->width,
-                'depth'                => $artwork->depth,
-                'unit'                 => $artwork->unit,
-                'status'               => $artwork->status,
-                'is_cross_posted'      => $artwork->is_cross_posted,
-                'bulk_sell_enabled'    => (bool) $artwork->bulk_sell_enabled,
-                'bulk_sell_min_qty'    => $artwork->bulk_sell_min_qty,
-                'bulk_sell_discount'   => $artwork->bulk_sell_discount,
+                'success'             => true,
+                'id'                  => $artwork->id,
+                'product_name'        => $artwork->product_name,
+                'product_description' => $artwork->product_description,
+                'product_price'       => $artwork->product_price,
+                'shipping_fee'        => $artwork->shipping_fee ?? 0,
+                'image_url'           => $artwork->image_url,
+                'image_path'          => $artwork->image_path,
+                'artwork_type'        => $artwork->artwork_type,
+                'material'            => $artwork->material,
+                'height'              => $artwork->height,
+                'width'               => $artwork->width,
+                'depth'               => $artwork->depth,
+                'unit'                => $artwork->unit,
+                'status'              => $artwork->status,
+                'is_cross_posted'     => $artwork->is_cross_posted,
+                'bulk_sell_enabled'   => (bool) $artwork->bulk_sell_enabled,
+                'bulk_sell_min_qty'   => $artwork->bulk_sell_min_qty,
+                'bulk_sell_discount'  => $artwork->bulk_sell_discount,
             ]);
-
         } catch (\Exception $e) {
             Log::error('Edit fetch error: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Failed to load artwork'], 500);
         }
     }
 
-    /**
-     * Update existing artwork
-     */
     public function update(Request $request, $id)
     {
         try {
@@ -213,9 +218,6 @@ class ArtworkSellController extends Controller
                 }
                 return redirect()->back()->with('error', 'Unauthorized');
             }
-
-            Log::info('Update Request Data: ' . json_encode($request->except(['image', '_token'])));
-            Log::info('Has Image File: ' . ($request->hasFile('image') ? 'true' : 'false'));
 
             $validated = $request->validate([
                 'product_name'        => 'required|string|max:255',
@@ -235,9 +237,7 @@ class ArtworkSellController extends Controller
                 'bulk_sell_discount'  => 'nullable|numeric|min:1|max:99',
             ]);
 
-            $artwork = ArtworkSell::where('id', $id)
-                ->where('artist_id', $user->id)
-                ->firstOrFail();
+            $artwork = ArtworkSell::where('id', $id)->where('artist_id', $user->id)->firstOrFail();
 
             DB::beginTransaction();
 
@@ -258,43 +258,30 @@ class ArtworkSellController extends Controller
             $artwork->bulk_sell_min_qty   = $bulkEnabled ? $request->input('bulk_sell_min_qty') : null;
             $artwork->bulk_sell_discount  = $bulkEnabled ? $request->input('bulk_sell_discount') : null;
 
-            // Handle image update
             $imageUpdated = false;
             if ($request->hasFile('image')) {
-                Log::info('Processing new image upload');
-
                 if ($artwork->image_path && Storage::disk('public')->exists($artwork->image_path)) {
                     Storage::disk('public')->delete($artwork->image_path);
                 }
-
                 $image    = $request->file('image');
                 $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
                 $newPath  = $image->storeAs('artwork-sells', $filename, 'public');
-
                 if ($newPath) {
                     $artwork->image_path = $newPath;
                     $imageUpdated        = true;
-                    Log::info('New image saved: ' . $newPath);
                 }
             }
 
-            // Sync with Demo (only Title, Description, Image)
             if ($artwork->is_cross_posted && $artwork->crossPostedFrom) {
                 $demo              = $artwork->crossPostedFrom;
                 $demo->title       = $validated['product_name'];
                 $demo->description = $validated['product_description'];
-                if ($imageUpdated) {
-                    $demo->image_path = $artwork->image_path;
-                }
+                if ($imageUpdated) $demo->image_path = $artwork->image_path;
                 $demo->save();
-                Log::info('Cross-posted demo updated');
             }
 
             $artwork->save();
-
             DB::commit();
-
-            Log::info('Artwork updated successfully - ID: ' . $artwork->id);
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -317,11 +304,10 @@ class ArtworkSellController extends Controller
                 ]);
             }
 
-            return redirect()->back()->with('success', 'Artwork updated successfully!');
+            return redirect()->route('artist.profile')->with('success', 'Artwork updated successfully!');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
-            Log::error('Validation error: ' . json_encode($e->errors()));
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $e->errors()], 422);
             }
@@ -330,7 +316,6 @@ class ArtworkSellController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Update error: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'An error occurred: ' . $e->getMessage()], 500);
             }
@@ -338,9 +323,6 @@ class ArtworkSellController extends Controller
         }
     }
 
-    /**
-     * Delete artwork
-     */
     public function destroy(Request $request, $id)
     {
         try {
@@ -352,10 +334,7 @@ class ArtworkSellController extends Controller
                 return redirect()->back()->with('error', 'Unauthorized');
             }
 
-            $artworkSell = ArtworkSell::where('id', $id)
-                ->where('artist_id', $user->id)
-                ->first();
-
+            $artworkSell = ArtworkSell::where('id', $id)->where('artist_id', $user->id)->first();
             if (!$artworkSell) {
                 if ($request->expectsJson()) {
                     return response()->json(['success' => false, 'message' => 'Not found'], 404);
@@ -366,23 +345,19 @@ class ArtworkSellController extends Controller
             DB::beginTransaction();
 
             $wasCrossListed = $artworkSell->isCrossListed();
-
             if ($wasCrossListed && $artworkSell->crossPostedFrom) {
                 $artworkSell->crossPostedFrom->delete();
             }
-
             if (Storage::disk('public')->exists($artworkSell->image_path)) {
                 Storage::disk('public')->delete($artworkSell->image_path);
             }
-
             $artworkSell->delete();
-
             DB::commit();
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Artwork deleted successfully!']);
             }
-            return redirect()->back()->with('success', 'Artwork deleted successfully!');
+            return redirect()->route('artist.profile')->with('success', 'Artwork deleted successfully!');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -394,9 +369,6 @@ class ArtworkSellController extends Controller
         }
     }
 
-    /**
-     * Unlink cross-posted demo
-     */
     public function unlinkDemo($id)
     {
         try {
@@ -404,32 +376,22 @@ class ArtworkSellController extends Controller
             if (!$user->artist) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
-
-            $artworkSell = ArtworkSell::where('id', $id)
-                ->where('artist_id', $user->id)
-                ->first();
-
+            $artworkSell = ArtworkSell::where('id', $id)->where('artist_id', $user->id)->first();
             if (!$artworkSell || !$artworkSell->is_cross_posted) {
                 return response()->json(['success' => false, 'message' => 'Not cross-posted'], 404);
             }
-
             DB::beginTransaction();
-
             if ($artworkSell->crossPostedFrom) {
                 $demo                     = $artworkSell->crossPostedFrom;
                 $demo->is_cross_posted    = false;
                 $demo->cross_posted_to_id = null;
                 $demo->save();
             }
-
             $artworkSell->is_cross_posted      = false;
             $artworkSell->cross_posted_from_id = null;
             $artworkSell->save();
-
             DB::commit();
-
             return response()->json(['success' => true, 'message' => 'Unlinked successfully! Both items now separate.']);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Failed to unlink'], 500);

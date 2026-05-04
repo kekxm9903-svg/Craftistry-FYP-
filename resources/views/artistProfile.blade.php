@@ -131,16 +131,17 @@
         </div>
     </div>
 
+    {{-- DEMO SECTION --}}
     <div class="profile-section">
         <div class="section-header">
             <h2 class="section-title">
                 <i class="fas fa-images"></i>
                 DEMO
             </h2>
-            <button class="btn-upload" onclick="openUploadModal()">
+            <a href="{{ route('artist.demo.upload.page') }}" class="btn-upload">
                 <i class="fas fa-upload"></i>
                 Upload
-            </button>
+            </a>
         </div>
 
         @if($artist->demoArtworks->count() > 0)
@@ -148,7 +149,27 @@
                 @foreach($artist->demoArtworks as $demo)
                 <div class="artwork-card" data-demo-id="{{ $demo->id }}">
                     <div class="artwork-image">
-                        <img src="{{ $demo->image_url }}" alt="{{ $demo->title }}">
+                        @php
+                            $demoImages = array_filter(array_merge(
+                                [$demo->image_url],
+                                $demo->extra_images ? array_map(fn($p) => asset('storage/' . $p), $demo->extra_images) : []
+                            ));
+                            $demoImages = array_values($demoImages);
+                        @endphp
+                        <div class="card-slider" data-index="0">
+                            @foreach($demoImages as $i => $imgUrl)
+                                <img src="{{ $imgUrl }}" alt="{{ $demo->title }}" class="slider-img {{ $i === 0 ? 'active' : '' }}">
+                            @endforeach
+                            @if(count($demoImages) > 1)
+                                <button class="slider-arrow slider-prev" onclick="slideCard(this, -1)"><i class="bi bi-chevron-left"></i></button>
+                                <button class="slider-arrow slider-next" onclick="slideCard(this, 1)"><i class="bi bi-chevron-right"></i></button>
+                                <div class="slider-dots">
+                                    @foreach($demoImages as $i => $imgUrl)
+                                        <span class="slider-dot {{ $i === 0 ? 'active' : '' }}"></span>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
                         <div class="artwork-overlay">
                             <button class="btn-icon" title="Edit" onclick="openEditDemoModal({{ $demo->id }})">
                                 <i class="fas fa-edit"></i>
@@ -174,24 +195,25 @@
                 </div>
                 <h3>No Demo Artworks Yet</h3>
                 <p>Upload your demo artworks to showcase your creative process and work-in-progress pieces</p>
-                <button class="btn-primary-outline" onclick="openUploadModal()">
+                <a href="{{ route('artist.demo.upload.page') }}" class="btn-primary-outline">
                     <i class="fas fa-plus"></i>
                     Upload Your First Demo
-                </button>
+                </a>
             </div>
         @endif
     </div>
 
+    {{-- ARTWORK SELL SECTION --}}
     <div class="profile-section">
         <div class="section-header">
             <h2 class="section-title">
                 <i class="fas fa-shopping-cart"></i>
                 Artwork Sell
             </h2>
-            <button class="btn-upload" onclick="openSellModal()">
+            <a href="{{ route('artist.artwork.sell.page') }}" class="btn-upload">
                 <i class="fas fa-upload"></i>
                 Upload
-            </button>
+            </a>
         </div>
 
         @if($artist->artworkSells->count() > 0)
@@ -199,7 +221,27 @@
                 @foreach($artist->artworkSells as $artwork)
                 <div class="artwork-card" data-artwork-id="{{ $artwork->id }}">
                     <div class="artwork-image">
-                        <img src="{{ $artwork->image_url }}" alt="{{ $artwork->product_name }}">
+                        @php
+                            $sellImages = array_filter(array_merge(
+                                [$artwork->image_url],
+                                $artwork->extra_images ? array_map(fn($p) => asset('storage/' . $p), $artwork->extra_images) : []
+                            ));
+                            $sellImages = array_values($sellImages);
+                        @endphp
+                        <div class="card-slider" data-index="0">
+                            @foreach($sellImages as $i => $imgUrl)
+                                <img src="{{ $imgUrl }}" alt="{{ $artwork->product_name }}" class="slider-img {{ $i === 0 ? 'active' : '' }}">
+                            @endforeach
+                            @if(count($sellImages) > 1)
+                                <button class="slider-arrow slider-prev" onclick="slideCard(this, -1)"><i class="bi bi-chevron-left"></i></button>
+                                <button class="slider-arrow slider-next" onclick="slideCard(this, 1)"><i class="bi bi-chevron-right"></i></button>
+                                <div class="slider-dots">
+                                    @foreach($sellImages as $i => $imgUrl)
+                                        <span class="slider-dot {{ $i === 0 ? 'active' : '' }}"></span>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
                         <div class="artwork-overlay">
                             <button class="btn-icon" title="Edit" onclick="openEditArtworkModal({{ $artwork->id }})">
                                 <i class="fas fa-edit"></i>
@@ -252,307 +294,16 @@
                 </div>
                 <h3>No Artworks for Sale Yet</h3>
                 <p>Start selling your artwork! Upload your completed pieces and set your prices</p>
-                <button class="btn-primary-outline" onclick="openSellModal()">
+                <a href="{{ route('artist.artwork.sell.page') }}" class="btn-primary-outline">
                     <i class="fas fa-plus"></i>
                     List Your First Artwork
-                </button>
+                </a>
             </div>
         @endif
     </div>
 </main>
 
-<!-- DEMO UPLOAD MODAL -->
-<div class="modal" id="uploadModal">
-    <div class="modal-overlay" onclick="closeUploadModal()"></div>
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2><i class="fas fa-upload"></i> Upload Demo Artwork</h2>
-            <button class="modal-close" onclick="closeUploadModal()"><i class="fas fa-times"></i></button>
-        </div>
-
-        <form id="uploadForm" action="{{ route('artist.demo.upload') }}" method="POST" enctype="multipart/form-data">
-            @csrf
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="demoImage">Image <span class="required">*</span></label>
-                    <div class="image-upload-area" id="imageUploadArea">
-                        <input type="file" id="demoImage" name="image" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" required>
-                        <div class="upload-placeholder">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <p>Click to upload or drag and drop</p>
-                        </div>
-                        <div class="image-preview" id="imagePreview" style="display: none;">
-                            <img src="" alt="Preview" id="previewImage">
-                            <button type="button" class="remove-image" onclick="removeImage()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="demoTitle">Title <span class="required">*</span></label>
-                    <input type="text" id="demoTitle" name="title" placeholder="Enter demo title" required maxlength="255">
-                </div>
-
-                <div class="form-group">
-                    <label for="demoDescription">Description (Optional)</label>
-                    <textarea id="demoDescription" name="description" rows="3" placeholder="Describe your demo artwork..." maxlength="1000"></textarea>
-                </div>
-
-                <div class="form-group cross-post-box">
-                    <label class="radio-label" style="margin-bottom: 0;">
-                        <input type="checkbox" id="alsoSellCheckbox" name="also_sell" value="1" onchange="toggleDemoSellFields()">
-                        <span class="cross-post-label">Also list this artwork for Sale?</span>
-                    </label>
-                </div>
-
-                <div id="demoSellFields" style="display: none; border-top: 1px solid #e5e7eb; padding-top: 15px; margin-top: 10px;">
-                    <h4 style="font-size: 0.9rem; color: #6b7280; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Sale Details</h4>
-
-                    <div class="form-group">
-                        <label>Artwork Type <span class="required">*</span></label>
-                        <div class="radio-group">
-                            <label class="radio-label">
-                                <input type="radio" name="artwork_type" value="physical" class="sell-req"> <span>Physical</span>
-                            </label>
-                            <label class="radio-label">
-                                <input type="radio" name="artwork_type" value="digital" class="sell-req"> <span>Digital</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Price (RM) <span class="required">*</span></label>
-                        <input type="number" name="product_price" placeholder="0.00" step="0.01" class="sell-req">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Shipping Fee (RM)</label>
-                        <div style="position:relative;">
-                            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#718096;font-weight:600;font-size:0.9rem;">RM</span>
-                            <input type="number" name="shipping_fee" placeholder="0.00" step="0.01" min="0" value="0" style="padding-left:40px;">
-                        </div>
-                        <small style="color:#718096;font-size:0.8rem;margin-top:4px;display:block;">
-                            <i class="fas fa-info-circle"></i> Enter 0 for free shipping
-                        </small>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Material <span class="required">*</span></label>
-                        <input type="text" name="material" placeholder="e.g. Oil on Canvas" class="sell-req">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Dimensions <span class="required">*</span></label>
-                        <div class="dimensions-row">
-                            <div class="dim-col"><label>H</label><input type="number" name="height" step="0.1" class="sell-req"></div>
-                            <span class="dim-separator">×</span>
-                            <div class="dim-col"><label>W</label><input type="number" name="width" step="0.1" class="sell-req"></div>
-                            <span class="dim-separator">×</span>
-                            <div class="dim-col"><label>D</label><input type="number" name="depth" step="0.1"></div>
-                            <div class="dim-unit">
-                                <label>Unit</label>
-                                <select name="unit">
-                                    <option value="cm">cm</option>
-                                    <option value="inch">in</option>
-                                    <option value="px">px</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Status <span class="required">*</span></label>
-                        <div class="radio-group">
-                            <label class="radio-label">
-                                <input type="radio" name="status" value="available" class="sell-req" checked> <span>Available</span>
-                            </label>
-                            <label class="radio-label">
-                                <input type="radio" name="status" value="sold_out" class="sell-req"> <span>Sold Out</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn-secondary" onclick="closeUploadModal()">Cancel</button>
-                <button type="submit" class="btn-primary" id="uploadBtn"><i class="fas fa-upload"></i> Upload Demo</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- SELL MODAL -->
-<div class="modal" id="sellModal">
-    <div class="modal-overlay" onclick="closeSellModal()"></div>
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2><i class="fas fa-shopping-cart"></i> List Artwork for Sale</h2>
-            <button class="modal-close" onclick="closeSellModal()"><i class="fas fa-times"></i></button>
-        </div>
-
-        <form id="sellForm" action="{{ route('artist.artwork.sell') }}" method="POST" enctype="multipart/form-data">
-            @csrf
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="productImage">Product Image <span class="required">*</span></label>
-                    <div class="image-upload-area" id="sellImageUploadArea">
-                        <input type="file" id="productImage" name="image" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" required>
-                        <div class="upload-placeholder" id="sellUploadPlaceholder">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <p>Click to upload or drag and drop</p>
-                        </div>
-                        <div class="image-preview" id="sellImagePreview" style="display: none;">
-                            <img src="" alt="Preview" id="sellPreviewImage">
-                            <button type="button" class="remove-image" onclick="removeSellImage()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="productName">Product Name <span class="required">*</span></label>
-                    <input type="text" id="productName" name="product_name" placeholder="Enter product name" required maxlength="255">
-                </div>
-
-                <div class="form-group">
-                    <label>Artwork Type <span class="required">*</span></label>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="artwork_type" value="physical" checked> <span>Physical</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="artwork_type" value="digital"> <span>Digital</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="productPrice">Price (RM) <span class="required">*</span></label>
-                    <input type="number" id="productPrice" name="product_price" placeholder="0.00" step="0.01" min="0.01" max="999999.99" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="productShipping">
-                        Shipping Fee (RM)
-                        <span style="font-size:0.78rem; font-weight:400; color:#718096; margin-left:6px;">Optional — enter 0 for free shipping</span>
-                    </label>
-                    <div style="position:relative;">
-                        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#718096;font-weight:600;font-size:0.9rem;pointer-events:none;">RM</span>
-                        <input type="number" id="productShipping" name="shipping_fee"
-                               placeholder="0.00" step="0.01" min="0" max="9999.99" value="0"
-                               style="padding-left:40px;">
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-                        <input type="checkbox" id="freeShippingCheck" onchange="toggleFreeShipping('productShipping', this)">
-                        <label for="freeShippingCheck" style="margin:0;font-size:0.85rem;color:#48bb78;font-weight:600;cursor:pointer;">
-                            <i class="fas fa-truck"></i> Free Shipping
-                        </label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="productMaterial">Material / Medium <span class="required">*</span></label>
-                    <input type="text" id="productMaterial" name="material" placeholder="e.g. Oil on Canvas" required maxlength="255">
-                </div>
-
-                <div class="form-group">
-                    <label>Dimensions <span class="required">*</span></label>
-                    <div class="dimensions-row">
-                        <div class="dim-col"><label>Height</label><input type="number" id="productHeight" name="height" step="0.1" required></div>
-                        <span class="dim-separator">×</span>
-                        <div class="dim-col"><label>Width</label><input type="number" id="productWidth" name="width" step="0.1" required></div>
-                        <span class="dim-separator">×</span>
-                        <div class="dim-col"><label>Depth</label><input type="number" id="productDepth" name="depth" step="0.1"></div>
-                        <div class="dim-unit">
-                            <label>Unit</label>
-                            <select id="productUnit" name="unit">
-                                <option value="cm">cm</option>
-                                <option value="inch">in</option>
-                                <option value="px">px</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Status <span class="required">*</span></label>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="status" value="available" checked> <span>Available</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="status" value="sold_out"> <span>Sold Out</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="productDescription">Description (Optional)</label>
-                    <textarea id="productDescription" name="product_description" rows="3" placeholder="Describe your artwork..." maxlength="2000"></textarea>
-                </div>
-
-                <div class="form-group cross-post-box">
-                    <label class="radio-label" style="margin-bottom: 0;">
-                        <input type="checkbox" name="also_demo" value="1" checked>
-                        <span class="cross-post-label">Also show in Demo/Portfolio Gallery?</span>
-                    </label>
-                </div>
-
-                {{-- ── BULK SELL ── --}}
-                <div class="form-group bulk-sell-box">
-                    <label class="radio-label" style="margin-bottom:0;">
-                        <input type="checkbox" id="bulkSellEnabled" name="bulk_sell_enabled" value="1"
-                               onchange="toggleBulkSellFields('bulkSellFields')">
-                        <span class="bulk-sell-label"><i class="fas fa-tags"></i> Enable Bulk Sell Discount</span>
-                    </label>
-                    <small style="color:#718096;font-size:0.8rem;margin-top:4px;display:block;margin-left:23px;">
-                        Offer a discount when buyers purchase above a certain quantity
-                    </small>
-                </div>
-
-                <div id="bulkSellFields" style="display:none; border:1px solid #ddd6fe; border-radius:8px; padding:16px; margin-top:-8px; background:#faf9ff;">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                        <div class="form-group" style="margin-bottom:0;">
-                            <label for="bulkMinQty">Minimum Quantity <span class="required">*</span></label>
-                            <input type="number" id="bulkMinQty" name="bulk_sell_min_qty"
-                                   placeholder="e.g. 50" min="2" step="1">
-                            <small style="color:#718096;font-size:0.78rem;margin-top:4px;display:block;">
-                                Discount applies when buyer orders this many or more
-                            </small>
-                        </div>
-                        <div class="form-group" style="margin-bottom:0;">
-                            <label for="bulkDiscount">Discount (%) <span class="required">*</span></label>
-                            <div style="position:relative;">
-                                <input type="number" id="bulkDiscount" name="bulk_sell_discount"
-                                       placeholder="e.g. 10" min="1" max="99" step="0.1"
-                                       style="padding-right:36px;">
-                                <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#718096;font-weight:600;font-size:0.9rem;">%</span>
-                            </div>
-                            <small style="color:#718096;font-size:0.78rem;margin-top:4px;display:block;">
-                                Percentage off the unit price
-                            </small>
-                        </div>
-                    </div>
-                    <div id="bulkSellPreview" style="display:none; margin-top:12px; padding:10px 14px; background:#ede9fe; border-radius:6px; font-size:0.82rem; color:#5b21b6;">
-                        <i class="fas fa-tag"></i> <span id="bulkSellPreviewText"></span>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn-secondary" onclick="closeSellModal()">Cancel</button>
-                <button type="submit" class="btn-primary" id="sellBtn"><i class="fas fa-upload"></i> List Artwork</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- EDIT DEMO MODAL -->
+{{-- EDIT DEMO MODAL --}}
 <div class="modal" id="editDemoModal">
     <div class="modal-overlay" onclick="closeEditDemoModal()"></div>
     <div class="modal-content">
@@ -610,7 +361,7 @@
     </div>
 </div>
 
-<!-- EDIT SELL MODAL -->
+{{-- EDIT SELL MODAL --}}
 <div class="modal" id="editSellModal">
     <div class="modal-overlay" onclick="closeEditSellModal()"></div>
     <div class="modal-content">
@@ -731,7 +482,7 @@
                     <span class="char-count" id="editSellDescCount">0 / 2000 characters</span>
                 </div>
 
-                {{-- ── BULK SELL ── --}}
+                {{-- BULK SELL --}}
                 <div class="form-group bulk-sell-box">
                     <label class="radio-label" style="margin-bottom:0;">
                         <input type="checkbox" id="editBulkSellEnabled" name="bulk_sell_enabled" value="1"
@@ -781,7 +532,7 @@
     </div>
 </div>
 
-<!-- SUCCESS POPUP -->
+{{-- SUCCESS POPUP --}}
 <div class="success-popup" id="successPopup">
     <div class="success-content">
         <div class="success-icon"><i class="fas fa-check-circle"></i></div>
@@ -789,7 +540,7 @@
     </div>
 </div>
 
-<!-- DELETE POPUP -->
+{{-- DELETE POPUP --}}
 <div class="delete-popup" id="deletePopup">
     <div class="delete-content">
         <div class="delete-icon"><i class="fas fa-trash-alt"></i></div>
@@ -853,13 +604,10 @@ function syncFreeShippingCheckbox() {
     }
 }
 
-// ── Bulk Sell Toggle ──
 function toggleBulkSellFields(fieldsId) {
-    const checkbox  = event.target;
-    const fields    = document.getElementById(fieldsId);
+    const checkbox = event.target;
+    const fields   = document.getElementById(fieldsId);
     fields.style.display = checkbox.checked ? 'block' : 'none';
-
-    // clear values when disabled
     if (!checkbox.checked) {
         fields.querySelectorAll('input[type="number"]').forEach(i => i.value = '');
         const preview = fields.querySelector('[id$="BulkSellPreview"]');
@@ -867,13 +615,11 @@ function toggleBulkSellFields(fieldsId) {
     }
 }
 
-// ── Live preview of bulk deal ──
 function updateBulkPreview(qtyId, discountId, previewId, previewTextId) {
     const qty      = parseInt(document.getElementById(qtyId)?.value) || 0;
     const discount = parseFloat(document.getElementById(discountId)?.value) || 0;
     const preview  = document.getElementById(previewId);
     const text     = document.getElementById(previewTextId);
-
     if (qty >= 2 && discount > 0 && discount < 100 && preview && text) {
         text.textContent = `Buy ${qty} or more and get ${discount}% off each item`;
         preview.style.display = 'block';
@@ -882,16 +628,7 @@ function updateBulkPreview(qtyId, discountId, previewId, previewTextId) {
     }
 }
 
-// Attach live preview listeners after DOM ready
 document.addEventListener('DOMContentLoaded', function () {
-    // New sell modal
-    ['bulkMinQty', 'bulkDiscount'].forEach(id => {
-        document.getElementById(id)?.addEventListener('input', () =>
-            updateBulkPreview('bulkMinQty', 'bulkDiscount', 'bulkSellPreview', 'bulkSellPreviewText')
-        );
-    });
-
-    // Edit sell modal
     ['editBulkMinQty', 'editBulkDiscount'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', () =>
             updateBulkPreview('editBulkMinQty', 'editBulkDiscount', 'editBulkSellPreview', 'editBulkSellPreviewText')
@@ -914,6 +651,4 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <script src="{{ asset('js/artistProfileModals.js') }}"></script>
 <script src="{{ asset('js/artistProfile.js') }}"></script>
-<script src="{{ asset('js/demoUpload.js') }}"></script>
-<script src="{{ asset('js/artworkSell.js') }}"></script>
 @endsection

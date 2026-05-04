@@ -16,6 +16,7 @@ class ArtworkSell extends Model
         'product_price',
         'shipping_fee',
         'image_path',
+        'extra_images',
         'artwork_type',
         'material',
         'height',
@@ -25,20 +26,26 @@ class ArtworkSell extends Model
         'status',
         'is_cross_posted',
         'cross_posted_from_id',
+        'bulk_sell_enabled',
+        'bulk_sell_min_qty',
+        'bulk_sell_discount',
     ];
 
     protected $casts = [
-        'product_price' => 'decimal:2',
-        'shipping_fee'  => 'decimal:2',
-        'height'        => 'decimal:2',
-        'width'         => 'decimal:2',
-        'depth'         => 'decimal:2',
-        'is_cross_posted' => 'boolean',
+        'product_price'    => 'decimal:2',
+        'shipping_fee'     => 'decimal:2',
+        'height'           => 'decimal:2',
+        'width'            => 'decimal:2',
+        'depth'            => 'decimal:2',
+        'is_cross_posted'  => 'boolean',
+        'bulk_sell_enabled'=> 'boolean',
+        'extra_images'     => 'array',
     ];
 
     protected $appends = ['image_url', 'formatted_price', 'status_label'];
 
     // Relationships
+
     public function artist()
     {
         return $this->belongsTo(Artist::class);
@@ -50,6 +57,7 @@ class ArtworkSell extends Model
     }
 
     // Accessors
+
     public function getImageUrlAttribute()
     {
         return $this->image_path ? asset('storage/' . $this->image_path) : null;
@@ -66,6 +74,7 @@ class ArtworkSell extends Model
     }
 
     // Methods
+
     public function isCrossListed()
     {
         return $this->is_cross_posted === true;

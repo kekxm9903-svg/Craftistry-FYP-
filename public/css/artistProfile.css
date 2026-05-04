@@ -406,6 +406,7 @@ body {
     transition: all .15s;
     box-shadow: 0 3px 10px rgba(102, 126, 234, .25);
     white-space: nowrap;
+    text-decoration: none;
 }
 
 .btn-upload:hover { opacity: .88; box-shadow: 0 5px 16px rgba(102, 126, 234, .38); }
@@ -441,6 +442,14 @@ body {
     aspect-ratio: 1;
     overflow: hidden;
     background: var(--divider);
+}
+
+/* card-slider fills the artwork-image container */
+.artwork-image .card-slider {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
 }
 
 .artwork-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -564,13 +573,14 @@ body {
     font-weight: 700;
     cursor: pointer;
     transition: all .15s;
+    text-decoration: none;
 }
 
 .btn-primary-outline:hover { background: var(--primary); color: #fff; }
 
 
 /* ══════════════════════════════
-   MODAL
+   MODAL  (edit modals only)
 ══════════════════════════════ */
 
 .modal { display: none; position: fixed; inset: 0; z-index: 1000; }
@@ -625,7 +635,7 @@ body {
 
 
 /* ══════════════════════════════
-   FORM ELEMENTS
+   FORM ELEMENTS  (edit modals)
 ══════════════════════════════ */
 
 .form-group { margin-bottom: var(--sp-lg); }
@@ -639,8 +649,6 @@ body {
 }
 
 .required { color: var(--danger); }
-
-.help-text { font-size: var(--fs-sm); color: var(--muted); margin-bottom: var(--sp-xs); line-height: 1.5; }
 
 .form-group input[type="text"],
 .form-group input[type="number"],
@@ -670,9 +678,6 @@ body {
 
 .char-count { text-align: right; color: #9ca3af; font-size: var(--fs-sm); margin-top: var(--sp-xs); display: block; }
 
-.error-message { color: var(--danger); font-size: var(--fs-sm); margin-top: var(--sp-xs); display: none; }
-.error-message.show { display: block; }
-
 .dimensions-row { display: flex; gap: var(--sp-sm); align-items: flex-end; }
 .dim-col { flex: 1; }
 .dim-col label { font-size: var(--fs-sm); color: var(--muted); margin-bottom: 4px; display: block; font-weight: 500; }
@@ -689,46 +694,8 @@ body {
 .radio-label input[type="radio"],
 .radio-label input[type="checkbox"] { accent-color: var(--primary); width: 15px; height: 15px; }
 
-.cross-post-box {
-    background: var(--divider);
-    padding: var(--sp-md);
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    margin-top: var(--sp-md);
-}
-
-.cross-post-label { font-weight: 700; color: var(--primary); }
-
-
-/* ══════════════════════════════
-   BULK SELL BOX
-══════════════════════════════ */
-
-.bulk-sell-box {
-    background: #faf9ff;
-    border: 1px solid #ddd6fe;
-    border-radius: var(--radius-sm);
-    padding: var(--sp-md);
-    margin-top: var(--sp-md);
-}
-
-.bulk-sell-label {
-    color: var(--primary-2);
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: var(--sp-xs);
-}
-
-.bulk-sell-label i {
-    color: var(--primary);
-    font-size: 12px;
-}
-
-
-/* ══════════════════════════════
-   IMAGE UPLOAD AREA
-══════════════════════════════ */
+.current-image-preview { margin-bottom: var(--sp-md); }
+.current-image-preview img { display: block; max-width: 100%; height: auto; border-radius: var(--radius-md); border: 1px solid var(--border); }
 
 .image-upload-area {
     position: relative;
@@ -744,11 +711,7 @@ body {
 
 .upload-placeholder { padding: 36px var(--sp-xl); text-align: center; }
 .upload-placeholder i { font-size: 2.2rem; color: var(--primary); margin-bottom: var(--sp-md); display: block; }
-.upload-placeholder p { font-size: var(--fs-base); font-weight: 600; color: var(--ink); margin-bottom: var(--sp-xs); }
-.upload-placeholder span { font-size: var(--fs-sm); color: var(--muted); }
-
-.current-image-preview { margin-bottom: var(--sp-md); }
-.current-image-preview img { display: block; max-width: 100%; height: auto; border-radius: var(--radius-md); border: 1px solid var(--border); }
+.upload-placeholder p { font-size: var(--fs-base); font-weight: 600; color: var(--ink); }
 
 .image-preview { position: relative; padding: var(--sp-sm); }
 .image-preview img { width: 100%; height: auto; max-height: 340px; object-fit: contain; border-radius: var(--radius-md); }
@@ -769,6 +732,24 @@ body {
 }
 
 .remove-image:hover { background: #b91c1c; transform: scale(1.1); }
+
+.bulk-sell-box {
+    background: #faf9ff;
+    border: 1px solid #ddd6fe;
+    border-radius: var(--radius-sm);
+    padding: var(--sp-md);
+    margin-top: var(--sp-md);
+}
+
+.bulk-sell-label {
+    color: var(--primary-2);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-xs);
+}
+
+.bulk-sell-label i { color: var(--primary); font-size: 12px; }
 
 
 /* ══════════════════════════════
@@ -872,6 +853,99 @@ body {
 @keyframes slideOutRight {
     from { opacity: 1; transform: translateX(0); }
     to   { opacity: 0; transform: translateX(360px); }
+}
+
+
+
+/* ══════════════════════════════
+   CARD IMAGE SLIDER
+══════════════════════════════ */
+
+.card-slider {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* All images stacked, only active one visible */
+.slider-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity .3s ease;
+    display: block;
+    z-index: 1;
+}
+
+.slider-img.active {
+    opacity: 1;
+    z-index: 2;
+}
+
+/* Arrows — always visible when multiple images, sit above overlay */
+.slider-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, .92);
+    color: var(--ink);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    z-index: 10;
+    transition: background .15s, transform .15s, opacity .15s;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    padding: 0;
+    line-height: 1;
+    opacity: 0.85;
+}
+
+.slider-prev { left: 6px; }
+.slider-next { right: 6px; }
+
+.slider-arrow:hover {
+    background: var(--white);
+    opacity: 1;
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* Dots */
+.slider-dots {
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    z-index: 10;
+}
+
+.slider-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.5);
+    transition: background .2s, transform .2s;
+}
+
+.slider-dot.active {
+    background: var(--white);
+    transform: scale(1.3);
+}
+
+/* Overlay sits below arrows */
+.artwork-overlay {
+    z-index: 8 !important;
 }
 
 

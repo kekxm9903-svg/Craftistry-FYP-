@@ -112,12 +112,16 @@ Route::middleware('auth')->group(function () {
         Route::post('/profile/update', [ArtistController::class, 'update'])  ->name('artist.profile.update');
         Route::get('/dashboard',       [ArtistController::class, 'dashboard'])->name('artist.dashboard');
 
+        // --- DEMO ROUTES ---
+        Route::get('/demo/upload',            [DemoArtworkController::class, 'uploadPage'])->name('artist.demo.upload.page');
         Route::post('/demo/upload',           [DemoArtworkController::class, 'store'])     ->name('artist.demo.upload');
         Route::get('/demo/{id}/edit',         [DemoArtworkController::class, 'edit'])      ->name('artist.demo.edit');
         Route::post('/demo/{id}',             [DemoArtworkController::class, 'update'])    ->name('artist.demo.update');
         Route::delete('/demo/{id}',           [DemoArtworkController::class, 'destroy'])   ->name('artist.demo.delete');
         Route::post('/demo/{id}/unlink-sell', [DemoArtworkController::class, 'unlinkSell'])->name('artist.demo.unlink-sell');
 
+        // --- ARTWORK SELL ROUTES ---
+        Route::get('/artwork/sell',              [ArtworkSellController::class, 'sellPage'])  ->name('artist.artwork.sell.page');
         Route::post('/artwork/sell',             [ArtworkSellController::class, 'store'])     ->name('artist.artwork.sell');
         Route::get('/artwork/{id}/edit',         [ArtworkSellController::class, 'edit'])      ->name('artist.artwork.edit');
         Route::post('/artwork/{id}',             [ArtworkSellController::class, 'update'])    ->name('artist.artwork.update');
