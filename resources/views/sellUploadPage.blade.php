@@ -336,6 +336,79 @@
                     </div>
                 </div>
 
+
+                {{-- Promotion --}}
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <i class="fas fa-fire"></i>
+                        <h2>Promotion</h2>
+                        <span class="optional-badge">Optional</span>
+                    </div>
+                    <div class="form-card-body">
+                        <label class="toggle-row" for="promotionEnabled">
+                            <div class="toggle-info">
+                                <span class="toggle-title">
+                                    <i class="fas fa-tag"></i>
+                                    Enable Promotion
+                                </span>
+                                <span class="toggle-desc">Set a promotional discount with an optional time period</span>
+                            </div>
+                            <div class="toggle-switch-wrap">
+                                <input type="checkbox" id="promotionEnabled" name="promotion_enabled" value="1"
+                                       onchange="togglePromoFields(this)" {{ old('promotion_enabled') ? 'checked' : '' }}>
+                                <span class="toggle-switch"></span>
+                            </div>
+                        </label>
+
+                        <div id="promoFields" style="display:{{ old('promotion_enabled') ? 'block' : 'none' }}; margin-top:16px;">
+                            <div class="field-group">
+                                <label for="promoDiscount" class="field-label">
+                                    Promotion Discount (%) <span class="required">*</span>
+                                </label>
+                                <div class="field-suffix-wrap">
+                                    <input type="number" id="promoDiscount" name="promotion_discount"
+                                           value="{{ old('promotion_discount') }}"
+                                           placeholder="e.g. 20" min="1" max="99" step="0.1"
+                                           class="field-input with-suffix"
+                                           oninput="updatePromoPreview()">
+                                    <span class="field-suffix">%</span>
+                                </div>
+                            </div>
+
+                            {{-- Live promo price preview --}}
+                            <div class="promo-price-preview" id="promoPricePreview" style="display:none;">
+                                <div class="promo-preview-inner">
+                                    <span class="promo-original" id="promoOriginalPrice"></span>
+                                    <i class="fas fa-arrow-right" style="color:var(--muted);font-size:11px;"></i>
+                                    <span class="promo-final" id="promoFinalPrice"></span>
+                                    <span class="promo-saving" id="promoSaving"></span>
+                                </div>
+                            </div>
+
+                            <div class="field-row" style="margin-top:12px;">
+                                <div class="field-group">
+                                    <label for="promoStartsAt" class="field-label">
+                                        Start Date <span class="field-optional">(Optional)</span>
+                                    </label>
+                                    <input type="datetime-local" id="promoStartsAt" name="promotion_starts_at"
+                                           value="{{ old('promotion_starts_at') }}"
+                                           class="field-input">
+                                    <span class="field-hint">Leave blank to start immediately</span>
+                                </div>
+                                <div class="field-group">
+                                    <label for="promoEndsAt" class="field-label">
+                                        End Date <span class="field-optional">(Optional)</span>
+                                    </label>
+                                    <input type="datetime-local" id="promoEndsAt" name="promotion_ends_at"
+                                           value="{{ old('promotion_ends_at') }}"
+                                           class="field-input">
+                                    <span class="field-hint">Leave blank for no expiry</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Portfolio Cross-post --}}
                 <div class="form-card option-card">
                     <div class="option-card-inner">

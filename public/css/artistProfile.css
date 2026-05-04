@@ -439,20 +439,20 @@ body {
 .artwork-image {
     position: relative;
     width: 100%;
-    aspect-ratio: 1;
+    padding-bottom: 100%; /* 1:1 aspect ratio — gives height so absolute children fill it */
     overflow: hidden;
     background: var(--divider);
 }
 
-/* card-slider fills the artwork-image container */
-.artwork-image .card-slider {
+/* Direct img (no slider) still fills the box */
+.artwork-image > img {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
+    object-fit: cover;
+    display: block;
 }
-
-.artwork-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .artwork-overlay {
     position: absolute;
@@ -464,9 +464,11 @@ body {
     gap: var(--sp-sm);
     opacity: 0;
     transition: opacity .2s;
+    z-index: 10;
 }
 
 .artwork-card:hover .artwork-overlay { opacity: 1; }
+
 
 .artwork-overlay .btn-icon {
     width: 36px; height: 36px;
@@ -862,13 +864,13 @@ body {
 ══════════════════════════════ */
 
 .card-slider {
-    position: relative;
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     overflow: hidden;
 }
 
-/* All images stacked, only active one visible */
 .slider-img {
     position: absolute;
     inset: 0;
@@ -886,40 +888,64 @@ body {
     z-index: 2;
 }
 
-/* Arrows — always visible when multiple images, sit above overlay */
-.slider-arrow {
+/* Ensure card-slider always has the correct dimensions */
+.artwork-image .card-slider,
+.artwork-image > .card-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.artwork-image > .slider-arrow {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     border: none;
     background: rgba(255, 255, 255, .92);
-    color: var(--ink);
+    color: #1a1a2e;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    z-index: 10;
-    transition: background .15s, transform .15s, opacity .15s;
+    font-size: 13px;
+    z-index: 30;
     box-shadow: 0 2px 8px rgba(0,0,0,.25);
     padding: 0;
     line-height: 1;
-    opacity: 0.85;
+    opacity: 0;
+    pointer-events: all;
+    transition: opacity .2s, transform .15s, box-shadow .15s;
 }
 
-.slider-prev { left: 6px; }
-.slider-next { right: 6px; }
-
-.slider-arrow:hover {
-    background: var(--white);
+/* Show arrows on card hover — same behaviour as edit/delete overlay */
+.artwork-card:hover .artwork-image > .slider-arrow {
     opacity: 1;
-    transform: translateY(-50%) scale(1.1);
 }
 
-/* Dots */
+.artwork-image > .slider-prev { left: 8px; }
+.artwork-image > .slider-next { right: 8px; }
+
+.artwork-image > .slider-arrow:hover {
+    background: #fff;
+    transform: translateY(-50%) scale(1.12);
+    box-shadow: 0 4px 14px rgba(0,0,0,.4);
+}
+
+.artwork-image > .slider-arrow i {
+    font-size: 13px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1a1a2e;
+}
+
 .slider-dots {
     position: absolute;
     bottom: 6px;
@@ -927,7 +953,8 @@ body {
     transform: translateX(-50%);
     display: flex;
     gap: 4px;
-    z-index: 10;
+    z-index: 30;
+    pointer-events: none;
 }
 
 .slider-dot {
@@ -939,13 +966,64 @@ body {
 }
 
 .slider-dot.active {
-    background: var(--white);
+    background: #fff;
     transform: scale(1.3);
 }
 
-/* Overlay sits below arrows */
-.artwork-overlay {
-    z-index: 8 !important;
+
+/* ══════════════════════════════
+   ARTWORK CARD PRICE BLOCK
+══════════════════════════════ */
+
+.price-block {
+    margin-bottom: var(--sp-xs);
+}
+
+/* Normal price — reuse existing gradient style */
+.price-block .artwork-price {
+    margin-bottom: 0;
+}
+
+/* Promo layout */
+.price-block.promo-active {
+    margin-bottom: var(--sp-xs);
+}
+
+.price-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 1px;
+}
+
+/* Promo price — same gradient as normal artwork-price */
+.price-promo {
+    font-size: var(--fs-md);
+    font-weight: 800;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.price-discount-badge {
+    font-size: 10px;
+    font-weight: 700;
+    background: #dc2626;
+    color: #fff;
+    padding: 2px 7px;
+    border-radius: 20px;
+    flex-shrink: 0;
+    -webkit-text-fill-color: #fff;
+}
+
+/* Original price — strikethrough, sits below promo */
+.price-original {
+    font-size: var(--fs-sm);
+    color: var(--muted);
+    text-decoration: line-through;
+    font-weight: 500;
+    line-height: 1.3;
 }
 
 

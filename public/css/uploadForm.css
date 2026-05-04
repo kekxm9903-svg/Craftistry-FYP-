@@ -1,3 +1,53 @@
+/* ══════════════════════════════
+   CURRENT IMAGES GRID (edit pages)
+══════════════════════════════ */
+
+.current-images-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.current-img-item {
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%; /* forces 1:1 aspect ratio */
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 2px solid var(--border);
+    background: var(--divider);
+}
+
+.current-img-item img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.current-img-item.main-img {
+    border-color: #22c55e;
+}
+
+.current-img-badge {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    background: rgba(22,163,74,.9);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    z-index: 2;
+}
+
 /* ═══════════════════════════════════════════
    CRAFTISTRY — UPLOAD FORM PAGES
    Shared styles for demo & sell upload forms
@@ -1035,6 +1085,200 @@
 
 .image-drop-zone.has-files .drop-zone-title {
     font-size: var(--fs-base);
+}
+
+
+/* ══════════════════════════════
+   IMAGE MANAGER (edit pages)
+══════════════════════════════ */
+
+.img-manager-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.img-manager-item {
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 2px solid var(--border);
+    background: var(--divider);
+    transition: border-color .15s;
+}
+
+.img-manager-item img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.img-manager-item.marked-delete {
+    opacity: .35;
+    border-color: #dc2626;
+    border-style: dashed;
+}
+
+.img-manager-item.marked-delete::after {
+    content: 'Removed';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #dc2626;
+    background: rgba(255,255,255,.6);
+    z-index: 3;
+}
+
+.img-manager-badge {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.img-manager-badge.main-badge {
+    background: rgba(22,163,74,.9);
+    color: #fff;
+}
+
+.img-manager-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(220,38,38,.88);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    z-index: 4;
+    opacity: 0;
+    transition: opacity .15s, transform .15s;
+    padding: 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+
+.img-manager-item:hover .img-manager-remove {
+    opacity: 1;
+}
+
+.img-manager-remove:hover {
+    background: #b91c1c;
+    transform: scale(1.15);
+}
+
+/* New image tile (preview) */
+.img-manager-item[data-type="new"] {
+    border-color: var(--primary);
+    border-style: dashed;
+}
+
+.img-manager-item[data-type="new"] .img-manager-badge {
+    background: rgba(102,126,234,.88);
+    color: #fff;
+}
+
+/* Add more tile */
+.img-manager-add {
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%;
+    border-radius: var(--radius-sm);
+    border: 2px dashed var(--border);
+    background: #fafafe;
+    cursor: pointer;
+    transition: all .15s;
+}
+
+.img-manager-add:hover {
+    border-color: var(--primary);
+    background: var(--lavender);
+}
+
+.img-manager-add > i,
+.img-manager-add > span {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.img-manager-add > i {
+    top: calc(50% - 12px);
+    font-size: 18px;
+    color: var(--primary);
+}
+
+.img-manager-add > span {
+    top: calc(50% + 8px);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+
+/* ══════════════════════════════
+   PROMOTION PRICE PREVIEW
+══════════════════════════════ */
+
+.promo-price-preview {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, #fff7ed, #fef3c7);
+    border: 1px solid #fcd34d;
+    border-radius: var(--radius-sm);
+    animation: fadeIn .2s ease;
+}
+
+.promo-preview-inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.promo-original {
+    font-size: var(--fs-base);
+    color: var(--muted);
+    text-decoration: line-through;
+    font-weight: 500;
+}
+
+.promo-final {
+    font-size: var(--fs-md);
+    font-weight: 800;
+    color: #dc2626;
+}
+
+.promo-saving {
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: #16a34a;
+    background: #dcfce7;
+    padding: 2px 8px;
+    border-radius: 20px;
 }
 
 

@@ -115,7 +115,8 @@ Route::middleware('auth')->group(function () {
         // --- DEMO ROUTES ---
         Route::get('/demo/upload',            [DemoArtworkController::class, 'uploadPage'])->name('artist.demo.upload.page');
         Route::post('/demo/upload',           [DemoArtworkController::class, 'store'])     ->name('artist.demo.upload');
-        Route::get('/demo/{id}/edit',         [DemoArtworkController::class, 'edit'])      ->name('artist.demo.edit');
+        Route::get('/demo/{id}/edit',         [DemoArtworkController::class, 'editPage'])  ->name('artist.demo.edit.page');
+        Route::get('/demo/{id}/edit-data',    [DemoArtworkController::class, 'edit'])      ->name('artist.demo.edit');
         Route::post('/demo/{id}',             [DemoArtworkController::class, 'update'])    ->name('artist.demo.update');
         Route::delete('/demo/{id}',           [DemoArtworkController::class, 'destroy'])   ->name('artist.demo.delete');
         Route::post('/demo/{id}/unlink-sell', [DemoArtworkController::class, 'unlinkSell'])->name('artist.demo.unlink-sell');
@@ -123,7 +124,8 @@ Route::middleware('auth')->group(function () {
         // --- ARTWORK SELL ROUTES ---
         Route::get('/artwork/sell',              [ArtworkSellController::class, 'sellPage'])  ->name('artist.artwork.sell.page');
         Route::post('/artwork/sell',             [ArtworkSellController::class, 'store'])     ->name('artist.artwork.sell');
-        Route::get('/artwork/{id}/edit',         [ArtworkSellController::class, 'edit'])      ->name('artist.artwork.edit');
+        Route::get('/artwork/{id}/edit',         [ArtworkSellController::class, 'editPage'])  ->name('artist.artwork.edit.page');
+        Route::get('/artwork/{id}/edit-data',    [ArtworkSellController::class, 'edit'])      ->name('artist.artwork.edit');
         Route::post('/artwork/{id}',             [ArtworkSellController::class, 'update'])    ->name('artist.artwork.update');
         Route::delete('/artwork/{id}',           [ArtworkSellController::class, 'destroy'])   ->name('artist.artwork.delete');
         Route::post('/artwork/{id}/unlink-demo', [ArtworkSellController::class, 'unlinkDemo'])->name('artist.artwork.unlink-demo');

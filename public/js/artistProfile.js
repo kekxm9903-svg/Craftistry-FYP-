@@ -305,10 +305,13 @@ function deleteArtwork(id) {
 // ============================================
 
 function slideCard(btn, direction) {
-    // Stop propagation so overlay / card click don't fire
     if (event) event.stopPropagation();
 
-    const slider = btn.closest('.card-slider');
+    // Arrows are siblings of .card-slider inside .artwork-image
+    const artworkImage = btn.closest('.artwork-image');
+    if (!artworkImage) return;
+
+    const slider = artworkImage.querySelector('.card-slider');
     if (!slider) return;
 
     const imgs  = Array.from(slider.querySelectorAll('.slider-img'));

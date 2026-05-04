@@ -109,10 +109,12 @@
                 <div class="artists-grid">
                     @foreach($artworks as $artwork)
                     @php
-                        $artistUser = $artwork->artist?->user;
-                        $artistName = $artistUser?->fullname ?? $artistUser?->name ?? 'Unknown Artist';
-                        $artistImg  = $artwork->artist?->profile_image ?? $artistUser?->profile_image ?? null;
-                        $isSold     = in_array(strtolower($artwork->status ?? ''), ['sold', 'sold_out']);
+                        $artistUser   = $artwork->artist?->user;
+                        $artistName   = $artistUser?->fullname ?? $artistUser?->name ?? 'Unknown Artist';
+                        $artistImg    = $artwork->artist?->profile_image ?? $artistUser?->profile_image ?? null;
+                        $isSold       = in_array(strtolower($artwork->status ?? ''), ['sold', 'sold_out']);
+                        $promoPrice   = $artwork->promotion_price;
+                        $hasPromo     = $promoPrice !== null;
                     @endphp
                     <a href="{{ route('product.show', $artwork->id) }}" class="artist-card {{ $isSold ? 'is-sold' : '' }}">
 
@@ -130,6 +132,11 @@
                             {{-- Sold out overlay --}}
                             @if($isSold)
                                 <div class="sold-stamp">SOLD</div>
+                            @endif
+
+                            {{-- Promotion badge --}}
+                            @if($hasPromo)
+                                <div class="promo-badge">-{{ number_format($artwork->promotion_discount, 0) }}%</div>
                             @endif
 
                             {{-- Artwork type badge --}}
@@ -154,10 +161,23 @@
                                 <div class="card-name">{{ $artwork->product_name ?? 'Untitled' }}</div>
                                 <div class="card-spec">by {{ $artistName }}</div>
                             </div>
+
+                            {{-- Price: show promo or normal --}}
                             @if($artwork->product_price)
-                                <div class="card-price">
-                                    RM {{ number_format($artwork->product_price, 2) }}
-                                </div>
+                                @if($hasPromo)
+                                    <div class="card-price-block">
+                                        <span class="card-price-promo">
+                                            RM {{ number_format($promoPrice, 2) }}
+                                        </span>
+                                        <span class="card-price-original">
+                                            RM {{ number_format($artwork->product_price, 2) }}
+                                        </span>
+                                    </div>
+                                @else
+                                    <div class="card-price">
+                                        RM {{ number_format($artwork->product_price, 2) }}
+                                    </div>
+                                @endif
                             @endif
                         </div>
 

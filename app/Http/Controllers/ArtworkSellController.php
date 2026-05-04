@@ -17,6 +17,13 @@ class ArtworkSellController extends Controller
         return view('sellUploadPage');
     }
 
+    public function editPage($id)
+    {
+        $user    = Auth::user();
+        $artwork = ArtworkSell::where('id', $id)->where('artist_id', $user->id)->firstOrFail();
+        return view('sellEditPage', compact('artwork'));
+    }
+
     public function store(Request $request)
     {
         try {
@@ -47,6 +54,10 @@ class ArtworkSellController extends Controller
                 'bulk_sell_enabled'   => 'nullable|boolean',
                 'bulk_sell_min_qty'   => 'nullable|integer|min:2',
                 'bulk_sell_discount'  => 'nullable|numeric|min:1|max:99',
+                'promotion_enabled'   => 'nullable|boolean',
+                'promotion_discount'  => 'nullable|numeric|min:1|max:99',
+                'promotion_starts_at' => 'nullable|date',
+                'promotion_ends_at'   => 'nullable|date|after_or_equal:promotion_starts_at',
             ], [
                 'images.required' => 'At least one image is required',
                 'images.min'      => 'At least one image is required',
@@ -57,8 +68,11 @@ class ArtworkSellController extends Controller
 
             // Upload first image as main cover
             $path = null;
+            Log::info('SELL FILES RECEIVED: ' . json_encode(array_keys($request->allFiles())));
+            Log::info('SELL IMAGES COUNT: ' . count($request->file('images', [])));
             if ($request->hasFile('images')) {
                 $images   = $request->file('images');
+                Log::info('SELL IMAGES ARRAY COUNT: ' . count($images));
                 $main     = $images[0];
                 $filename = time() . '_' . uniqid() . '.' . $main->getClientOriginalExtension();
                 $path     = $main->storeAs('artwork-sells', $filename, 'public');
@@ -86,6 +100,7 @@ class ArtworkSellController extends Controller
                     'title'           => $validated['product_name'],
                     'description'     => $validated['product_description'] ?? null,
                     'image_path'      => $path,
+                    'extra_images'    => !empty($extraPaths) ? $extraPaths : null,
                     'order'           => $order,
                     'artwork_type'    => $validated['artwork_type'],
                     'material'        => $validated['material'],
@@ -118,6 +133,10 @@ class ArtworkSellController extends Controller
                 'bulk_sell_enabled'    => $bulkEnabled,
                 'bulk_sell_min_qty'    => $bulkEnabled ? $request->input('bulk_sell_min_qty') : null,
                 'bulk_sell_discount'   => $bulkEnabled ? $request->input('bulk_sell_discount') : null,
+                'promotion_enabled'    => $request->boolean('promotion_enabled'),
+                'promotion_discount'   => $request->boolean('promotion_enabled') ? $request->input('promotion_discount') : null,
+                'promotion_starts_at'  => $request->boolean('promotion_enabled') ? $request->input('promotion_starts_at') : null,
+                'promotion_ends_at'    => $request->boolean('promotion_enabled') ? $request->input('promotion_ends_at') : null,
             ]);
 
             if ($newDemo) {
@@ -224,7 +243,10 @@ class ArtworkSellController extends Controller
                 'product_description' => 'nullable|string|max:2000',
                 'product_price'       => 'required|numeric|min:0.01|max:999999.99',
                 'shipping_fee'        => 'nullable|numeric|min:0|max:9999.99',
-                'image'               => 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:5120',
+                'new_images'          => 'nullable|array',
+                'new_images.*'        => 'image|mimes:jpeg,jpg,png,gif,webp|max:5120',
+                'delete_images'       => 'nullable|array',
+                'delete_images.*'     => 'nullable|string',
                 'artwork_type'        => 'required|in:physical,digital',
                 'material'            => 'required|string|max:255',
                 'height'              => 'required|numeric|min:0',
@@ -235,6 +257,14 @@ class ArtworkSellController extends Controller
                 'bulk_sell_enabled'   => 'nullable|boolean',
                 'bulk_sell_min_qty'   => 'nullable|integer|min:2',
                 'bulk_sell_discount'  => 'nullable|numeric|min:1|max:99',
+                'promotion_enabled'   => 'nullable|boolean',
+                'promotion_discount'  => 'nullable|numeric|min:1|max:99',
+                'promotion_starts_at' => 'nullable|date',
+                'promotion_ends_at'   => 'nullable|date|after_or_equal:promotion_starts_at',
+                'promotion_enabled'   => 'nullable|boolean',
+                'promotion_discount'  => 'nullable|numeric|min:1|max:99',
+                'promotion_starts_at' => 'nullable|date',
+                'promotion_ends_at'   => 'nullable|date|after_or_equal:promotion_starts_at',
             ]);
 
             $artwork = ArtworkSell::where('id', $id)->where('artist_id', $user->id)->firstOrFail();
@@ -257,19 +287,50 @@ class ArtworkSellController extends Controller
             $artwork->bulk_sell_enabled   = $bulkEnabled;
             $artwork->bulk_sell_min_qty   = $bulkEnabled ? $request->input('bulk_sell_min_qty') : null;
             $artwork->bulk_sell_discount  = $bulkEnabled ? $request->input('bulk_sell_discount') : null;
+            $promoEnabled = $request->boolean('promotion_enabled');
+            $artwork->promotion_enabled   = $promoEnabled;
+            $artwork->promotion_discount  = $promoEnabled ? $request->input('promotion_discount') : null;
+            $artwork->promotion_starts_at = $promoEnabled ? $request->input('promotion_starts_at') : null;
+            $artwork->promotion_ends_at   = $promoEnabled ? $request->input('promotion_ends_at') : null;
 
+            // Handle image deletions
+            $deleteImages   = $request->input('delete_images', []);
+            $existingExtras = $artwork->extra_images ?? [];
+
+            foreach ($deleteImages as $deletePath) {
+                if (Storage::disk('public')->exists($deletePath)) {
+                    Storage::disk('public')->delete($deletePath);
+                }
+                $existingExtras = array_values(array_filter($existingExtras, fn($p) => $p !== $deletePath));
+                if ($deletePath === $artwork->image_path) {
+                    if (!empty($existingExtras)) {
+                        $artwork->image_path = array_shift($existingExtras);
+                    } else {
+                        $artwork->image_path = null;
+                    }
+                }
+            }
+            $artwork->extra_images = !empty($existingExtras) ? array_values($existingExtras) : null;
+
+            // Handle new image uploads
             $imageUpdated = false;
-            if ($request->hasFile('image')) {
-                if ($artwork->image_path && Storage::disk('public')->exists($artwork->image_path)) {
-                    Storage::disk('public')->delete($artwork->image_path);
+            if ($request->hasFile('new_images')) {
+                $newImages = $request->file('new_images');
+                $newPaths  = $artwork->extra_images ?? [];
+
+                foreach ($newImages as $img) {
+                    $filename = time() . '_' . uniqid() . '.' . $img->getClientOriginalExtension();
+                    $stored   = $img->storeAs('artwork-sells', $filename, 'public');
+                    if ($stored) {
+                        if (!$artwork->image_path) {
+                            $artwork->image_path = $stored;
+                        } else {
+                            $newPaths[] = $stored;
+                        }
+                        $imageUpdated = true;
+                    }
                 }
-                $image    = $request->file('image');
-                $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-                $newPath  = $image->storeAs('artwork-sells', $filename, 'public');
-                if ($newPath) {
-                    $artwork->image_path = $newPath;
-                    $imageUpdated        = true;
-                }
+                $artwork->extra_images = !empty($newPaths) ? array_values($newPaths) : null;
             }
 
             if ($artwork->is_cross_posted && $artwork->crossPostedFrom) {
@@ -344,11 +405,15 @@ class ArtworkSellController extends Controller
 
             DB::beginTransaction();
 
-            $wasCrossListed = $artworkSell->isCrossListed();
-            if ($wasCrossListed && $artworkSell->crossPostedFrom) {
-                $artworkSell->crossPostedFrom->delete();
+            // Unlink from demo — keep demo record intact
+            if ($artworkSell->is_cross_posted && $artworkSell->crossPostedFrom) {
+                $demo                     = $artworkSell->crossPostedFrom;
+                $demo->is_cross_posted    = false;
+                $demo->cross_posted_to_id = null;
+                $demo->save();
             }
-            if (Storage::disk('public')->exists($artworkSell->image_path)) {
+
+            if ($artworkSell->image_path && Storage::disk('public')->exists($artworkSell->image_path)) {
                 Storage::disk('public')->delete($artworkSell->image_path);
             }
             $artworkSell->delete();

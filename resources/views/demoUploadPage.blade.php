@@ -254,6 +254,63 @@
                                 </div>
                             </div>
 
+                            <div class="field-group">
+                                <label for="demoProductDesc" class="field-label">
+                                    Product Description <span class="field-optional">(Optional)</span>
+                                </label>
+                                <textarea id="demoProductDesc" name="product_description" rows="3"
+                                          maxlength="2000" class="field-textarea"
+                                          placeholder="Describe your artwork for buyers...">{{ old('product_description') }}</textarea>
+                                <span class="field-counter" id="demoProductDescCounter">0 / 2000</span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {{-- Bulk Sell --}}
+                    <div class="form-card" style="margin-top:var(--sp-md);">
+                        <div class="form-card-header">
+                            <i class="fas fa-tags"></i>
+                            <h2>Bulk Sell Discount</h2>
+                            <span class="optional-badge">Optional</span>
+                        </div>
+                        <div class="form-card-body">
+                            <label class="toggle-row" for="demoBulkEnabled">
+                                <div class="toggle-info">
+                                    <span class="toggle-title"><i class="fas fa-percentage"></i> Enable Bulk Sell Discount</span>
+                                    <span class="toggle-desc">Offer a discount when buyers purchase above a certain quantity</span>
+                                </div>
+                                <div class="toggle-switch-wrap">
+                                    <input type="checkbox" id="demoBulkEnabled" name="bulk_sell_enabled" value="1"
+                                           onchange="toggleBulkFields(this)" {{ old('bulk_sell_enabled') ? 'checked' : '' }}>
+                                    <span class="toggle-switch"></span>
+                                </div>
+                            </label>
+                            <div id="bulkSellFields" style="display:{{ old('bulk_sell_enabled') ? 'block' : 'none' }}; margin-top:16px;">
+                                <div class="field-row">
+                                    <div class="field-group">
+                                        <label for="bulkMinQty" class="field-label">Minimum Quantity <span class="required">*</span></label>
+                                        <input type="number" id="bulkMinQty" name="bulk_sell_min_qty"
+                                               value="{{ old('bulk_sell_min_qty') }}"
+                                               placeholder="e.g. 50" min="2" step="1" class="field-input"
+                                               oninput="updateBulkPreview()">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="bulkDiscount" class="field-label">Discount (%) <span class="required">*</span></label>
+                                        <div class="field-suffix-wrap">
+                                            <input type="number" id="bulkDiscount" name="bulk_sell_discount"
+                                                   value="{{ old('bulk_sell_discount') }}"
+                                                   placeholder="e.g. 10" min="1" max="99" step="0.1"
+                                                   class="field-input with-suffix" oninput="updateBulkPreview()">
+                                            <span class="field-suffix">%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bulk-preview-strip" id="bulkPreviewStrip" style="display:none;">
+                                    <i class="fas fa-tag"></i>
+                                    <span id="bulkPreviewText"></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -278,4 +335,12 @@
 
 @section('scripts')
 <script src="{{ asset('js/uploadForm.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    setupCounter('demoProductDesc', 'demoProductDescCounter', 2000);
+    ['bulkMinQty', 'bulkDiscount'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', updateBulkPreview);
+    });
+});
+</script>
 @endsection

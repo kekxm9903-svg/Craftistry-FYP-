@@ -150,19 +150,18 @@
                 <div class="artwork-card" data-demo-id="{{ $demo->id }}">
                     <div class="artwork-image">
                         @php
-                            $demoImages = array_filter(array_merge(
-                                [$demo->image_url],
+                            $demoImages = array_values(array_filter(array_merge(
+                                $demo->image_path ? [$demo->image_url] : [],
                                 $demo->extra_images ? array_map(fn($p) => asset('storage/' . $p), $demo->extra_images) : []
-                            ));
-                            $demoImages = array_values($demoImages);
+                            )));
                         @endphp
                         <div class="card-slider" data-index="0">
-                            @foreach($demoImages as $i => $imgUrl)
-                                <img src="{{ $imgUrl }}" alt="{{ $demo->title }}" class="slider-img {{ $i === 0 ? 'active' : '' }}">
-                            @endforeach
+                            @forelse($demoImages as $i => $imgUrl)
+                                <img src="{{ $imgUrl }}" alt="{{ $demo->title }}" class="slider-img {{ $i === 0 ? 'active' : '' }}" onerror="this.closest('.card-slider').style.background='var(--divider)'">
+                            @empty
+                                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:2rem;"><i class="fas fa-image"></i></div>
+                            @endforelse
                             @if(count($demoImages) > 1)
-                                <button class="slider-arrow slider-prev" onclick="slideCard(this, -1)"><i class="bi bi-chevron-left"></i></button>
-                                <button class="slider-arrow slider-next" onclick="slideCard(this, 1)"><i class="bi bi-chevron-right"></i></button>
                                 <div class="slider-dots">
                                     @foreach($demoImages as $i => $imgUrl)
                                         <span class="slider-dot {{ $i === 0 ? 'active' : '' }}"></span>
@@ -170,8 +169,12 @@
                                 </div>
                             @endif
                         </div>
+                        @if(count($demoImages) > 1)
+                            <button class="slider-arrow slider-prev" onclick="slideCard(this,-1)"><i class="fas fa-chevron-left"></i></button>
+                            <button class="slider-arrow slider-next" onclick="slideCard(this, 1)"><i class="fas fa-chevron-right"></i></button>
+                        @endif
                         <div class="artwork-overlay">
-                            <button class="btn-icon" title="Edit" onclick="openEditDemoModal({{ $demo->id }})">
+                            <button class="btn-icon" title="Edit" onclick="window.location.href='{{ route('artist.demo.edit.page', $demo->id) }}'">
                                 <i class="fas fa-edit"></i>
                             </button>
                             <button class="btn-icon" title="Delete" onclick="deleteDemo({{ $demo->id }})">
@@ -222,19 +225,18 @@
                 <div class="artwork-card" data-artwork-id="{{ $artwork->id }}">
                     <div class="artwork-image">
                         @php
-                            $sellImages = array_filter(array_merge(
-                                [$artwork->image_url],
+                            $sellImages = array_values(array_filter(array_merge(
+                                $artwork->image_path ? [$artwork->image_url] : [],
                                 $artwork->extra_images ? array_map(fn($p) => asset('storage/' . $p), $artwork->extra_images) : []
-                            ));
-                            $sellImages = array_values($sellImages);
+                            )));
                         @endphp
                         <div class="card-slider" data-index="0">
-                            @foreach($sellImages as $i => $imgUrl)
-                                <img src="{{ $imgUrl }}" alt="{{ $artwork->product_name }}" class="slider-img {{ $i === 0 ? 'active' : '' }}">
-                            @endforeach
+                            @forelse($sellImages as $i => $imgUrl)
+                                <img src="{{ $imgUrl }}" alt="{{ $artwork->product_name }}" class="slider-img {{ $i === 0 ? 'active' : '' }}" onerror="this.closest('.card-slider').style.background='var(--divider)'">
+                            @empty
+                                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:2rem;"><i class="fas fa-image"></i></div>
+                            @endforelse
                             @if(count($sellImages) > 1)
-                                <button class="slider-arrow slider-prev" onclick="slideCard(this, -1)"><i class="bi bi-chevron-left"></i></button>
-                                <button class="slider-arrow slider-next" onclick="slideCard(this, 1)"><i class="bi bi-chevron-right"></i></button>
                                 <div class="slider-dots">
                                     @foreach($sellImages as $i => $imgUrl)
                                         <span class="slider-dot {{ $i === 0 ? 'active' : '' }}"></span>
@@ -242,8 +244,12 @@
                                 </div>
                             @endif
                         </div>
+                        @if(count($sellImages) > 1)
+                            <button class="slider-arrow slider-prev" onclick="slideCard(this,-1)"><i class="fas fa-chevron-left"></i></button>
+                            <button class="slider-arrow slider-next" onclick="slideCard(this, 1)"><i class="fas fa-chevron-right"></i></button>
+                        @endif
                         <div class="artwork-overlay">
-                            <button class="btn-icon" title="Edit" onclick="openEditArtworkModal({{ $artwork->id }})">
+                            <button class="btn-icon" title="Edit" onclick="window.location.href='{{ route('artist.artwork.edit.page', $artwork->id) }}'">
                                 <i class="fas fa-edit"></i>
                             </button>
                             <button class="btn-icon" title="Delete" onclick="deleteArtwork({{ $artwork->id }})">
@@ -252,7 +258,19 @@
                         </div>
                     </div>
                     <div class="artwork-info">
-                        <div class="artwork-price">{{ $artwork->formatted_price }}</div>
+                        @if($artwork->promotion_price !== null)
+                        <div class="price-block promo-active">
+                            <div class="price-row">
+                                <span class="price-promo">{{ $artwork->formatted_promotion_price }}</span>
+                                <span class="price-discount-badge">-{{ $artwork->promotion_discount }}%</span>
+                            </div>
+                            <div class="price-original">{{ $artwork->formatted_price }}</div>
+                        </div>
+                        @else
+                        <div class="price-block">
+                            <div class="artwork-price">{{ $artwork->formatted_price }}</div>
+                        </div>
+                        @endif
                         <h4>{{ $artwork->product_name }}</h4>
                         <span style="font-size: 0.75rem; color: #667eea; font-weight: bold; text-transform: uppercase;">
                             {{ $artwork->artwork_type }}
