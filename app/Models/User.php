@@ -102,7 +102,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Artists this user has favorited.
+     * Raw Favorite records for this user (artist favourites).
      */
     public function favorites()
     {
@@ -110,7 +110,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the actual favorited artist User models (many-to-many shortcut).
+     * Get the actual favourited artist User models (many-to-many shortcut).
      */
     public function favoriteArtists()
     {
@@ -119,6 +119,20 @@ class User extends Authenticatable
             'favorites',
             'user_id',
             'artist_id'
+        )->withTimestamps();
+    }
+
+    /**
+     * Artworks this user has saved to favourites.
+     * Pivot table: user_favorite_products (user_id, artwork_sell_id)
+     */
+    public function favoriteProducts()
+    {
+        return $this->belongsToMany(
+            ArtworkSell::class,
+            'user_favorite_products',
+            'user_id',
+            'artwork_sell_id'
         )->withTimestamps();
     }
 
@@ -135,10 +149,18 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if this user has favorited a specific artist.
+     * Check if this user has favourited a specific artist.
      */
     public function hasFavorited(User $artist): bool
     {
         return $this->favorites()->where('artist_id', $artist->id)->exists();
+    }
+
+    /**
+     * Check if this user has favourited a specific product.
+     */
+    public function hasFavoritedProduct(ArtworkSell $product): bool
+    {
+        return $this->favoriteProducts()->where('artwork_sell_id', $product->id)->exists();
     }
 }

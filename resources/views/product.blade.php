@@ -191,6 +191,14 @@
         gap: 0;
     }
 
+    .sp-title-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: var(--sp-md);
+        margin-bottom: var(--sp-sm);
+    }
+
     .sp-cat-tag {
         display: inline-block;
         font-size: var(--fs-sm);
@@ -209,7 +217,46 @@
         font-weight: 700;
         color: var(--ink);
         line-height: 1.3;
-        margin-bottom: var(--sp-sm);
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* ── Favourite button ── */
+    .btn-fav-product {
+        flex-shrink: 0;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 1.5px solid var(--border);
+        background: var(--white);
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        cursor: pointer;
+        transition: all .2s;
+        position: relative;
+        top: 2px;
+    }
+    .btn-fav-product:hover {
+        border-color: #fca5a5;
+        background: #fef2f2;
+        color: #ef4444;
+    }
+    .btn-fav-product.is-fav {
+        border-color: #fca5a5;
+        background: #fef2f2;
+        color: #ef4444;
+    }
+    .btn-fav-product.is-fav:hover {
+        background: #ef4444;
+        color: #fff;
+        border-color: #ef4444;
+    }
+    .btn-fav-product.loading {
+        pointer-events: none;
+        opacity: .6;
     }
 
     .sp-rating-row {
@@ -265,7 +312,6 @@
         background-clip: text;
     }
 
-    /* ── Bulk deal banner ── */
     .sp-bulk-banner {
         display: flex;
         align-items: center;
@@ -300,12 +346,6 @@
     .sp-row-val { color: var(--ink); flex: 1; font-weight: 500; }
     .sp-row-val .in-stock  { color: var(--success); font-weight: 600; }
     .sp-row-val .sold-out  { color: #c62828; font-weight: 600; }
-    .sp-row-val .guarantee-badge {
-        display: inline-flex; align-items: center; gap: 4px;
-        background: var(--lavender); color: var(--primary-2);
-        padding: 2px var(--sp-sm); border-radius: var(--radius-sm);
-        font-size: var(--fs-sm); font-weight: 600;
-    }
 
     .sp-purchase-section {
         padding: var(--sp-md) 0;
@@ -338,13 +378,19 @@
     .sp-qty-btn:hover:not(:disabled) { background: var(--lavender); color: var(--primary); }
     .sp-qty-btn:disabled { opacity: .35; cursor: not-allowed; }
     .sp-qty-num {
-        width: 44px; height: 32px;
+        width: 52px; height: 32px;
         text-align: center;
         font-size: var(--fs-base);
         font-weight: 600;
-        display: flex; align-items: center; justify-content: center;
         color: var(--ink);
+        border: none;
+        outline: none;
+        background: transparent;
+        font-family: 'Inter', sans-serif;
+        -moz-appearance: textfield;
     }
+    .sp-qty-num::-webkit-inner-spin-button,
+    .sp-qty-num::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     .sp-qty-note { font-size: var(--fs-sm); color: var(--muted); margin-left: var(--sp-sm); }
 
     .sp-total-price {
@@ -363,17 +409,13 @@
         font-weight: 400;
     }
 
-    /* ── CTA rows ── */
     .sp-cta-row {
         display: flex;
         gap: var(--sp-sm);
         padding-top: var(--sp-md);
         align-items: stretch;
     }
-
-    .sp-cta-row-bulk {
-        padding-top: var(--sp-xs);
-    }
+    .sp-cta-row-bulk { padding-top: var(--sp-xs); }
 
     .sp-btn {
         display: flex; align-items: center; justify-content: center; gap: var(--sp-xs);
@@ -407,7 +449,6 @@
     .sp-btn-buy:hover { opacity: .9; box-shadow: 0 5px 16px rgba(102,126,234,.38); }
     .sp-btn-buy:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
 
-    /* ── Bulk Order button ── */
     .sp-btn-bulk {
         width: 100%;
         background: #faf9ff;
@@ -417,13 +458,8 @@
         gap: var(--sp-sm);
         box-shadow: none;
     }
-    .sp-btn-bulk:hover {
-        background: var(--lavender);
-        border-style: solid;
-        color: var(--primary-2);
-    }
+    .sp-btn-bulk:hover { background: var(--lavender); color: var(--primary-2); }
 
-    /* Bulk badge inside button */
     .bulk-badge {
         display: inline-flex;
         align-items: center;
@@ -436,14 +472,6 @@
         font-weight: 700;
         border: 1px solid #ddd6fe;
     }
-
-    .sp-btn-contact {
-        background: var(--white);
-        color: var(--muted);
-        border: 1.5px solid var(--border);
-        padding: 11px var(--sp-md);
-    }
-    .sp-btn-contact:hover { border-color: var(--primary); color: var(--primary); }
 
     .sp-sold-notice {
         display: flex; align-items: center; gap: var(--sp-xs);
@@ -473,7 +501,6 @@
         padding: var(--sp-sm) 0;
         border-bottom: 1px solid var(--divider);
         font-size: var(--fs-base);
-        gap: 0;
     }
     .sp-spec-cell:nth-last-child(-n+2) { border-bottom: none; }
     .sp-spec-cell:nth-child(odd) { padding-right: var(--sp-xl); }
@@ -579,6 +606,7 @@
     .toast.show { transform: translateY(0); opacity: 1; }
     .t-success { color: #34d399; }
     .t-info    { color: #60a5fa; }
+    .t-heart   { color: #f87171; }
     .toast-link { color: #a78bfa; font-weight: 700; font-size: var(--fs-sm); text-decoration: none; margin-left: var(--sp-xs); white-space: nowrap; }
 
     @media (max-width: 860px) {
@@ -621,7 +649,10 @@
     <input type="hidden" name="qty"        id="buy-now-qty" value="1">
 </form>
 
-@php $isSoldOut = in_array(strtolower($artwork->status ?? ''), ['sold', 'sold_out']); @endphp
+@php
+    $isSoldOut  = in_array(strtolower($artwork->status ?? ''), ['sold', 'sold_out']);
+    $isFavorited = auth()->check() && auth()->user()->favoriteProducts->contains($artwork->id);
+@endphp
 
 <div class="sp-page">
     <a href="javascript:history.back()" class="back-btn">
@@ -684,7 +715,21 @@
                 <span class="sp-cat-tag">{{ ucfirst($artwork->artwork_type) }}</span>
             @endif
 
-            <h1 class="sp-title">{{ $artwork->product_name ?? 'Untitled Artwork' }}</h1>
+            {{-- Title row with favourite button --}}
+            <div class="sp-title-row">
+                <h1 class="sp-title">{{ $artwork->product_name ?? 'Untitled Artwork' }}</h1>
+
+                @auth
+                <button class="btn-fav-product {{ $isFavorited ? 'is-fav' : '' }}"
+                        id="btn-fav-product"
+                        data-url="{{ route('product.favorite', $artwork->id) }}"
+                        title="{{ $isFavorited ? 'Remove from favourites' : 'Add to favourites' }}"
+                        aria-label="Toggle favourite"
+                        onclick="toggleProductFav(this)">
+                    <i class="fas fa-heart"></i>
+                </button>
+                @endauth
+            </div>
 
             @if($reviewCount > 0)
             <div class="sp-rating-row">
@@ -754,7 +799,10 @@
                     <div style="display:flex;align-items:center;">
                         <div class="sp-qty-stepper">
                             <button class="sp-qty-btn" id="qty-minus" onclick="changeQty(-1)" disabled>−</button>
-                            <div class="sp-qty-num" id="qty-value">1</div>
+                            <input class="sp-qty-num" id="qty-value"
+                                   type="number" value="1" min="1"
+                                   oninput="handleQtyInput(this)"
+                                   onblur="handleQtyBlur(this)">
                             <button class="sp-qty-btn" id="qty-plus" onclick="changeQty(1)">+</button>
                         </div>
                         <span class="sp-qty-note">Available</span>
@@ -780,7 +828,7 @@
                 </div>
             </div>
 
-            {{-- CTA row 1: Add to Cart + Buy Now + Contact --}}
+            {{-- CTA row 1: Add to Cart + Buy Now --}}
             <div class="sp-cta-row">
                 @if($isSoldOut)
                     <div class="sp-sold-notice"><i class="fas fa-ban"></i> This artwork has been sold</div>
@@ -795,7 +843,7 @@
                 @endif
             </div>
 
-            {{-- CTA row 2: Bulk Order (only if enabled and not sold out) --}}
+            {{-- CTA row 2: Bulk Order --}}
             @if(!$isSoldOut && $artwork->bulk_sell_enabled)
             <div class="sp-cta-row-bulk">
                 @auth
@@ -989,9 +1037,9 @@
     const BULK_DISCOUNT = {{ $artwork->bulk_sell_discount ?? 0 }};
     let qty = 1;
 
-    function changeQty(delta) {
-        qty = Math.max(1, qty + delta);
-        document.getElementById('qty-value').textContent = qty;
+    function updateQtyDisplay() {
+        const input = document.getElementById('qty-value');
+        input.value = qty;
         document.getElementById('qty-minus').disabled = qty <= 1;
 
         let unitPrice = UNIT_PRICE;
@@ -1010,6 +1058,25 @@
         const hint = document.getElementById('total-hint');
         if (qty > 1) { hint.style.display = 'inline'; document.getElementById('qty-hint-val').textContent = qty; }
         else         { hint.style.display = 'none'; }
+    }
+
+    function changeQty(delta) {
+        qty = Math.max(1, qty + delta);
+        updateQtyDisplay();
+    }
+
+    function handleQtyInput(input) {
+        const val = parseInt(input.value, 10);
+        if (!isNaN(val) && val >= 1) {
+            qty = val;
+            updateQtyDisplay();
+        }
+    }
+
+    function handleQtyBlur(input) {
+        const val = parseInt(input.value, 10);
+        qty = (!isNaN(val) && val >= 1) ? val : 1;
+        updateQtyDisplay();
     }
 
     function handleAddToCart(artworkId) {
@@ -1046,17 +1113,57 @@
         document.getElementById('buy-now-form').submit();
     }
 
+    // ── Toggle product favourite ──────────────────────────────────────────────
+    async function toggleProductFav(btn) {
+        if (btn.classList.contains('loading')) return;
+        btn.classList.add('loading');
+
+        const url      = btn.dataset.url;
+        const wasFav   = btn.classList.contains('is-fav');
+
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept':       'application/json',
+                },
+            });
+
+            if (!res.ok) throw new Error('Request failed');
+
+            const data = await res.json();
+
+            if (data.favorited) {
+                btn.classList.add('is-fav');
+                btn.title = 'Remove from favourites';
+                showToast('Added to your favourites!', 'heart', false);
+            } else {
+                btn.classList.remove('is-fav');
+                btn.title = 'Add to favourites';
+                showToast('Removed from favourites', 'info', false);
+            }
+        } catch (err) {
+            showToast('Something went wrong. Please try again.', 'info', false);
+        } finally {
+            btn.classList.remove('loading');
+        }
+    }
+
     function showToast(message, type = 'success', showLink = true) {
         const toast = document.getElementById('toast');
         document.getElementById('toast-msg').textContent = message;
-        document.getElementById('toast-icon').className = type === 'info'
-            ? 'fas fa-info-circle t-info' : 'fas fa-check-circle t-success';
+
+        const iconEl = document.getElementById('toast-icon');
+        if (type === 'heart')        iconEl.className = 'fas fa-heart t-heart';
+        else if (type === 'info')    iconEl.className = 'fas fa-info-circle t-info';
+        else                         iconEl.className = 'fas fa-check-circle t-success';
+
         document.getElementById('toast-link').style.display = showLink ? 'inline' : 'none';
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 3500);
     }
-
-    function handleContact() { alert('Contact feature coming soon!'); }
 
     function openLightbox(type, src) {
         const lb  = document.getElementById('lightbox');

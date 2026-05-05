@@ -18,7 +18,8 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         // ── Existing stats ──
-        $favoriteArtists = $user->favorites()->count();
+        $favoriteArtists = $user->favorites()->count()
+                         + $user->favoriteProducts()->count();
 
         $activeOrders = Order::where('user_id', $user->id)
                              ->where('payment_status', 'paid')

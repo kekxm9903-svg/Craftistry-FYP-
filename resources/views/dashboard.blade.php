@@ -31,7 +31,7 @@
             <div class="stat-icon purple"><i class="fas fa-heart"></i></div>
             <div class="stat-body">
                 <div class="stat-num">{{ $favoriteArtists }}</div>
-                <div class="stat-label">Favourite Artists</div>
+                <div class="stat-label">Favourite List</div>
             </div>
         </div>
         <div class="stat-card">
@@ -70,8 +70,8 @@
                 <a href="{{ route('favorites.index') }}" class="action-card">
                     <div class="action-icon purple"><i class="fas fa-heart"></i></div>
                     <div class="action-body">
-                        <div class="action-title">Favourite Artists</div>
-                        <div class="action-desc">Browse your saved artists</div>
+                        <div class="action-title">Favourite List</div>
+                        <div class="action-desc">Browse your saved artists and products</div>
                     </div>
                     <i class="fas fa-chevron-right action-arrow"></i>
                 </a>
