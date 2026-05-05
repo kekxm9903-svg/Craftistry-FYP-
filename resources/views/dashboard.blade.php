@@ -107,7 +107,7 @@
         </div>
     </div>
 
-    {{-- ══ TOP ARTISTS — MiHuaShi style horizontal scroll ══ --}}
+    {{-- ══ TOP ARTISTS ══ --}}
     @if(isset($topArtists) && $topArtists->count() > 0)
     <div class="sp-card">
         <div class="sp-card-header">
@@ -156,7 +156,7 @@
     </div>
     @endif
 
-    {{-- ══ HOT ARTWORKS — MiHuaShi portrait grid ══ --}}
+    {{-- ══ HOT ARTWORKS ══ --}}
     @if(isset($hotProducts) && $hotProducts->count() > 0)
     <div class="sp-card">
         <div class="sp-card-header">
@@ -174,6 +174,7 @@
                     $pName   = $pArtist?->fullname ?? 'Artist';
                     $pImg    = $pArtist?->profile_image ?? null;
                     $pInit   = strtoupper(substr($pName, 0, 1));
+                    $pPromo  = $product->promotion_price;
                 @endphp
                 <a href="{{ route('product.show', $product->id) }}" class="product-card">
                     <div class="product-img">
@@ -186,6 +187,9 @@
                             <span class="product-type-badge {{ strtolower($product->artwork_type) }}">
                                 {{ ucfirst($product->artwork_type) }}
                             </span>
+                        @endif
+                        @if($pPromo !== null)
+                            <span class="product-promo-badge">-{{ number_format($product->promotion_discount, 0) }}%</span>
                         @endif
                     </div>
                     <div class="product-info">
@@ -200,7 +204,12 @@
                             </div>
                             <span class="product-artist-name">{{ Str::limit($pName, 14) }}</span>
                         </div>
-                        <div class="product-price">RM {{ number_format($product->product_price, 2) }}</div>
+                        @if($pPromo !== null)
+                            <div class="product-price-promo">RM {{ number_format($pPromo, 2) }}</div>
+                            <div class="product-price-original">RM {{ number_format($product->product_price, 2) }}</div>
+                        @else
+                            <div class="product-price">RM {{ number_format($product->product_price, 2) }}</div>
+                        @endif
                     </div>
                 </a>
                 @endforeach

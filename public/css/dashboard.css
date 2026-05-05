@@ -128,7 +128,7 @@ body {
 
 
 /* ══════════════════════════════
-   STATS ROW — 4 columns
+   STATS ROW
 ══════════════════════════════ */
 
 .stats-row {
@@ -238,7 +238,7 @@ body {
 
 
 /* ══════════════════════════════
-   QUICK ACTIONS — 4 columns
+   QUICK ACTIONS
 ══════════════════════════════ */
 
 .action-grid {
@@ -308,7 +308,6 @@ body {
 
 .action-card:hover .action-arrow { color: var(--primary); }
 
-/* Pending badge on action card */
 .action-badge {
     display: inline-flex;
     align-items: center;
@@ -326,7 +325,7 @@ body {
 
 
 /* ══════════════════════════════
-   TOP ARTISTS — MiHuaShi scroll cards
+   TOP ARTISTS
 ══════════════════════════════ */
 
 .artist-scroll-row {
@@ -444,7 +443,7 @@ body {
 
 
 /* ══════════════════════════════
-   HOT ARTWORKS — MiHuaShi portrait grid
+   HOT ARTWORKS
 ══════════════════════════════ */
 
 .product-grid {
@@ -501,6 +500,7 @@ body {
     background: linear-gradient(135deg, #f5f3ff, var(--lavender));
 }
 
+/* ── Artwork type badge (top-left) ── */
 .product-type-badge {
     position: absolute;
     top: var(--sp-xs);
@@ -511,10 +511,30 @@ body {
     font-weight: 700;
     pointer-events: none;
     z-index: 2;
+    color: #fff;
 }
 
-.product-type-badge.digital  { background: rgba(59, 130, 246, .88); color: #fff; }
-.product-type-badge.physical { background: rgba(102, 126, 234, .88); color: #fff; }
+/* Digital → bold blue */
+.product-type-badge.digital  { background: #2563eb; }
+
+/* Physical → forest green */
+.product-type-badge.physical { background: #16a34a; }
+
+/* Promo badge — top-right of product image */
+.product-promo-badge {
+    position: absolute;
+    top: var(--sp-xs);
+    right: var(--sp-xs);
+    background: #dc2626;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 20px;
+    pointer-events: none;
+    z-index: 2;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, .4);
+}
 
 .product-info {
     padding: var(--sp-xs) var(--sp-sm) var(--sp-sm);
@@ -571,6 +591,7 @@ body {
     text-overflow: ellipsis;
 }
 
+/* Normal price */
 .product-price {
     font-size: var(--fs-md);
     font-weight: 800;
@@ -581,9 +602,26 @@ body {
     line-height: 1;
 }
 
+/* Promo price — red */
+.product-price-promo {
+    font-size: var(--fs-md);
+    font-weight: 800;
+    color: #dc2626;
+    line-height: 1.2;
+}
+
+/* Original price — grey strikethrough */
+.product-price-original {
+    font-size: var(--fs-sm);
+    color: #9ca3af;
+    text-decoration: line-through;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
 
 /* ══════════════════════════════
-   UPCOMING CLASSES LIST
+   UPCOMING CLASSES
 ══════════════════════════════ */
 
 .class-list { display: flex; flex-direction: column; }
