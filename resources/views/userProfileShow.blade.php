@@ -29,8 +29,6 @@
 
     {{-- ══ PROFILE HEADER CARD ══ --}}
     <div class="sp-card profile-header-card">
-
-        {{-- Avatar + name row --}}
         <div class="profile-top">
             <div class="profile-avatar-wrap">
                 @if($user->profile_image && $user->profile_image !== 'images/Profile.png')
@@ -57,7 +55,6 @@
                 <i class="fas fa-edit"></i> Edit Profile
             </a>
         </div>
-
     </div>
 
     {{-- ══ PERSONAL INFORMATION CARD ══ --}}
@@ -110,6 +107,77 @@
         </div>
     </div>
 
+    {{-- ══ ARTWORK PREFERENCE CARD ══ --}}
+    <div class="sp-card">
+        <div class="sp-card-header">
+            <div class="sp-card-header-left">
+                <div class="hline"></div>
+                Artwork Preference
+            </div>
+        </div>
+        <div class="sp-card-body">
+
+            {{-- Current preference display --}}
+            <div class="pref-current-row">
+                <div>
+                    <div class="pref-current-label">Your preferred artwork type</div>
+                    @if($user->preferred_artwork_type)
+                        <div class="pref-current-value">
+                            <span class="pref-badge">
+                                <i class="fas fa-palette"></i>
+                                {{ $user->preferred_artwork_type }}
+                            </span>
+                            <span class="pref-current-hint">
+                                Artworks of this type appear first in your gallery and dashboard.
+                            </span>
+                        </div>
+                    @else
+                        <div class="pref-current-value pref-none">
+                            No preference set — all artwork types shown equally.
+                        </div>
+                    @endif
+                </div>
+                <button class="btn-change-pref" id="btn-open-pref" type="button" onclick="openPrefPanel()">
+                    <i class="fas fa-sliders-h"></i>
+                    {{ $user->preferred_artwork_type ? 'Change' : 'Set Preference' }}
+                </button>
+            </div>
+
+            {{-- Inline type picker (hidden by default) --}}
+            <div class="pref-panel" id="pref-panel" style="display:none;">
+                <div class="pref-panel-label">Select your preferred artwork type:</div>
+
+                @php $artworkTypes = \App\Models\ArtworkType::orderBy('name')->get(); @endphp
+
+                <div class="pref-panel-grid" id="pref-panel-grid">
+                    @foreach($artworkTypes as $type)
+                    <button class="pref-panel-option {{ $user->preferred_artwork_type === $type->name ? 'selected' : '' }}"
+                            data-value="{{ $type->name }}"
+                            type="button"
+                            onclick="selectPrefPanel(this)">
+                        <div class="pref-panel-icon"><i class="fas fa-palette"></i></div>
+                        <div class="pref-panel-name">{{ $type->name }}</div>
+                        <div class="pref-panel-check"><i class="fas fa-check"></i></div>
+                    </button>
+                    @endforeach
+                </div>
+
+                <div class="pref-panel-actions">
+                    <button class="pref-panel-clear" type="button" onclick="clearPrefPanel()">
+                        <i class="fas fa-times"></i> Clear preference
+                    </button>
+                    <button class="pref-panel-cancel" type="button" onclick="closePrefPanel()">
+                        Cancel
+                    </button>
+                    <button class="pref-panel-save" id="pref-panel-save" type="button" onclick="savePrefPanel()" disabled>
+                        <i class="fas fa-check"></i> Save
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     {{-- ══ SECURITY CARD ══ --}}
     <div class="sp-card">
         <div class="sp-card-header">
@@ -137,13 +205,82 @@
 @section('scripts')
 <script src="{{ asset('js/userProfileShow.js') }}"></script>
 <script>
-    // Auto-hide success toast
+    // ── Auto-hide success toast ──
     const toast = document.getElementById('successAlert');
     if (toast) {
         setTimeout(() => {
             toast.style.animation = 'slideOutRight .4s ease-in forwards';
             setTimeout(() => toast.remove(), 400);
         }, 3000);
+    }
+
+    // ── Inline preference panel ──
+    const PREF_UPDATE_URL = '{{ route('preference.update') }}';
+    const CSRF            = '{{ csrf_token() }}';
+    let   panelSelected   = null;
+
+    function openPrefPanel() {
+        document.getElementById('pref-panel').style.display = 'block';
+        document.getElementById('btn-open-pref').style.display = 'none';
+        // Pre-select current preference if set
+        const current = @json($user->preferred_artwork_type);
+        if (current) {
+            document.querySelectorAll('.pref-panel-option').forEach(btn => {
+                if (btn.dataset.value === current) {
+                    btn.classList.add('selected');
+                    panelSelected = current;
+                    document.getElementById('pref-panel-save').disabled = false;
+                }
+            });
+        }
+    }
+
+    function closePrefPanel() {
+        document.getElementById('pref-panel').style.display = 'none';
+        document.getElementById('btn-open-pref').style.display = 'inline-flex';
+        panelSelected = null;
+        document.querySelectorAll('.pref-panel-option').forEach(b => b.classList.remove('selected'));
+        document.getElementById('pref-panel-save').disabled = true;
+    }
+
+    function selectPrefPanel(btn) {
+        document.querySelectorAll('.pref-panel-option').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        panelSelected = btn.dataset.value;
+        document.getElementById('pref-panel-save').disabled = false;
+    }
+
+    function clearPrefPanel() {
+        document.querySelectorAll('.pref-panel-option').forEach(b => b.classList.remove('selected'));
+        panelSelected = '';
+        document.getElementById('pref-panel-save').disabled = false;
+    }
+
+    async function savePrefPanel() {
+        const saveBtn = document.getElementById('pref-panel-save');
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        try {
+            const res = await fetch(PREF_UPDATE_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': CSRF,
+                    'Accept':       'application/json',
+                },
+                body: JSON.stringify({ preferred_artwork_type: panelSelected }),
+            });
+
+            if (!res.ok) throw new Error('Failed');
+            // Reload to reflect changes
+            window.location.reload();
+
+        } catch (err) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-check"></i> Save';
+            alert('Something went wrong. Please try again.');
+        }
     }
 </script>
 @endsection

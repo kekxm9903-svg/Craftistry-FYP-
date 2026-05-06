@@ -11,11 +11,10 @@ use Illuminate\Support\Facades\Log;
 
 class ArtistBrowseController extends Controller
 {
-    /**
-     * Display all artwork sells (one card per artwork, not per artist)
-     */
     public function index(Request $request)
     {
+        $pref = auth()->check() ? auth()->user()->preferred_artwork_type : null;
+
         $query = ArtworkSell::with(['artist.user'])
             ->whereHas('artist.user')
             ->whereNotNull('image_path')
@@ -39,23 +38,31 @@ class ArtistBrowseController extends Controller
             });
         }
 
-        // Filter by artwork type (digital / physical)
+        // Filter by artwork_type (physical / digital)
         if ($request->filled('type')) {
             $query->where('artwork_type', $request->type);
         }
 
-        // Sort options
-        switch ($request->get('sort', 'latest')) {
-            case 'name':
-                $query->orderBy('product_name', 'asc');
-                break;
-            case 'price':
-                $query->orderBy('product_price', 'asc');
-                break;
-            case 'latest':
-            default:
+        // Filter by product_category (Drawing, Knitting, etc.)
+        if ($request->filled('category')) {
+            $query->where('product_category', $request->category);
+        }
+
+        // Sort
+        $sort = $request->get('sort', 'latest');
+
+        if ($sort === 'name') {
+            $query->orderBy('product_name', 'asc');
+        } elseif ($sort === 'price') {
+            $query->orderBy('product_price', 'asc');
+        } else {
+            // Default: latest — push preferred category to top if no explicit category filter
+            if ($pref && !$request->filled('category')) {
+                $query->orderByRaw("CASE WHEN product_category = ? THEN 0 ELSE 1 END", [$pref])
+                      ->latest();
+            } else {
                 $query->latest();
-                break;
+            }
         }
 
         $artworks = $query->paginate(20)->withQueryString();
@@ -70,28 +77,47 @@ class ArtistBrowseController extends Controller
             ->values()
             ->toArray();
 
-        return view('artistBrowse', compact('artworks', 'specialties'));
+        // Product categories for filter pills
+        $categories = ArtworkSell::whereNotNull('product_category')
+            ->where('product_category', '!=', '')
+            ->whereNotIn('status', ['sold', 'sold_out'])
+            ->distinct()
+            ->pluck('product_category')
+            ->filter()
+            ->sort()
+            ->values()
+            ->toArray();
+
+        return view('artistBrowse', compact('artworks', 'specialties', 'categories', 'pref'));
     }
 
-    /**
-     * Display single artist detail page
-     */
     public function show($id)
     {
-        Log::info('Artist Profile Accessed', [
-            'requested_id' => $id,
-            'route_params' => request()->route()->parameters(),
-        ]);
+        Log::info('Artist Profile Accessed', ['requested_id' => $id]);
+
+        $pref = auth()->check() ? auth()->user()->preferred_artwork_type : null;
 
         $user = User::with([
             'artist.artworkTypes',
-            'demoArtworks' => function ($q) {
-                $q->orderBy('order', 'asc');
-            },
-            'artworkSells' => function ($q) {
-                $q->orderBy('created_at', 'desc');
-            },
+            'demoArtworks' => fn($q) => $q->orderBy('order', 'asc'),
         ])->findOrFail($id);
+
+        if (!$user->artist) {
+            abort(404, 'Artist profile not found');
+        }
+
+        // Sort artworks — preferred category first
+        $artworkSellsQuery = ArtworkSell::where('artist_id', $user->artist->id);
+
+        if ($pref) {
+            $artworkSellsQuery
+                ->orderByRaw("CASE WHEN product_category = ? THEN 0 ELSE 1 END", [$pref])
+                ->orderBy('created_at', 'desc');
+        } else {
+            $artworkSellsQuery->orderBy('created_at', 'desc');
+        }
+
+        $user->setRelation('artworkSells', $artworkSellsQuery->get());
 
         Log::info('Artist Profile Loaded', [
             'loaded_user_id'      => $user->id,
@@ -100,21 +126,12 @@ class ArtistBrowseController extends Controller
             'artworks_sell_count' => $user->artworkSells->count(),
         ]);
 
-        if (!$user->artist) {
-            abort(404, 'Artist profile not found');
-        }
-
-        return view('artistShow', compact('user'));
+        return view('artistShow', compact('user', 'pref'));
     }
 
-    /**
-     * DEBUG METHOD — Check database relationships
-     * Access via: /artists/debug-check
-     */
     public function debugCheck()
     {
         $results = [];
-
         $artists = User::whereHas('artist')->with('artist')->get();
 
         foreach ($artists as $artist) {

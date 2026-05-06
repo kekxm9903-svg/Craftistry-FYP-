@@ -25,6 +25,7 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\CustomOrderController;
 use App\Http\Controllers\ArtistCustomOrderController;
 use App\Http\Controllers\BulkOrderController;
+use App\Http\Controllers\PreferenceController;   // ← NEW
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
@@ -48,6 +49,11 @@ Route::get('/checkout/order/cancel',  [OrderCheckoutController::class, 'cancel']
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/my-classes', [MyClassesController::class, 'index'])->name('my.classes');
+
+    // --- PREFERENCE ROUTES ---
+    Route::post('/user/preference',        [PreferenceController::class, 'store']) ->name('preference.store');
+    Route::post('/user/preference/skip',   [PreferenceController::class, 'skip'])  ->name('preference.skip');
+    Route::post('/user/preference/update', [PreferenceController::class, 'update'])->name('preference.update');
 
     // --- ORDER ROUTES (buyer) ---
     Route::get('/my-orders',                   [OrderController::class, 'index'])          ->name('orders.index');
@@ -112,7 +118,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/profile/update', [ArtistController::class, 'update'])  ->name('artist.profile.update');
         Route::get('/dashboard',       [ArtistController::class, 'dashboard'])->name('artist.dashboard');
 
-        // --- DEMO ROUTES ---
         Route::get('/demo/upload',            [DemoArtworkController::class, 'uploadPage'])->name('artist.demo.upload.page');
         Route::post('/demo/upload',           [DemoArtworkController::class, 'store'])     ->name('artist.demo.upload');
         Route::get('/demo/{id}/edit',         [DemoArtworkController::class, 'editPage'])  ->name('artist.demo.edit.page');
@@ -121,7 +126,6 @@ Route::middleware('auth')->group(function () {
         Route::delete('/demo/{id}',           [DemoArtworkController::class, 'destroy'])   ->name('artist.demo.delete');
         Route::post('/demo/{id}/unlink-sell', [DemoArtworkController::class, 'unlinkSell'])->name('artist.demo.unlink-sell');
 
-        // --- ARTWORK SELL ROUTES ---
         Route::get('/artwork/sell',              [ArtworkSellController::class, 'sellPage'])  ->name('artist.artwork.sell.page');
         Route::post('/artwork/sell',             [ArtworkSellController::class, 'store'])     ->name('artist.artwork.sell');
         Route::get('/artwork/{id}/edit',         [ArtworkSellController::class, 'editPage'])  ->name('artist.artwork.edit.page');
@@ -132,22 +136,18 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/demo/reorder', [DemoArtworkController::class, 'reorder'])->name('artist.demo.reorder');
 
-        // --- ARTIST ORDER ROUTES (seller) ---
         Route::get('/orders',                 [ArtistOrderController::class, 'index']) ->name('artist.orders');
         Route::post('/orders/{order}/accept', [ArtistOrderController::class, 'accept'])->name('artist.orders.accept');
         Route::post('/orders/{order}/ship',   [ArtistOrderController::class, 'ship'])  ->name('artist.orders.ship');
 
-        // --- ORDER SUMMARY (seller dashboard) ---
         Route::get('/order-summary',            [OrderSummaryController::class, 'index'])    ->name('artist.order.summary');
         Route::get('/order-summary/chart-data', [OrderSummaryController::class, 'chartData'])->name('artist.order.summary.chart');
 
-        // --- CUSTOM ORDER REQUESTS (seller) ---
         Route::get('/custom-orders',                       [ArtistCustomOrderController::class, 'index']) ->name('artist.custom-orders.index');
         Route::get('/custom-orders/{customOrder}',         [ArtistCustomOrderController::class, 'show'])  ->name('artist.custom-orders.show');
         Route::post('/custom-orders/{customOrder}/accept', [ArtistCustomOrderController::class, 'accept'])->name('artist.custom-orders.accept');
         Route::post('/custom-orders/{customOrder}/refuse', [ArtistCustomOrderController::class, 'refuse'])->name('artist.custom-orders.refuse');
 
-        // --- BULK ORDER ROUTES (seller) ---
         Route::get('/bulk-orders',              [BulkOrderController::class, 'sellerIndex'])->name('artist.bulk-orders.index');
         Route::get('/bulk-orders/{id}',         [BulkOrderController::class, 'sellerShow']) ->name('artist.bulk-orders.show');
         Route::post('/bulk-orders/{id}/accept', [BulkOrderController::class, 'accept'])     ->name('artist.bulk-orders.accept');
@@ -185,8 +185,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/bulk-orders',                     [BulkOrderController::class, 'index'])      ->name('bulk-orders.index');
 
     // --- FAVORITE ROUTES ---
-    Route::post('/artist/{user}/favorite', [FavoriteController::class, 'toggle'])->name('artist.favorite');
-    Route::get('/my-favorites',            [FavoriteController::class, 'index']) ->name('favorites.index');
+    Route::post('/artist/{user}/favorite',          [FavoriteController::class, 'toggle'])       ->name('artist.favorite');
+    Route::get('/my-favorites',                     [FavoriteController::class, 'index'])        ->name('favorites.index');
     Route::post('/products/{artworkSell}/favorite', [FavoriteController::class, 'toggleProduct'])->name('product.favorite');
 
     // --- REPORT ROUTES ---
@@ -217,9 +217,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports',                  [AdminController::class, 'reports'])           ->name('admin.reports');
         Route::post('/reports/{report}/status', [AdminController::class, 'updateReportStatus'])->name('admin.reports.status');
 
-        Route::get('/admins',               [AdminController::class, 'admins'])     ->name('admin.admins');
-        Route::post('/admins/add',          [AdminController::class, 'addAdmin'])   ->name('admin.admins.add');
-        Route::post('/admins/{user}/remove',[AdminController::class, 'removeAdmin'])->name('admin.admins.remove');
+        Route::get('/admins',                [AdminController::class, 'admins'])     ->name('admin.admins');
+        Route::post('/admins/add',           [AdminController::class, 'addAdmin'])   ->name('admin.admins.add');
+        Route::post('/admins/{user}/remove', [AdminController::class, 'removeAdmin'])->name('admin.admins.remove');
     });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

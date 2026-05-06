@@ -16,19 +16,19 @@ class DashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
+        $pref = $user->preferred_artwork_type; // e.g. 'Drawing', 'Knitting', or null
 
-        // ── Existing stats ──
+        // ── Favourite count ──
         $favoriteArtists = $user->favorites()->count()
                          + $user->favoriteProducts()->count();
 
+        // ── Stats ──
         $activeOrders = Order::where('user_id', $user->id)
                              ->where('payment_status', 'paid')
                              ->whereIn('status', ['processing', 'preparing', 'shipped'])
                              ->count();
 
-        $enrolledClasses = Booking::where('user_id', $user->id)->count();
-
-        // ── Custom Orders stats ──
+        $enrolledClasses  = Booking::where('user_id', $user->id)->count();
         $customOrdersCount = CustomOrderRequest::where('buyer_id', $user->id)->count();
 
         $customOrdersPending = CustomOrderRequest::where('buyer_id', $user->id)
@@ -37,7 +37,7 @@ class DashboardController extends Controller
                                 ->whereNull('buyer_response')
                                 ->count();
 
-        // ── Top Artists (most artworks for sale) ──
+        // ── Top Artists ──
         $topArtists = Artist::with(['user', 'artworkSells' => function ($q) {
                                 $q->whereNotIn('status', ['sold', 'sold_out'])
                                   ->whereNotNull('image_path');
@@ -48,14 +48,33 @@ class DashboardController extends Controller
                             ->take(10)
                             ->get();
 
-        // ── Hot Products (latest available artworks) ──
-        $hotProducts = ArtworkSell::with(['artist.user'])
-                            ->whereHas('artist.user')
-                            ->whereNotIn('status', ['sold', 'sold_out'])
-                            ->whereNotNull('image_path')
+        // ── Hot Products — preferred product_category first ──
+        $baseQuery = ArtworkSell::with(['artist.user'])
+                        ->whereHas('artist.user')
+                        ->whereNotIn('status', ['sold', 'sold_out'])
+                        ->whereNotNull('image_path');
+
+        if ($pref) {
+            // Preferred category at top, rest after — limit 8 total
+            $preferred = (clone $baseQuery)
+                            ->where('product_category', $pref)
                             ->latest()
                             ->take(8)
                             ->get();
+
+            $others = (clone $baseQuery)
+                            ->where(function ($q) use ($pref) {
+                                $q->where('product_category', '!=', $pref)
+                                  ->orWhereNull('product_category');
+                            })
+                            ->latest()
+                            ->take(8)
+                            ->get();
+
+            $hotProducts = $preferred->merge($others)->take(8);
+        } else {
+            $hotProducts = $baseQuery->latest()->take(8)->get();
+        }
 
         // ── Upcoming Classes ──
         $upcomingClasses = ClassEvent::with('user')
@@ -66,6 +85,7 @@ class DashboardController extends Controller
 
         return view('dashboard', compact(
             'user',
+            'pref',
             'favoriteArtists',
             'activeOrders',
             'enrolledClasses',

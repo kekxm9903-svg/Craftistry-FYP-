@@ -13,13 +13,9 @@ class AuthController extends Controller
 {
     // ─── Cart Helpers ─────────────────────────────────────────────────────────
 
-    /**
-     * Save session cart → DB (called before logout)
-     */
     private function saveCartToDb(int $userId): void
     {
         $cart = session('cart', []);
-
         CartItem::where('user_id', $userId)->delete();
 
         foreach ($cart as $artworkId => $item) {
@@ -31,9 +27,6 @@ class AuthController extends Controller
         }
     }
 
-    /**
-     * Restore cart from DB → session (called after login)
-     */
     private function restoreCartFromDb(int $userId): void
     {
         $items = CartItem::where('user_id', $userId)
@@ -81,24 +74,23 @@ class AuthController extends Controller
             'password' => 'required|min:8|confirmed',
             'terms'    => 'accepted',
         ], [
-            'email.unique'        => 'This email is already registered. Please use a different email or try logging in.',
-            'password.min'        => 'Password must be at least 8 characters long.',
-            'password.confirmed'  => 'Password confirmation does not match.',
-            'terms.accepted'      => 'You must accept the terms and conditions to continue.',
+            'email.unique'       => 'This email is already registered.',
+            'password.min'       => 'Password must be at least 8 characters long.',
+            'password.confirmed' => 'Password confirmation does not match.',
+            'terms.accepted'     => 'You must accept the terms and conditions.',
         ]);
 
         $user = User::create([
-            'fullname' => $validated['fullname'],
-            'email'    => $validated['email'],
-            'phone'    => $validated['phone'],
-            'location' => $validated['location'],
-            'password' => Hash::make($validated['password']),
-            'role'     => 'buyer',
+            'fullname'         => $validated['fullname'],
+            'email'            => $validated['email'],
+            'phone'            => $validated['phone'],
+            'location'         => $validated['location'],
+            'password'         => Hash::make($validated['password']),
+            'role'             => 'buyer',
+            'preference_shown' => false,  // new user — show modal
         ]);
 
         Auth::login($user);
-
-        // New user — no saved cart to restore, but restoreCartFromDb is safe to call anyway
         $this->restoreCartFromDb($user->id);
 
         return redirect()->route('dashboard')
@@ -123,30 +115,25 @@ class AuthController extends Controller
             'password.required' => 'Please enter your password.',
         ]);
 
-        // Check if user exists
         $user = User::where('email', $credentials['email'])->first();
 
         if (!$user) {
             return back()->withErrors([
-                'email' => 'No account found with this email address. Please check your email or sign up for a new account.',
+                'email' => 'No account found with this email address.',
             ])->onlyInput('email');
         }
 
-        // Check if account is banned
         if ($user->artist_status === 'banned') {
             return back()->withErrors([
-                'email' => 'Your account has been suspended. Please contact support for assistance.',
+                'email' => 'Your account has been suspended. Please contact support.',
             ])->onlyInput('email');
         }
 
-        // Attempt login
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
-
-            // ← Restore saved cart from DB into session
             $this->restoreCartFromDb(Auth::id());
 
-            // Redirect admin to admin dashboard
+            // Admin — skip preference modal entirely
             if (Auth::user()->role === 'admin') {
                 return redirect()->route('admin.dashboard')
                     ->with('success', 'Welcome, Admin ' . Auth::user()->fullname . '!');
@@ -157,7 +144,7 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'Incorrect password. Please try again or use "Forgot Password" to reset it.',
+            'email' => 'Incorrect password. Please try again.',
         ])->onlyInput('email');
     }
 
@@ -165,9 +152,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        // ← Save session cart to DB before clearing session
         $this->saveCartToDb(Auth::id());
-
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

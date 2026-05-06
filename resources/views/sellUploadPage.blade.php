@@ -39,6 +39,8 @@
         </a>
     </div>
 
+    @php $artworkTypes = \App\Models\ArtworkType::orderBy('name')->get(); @endphp
+
     <form id="sellUploadForm" action="{{ route('artist.artwork.sell') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
@@ -53,7 +55,6 @@
                         <span class="required-badge">Required</span>
                     </div>
                     <div class="form-card-body">
-                        {{-- Drop Zone --}}
                         <div class="image-drop-zone" id="sellDropZone">
                             <input type="file" id="sellImage" name="images[]"
                                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
@@ -72,7 +73,6 @@
                             </div>
                         </div>
 
-                        {{-- Multi Preview Grid --}}
                         <div class="multi-preview-grid" id="sellPreviewGrid"></div>
 
                         <div class="image-tips" style="margin-top:10px;">
@@ -132,6 +132,7 @@
                             <span class="field-counter" id="nameCounter">0 / 255</span>
                         </div>
 
+                        {{-- Artwork Type (Physical / Digital) --}}
                         <div class="field-group">
                             <label class="field-label">Artwork Type <span class="required">*</span></label>
                             <div class="type-selector">
@@ -152,6 +153,42 @@
                                     </div>
                                 </label>
                             </div>
+                        </div>
+
+                        {{-- ── Product Category (NEW) ── --}}
+                        <div class="field-group">
+                            <label class="field-label">
+                                Product Category <span class="required">*</span>
+                            </label>
+                            <p class="field-hint" style="margin-bottom:10px;">
+                                Select the category that best describes your artwork
+                            </p>
+                            @if($artworkTypes->isNotEmpty())
+                                <div class="category-grid" style="grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, auto);">
+                                    @foreach($artworkTypes as $type)
+                                    <label class="category-option" for="cat_{{ Str::slug($type->name) }}">
+                                        <input type="radio"
+                                               id="cat_{{ Str::slug($type->name) }}"
+                                               name="product_category"
+                                               value="{{ $type->name }}"
+                                               {{ old('product_category') === $type->name ? 'checked' : '' }}
+                                               required>
+                                        <div class="category-option-inner">
+                                            <div class="category-icon"><i class="fas fa-palette"></i></div>
+                                            <span class="category-name">{{ $type->name }}</span>
+                                            <div class="category-check"><i class="fas fa-check"></i></div>
+                                        </div>
+                                    </label>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="field-hint" style="color:#dc2626;">
+                                    No artwork categories found. Please contact admin to add categories.
+                                </p>
+                            @endif
+                            @error('product_category')
+                                <span style="color:#dc2626;font-size:12px;">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="field-group">
@@ -250,9 +287,9 @@
                                 <div class="dim-field unit-field">
                                     <label>Unit</label>
                                     <select name="unit" class="field-input">
-                                        <option value="cm" {{ old('unit') === 'cm' ? 'selected' : '' }}>cm</option>
+                                        <option value="cm"   {{ old('unit') === 'cm'   ? 'selected' : '' }}>cm</option>
                                         <option value="inch" {{ old('unit') === 'inch' ? 'selected' : '' }}>inch</option>
-                                        <option value="px" {{ old('unit') === 'px' ? 'selected' : '' }}>px</option>
+                                        <option value="px"   {{ old('unit') === 'px'   ? 'selected' : '' }}>px</option>
                                     </select>
                                 </div>
                             </div>
@@ -336,7 +373,6 @@
                     </div>
                 </div>
 
-
                 {{-- Promotion --}}
                 <div class="form-card">
                     <div class="form-card-header">
@@ -375,7 +411,6 @@
                                 </div>
                             </div>
 
-                            {{-- Live promo price preview --}}
                             <div class="promo-price-preview" id="promoPricePreview" style="display:none;">
                                 <div class="promo-preview-inner">
                                     <span class="promo-original" id="promoOriginalPrice"></span>

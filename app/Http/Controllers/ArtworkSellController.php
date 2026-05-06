@@ -44,6 +44,7 @@ class ArtworkSellController extends Controller
                 'images'              => 'required|array|min:1',
                 'images.*'            => 'image|mimes:jpeg,jpg,png,gif,webp|max:5120',
                 'artwork_type'        => 'required|in:physical,digital',
+                'product_category'    => 'required|string|max:100',   // ← NEW
                 'material'            => 'required|string|max:255',
                 'height'              => 'required|numeric|min:0',
                 'width'               => 'required|numeric|min:0',
@@ -59,26 +60,29 @@ class ArtworkSellController extends Controller
                 'promotion_starts_at' => 'nullable|date',
                 'promotion_ends_at'   => 'nullable|date|after_or_equal:promotion_starts_at',
             ], [
-                'images.required' => 'At least one image is required',
-                'images.min'      => 'At least one image is required',
-                'images.*.image'  => 'Each file must be an image',
-                'images.*.mimes'  => 'Images must be jpeg, jpg, png, gif, or webp',
-                'images.*.max'    => 'Each image must be under 5MB',
+                'images.required'     => 'At least one image is required',
+                'images.min'          => 'At least one image is required',
+                'images.*.image'      => 'Each file must be an image',
+                'images.*.mimes'      => 'Images must be jpeg, jpg, png, gif, or webp',
+                'images.*.max'        => 'Each image must be under 5MB',
+                'product_category.required' => 'Please select a product category',
             ]);
 
             // Upload first image as main cover
-            $path = null;
+            $path       = null;
+            $extraPaths = [];
+
             Log::info('SELL FILES RECEIVED: ' . json_encode(array_keys($request->allFiles())));
             Log::info('SELL IMAGES COUNT: ' . count($request->file('images', [])));
+
             if ($request->hasFile('images')) {
-                $images   = $request->file('images');
+                $images = $request->file('images');
                 Log::info('SELL IMAGES ARRAY COUNT: ' . count($images));
+
                 $main     = $images[0];
                 $filename = time() . '_' . uniqid() . '.' . $main->getClientOriginalExtension();
                 $path     = $main->storeAs('artwork-sells', $filename, 'public');
 
-                // Store additional images
-                $extraPaths = [];
                 foreach (array_slice($images, 1) as $extra) {
                     $extraFilename = time() . '_' . uniqid() . '.' . $extra->getClientOriginalExtension();
                     $extraPath     = $extra->storeAs('artwork-sells', $extraFilename, 'public');
@@ -88,7 +92,8 @@ class ArtworkSellController extends Controller
 
             DB::beginTransaction();
 
-            $bulkEnabled = $request->boolean('bulk_sell_enabled');
+            $bulkEnabled  = $request->boolean('bulk_sell_enabled');
+            $promoEnabled = $request->boolean('promotion_enabled');
 
             $newDemo = null;
             if ($request->has('also_demo')) {
@@ -122,6 +127,7 @@ class ArtworkSellController extends Controller
                 'image_path'           => $path,
                 'status'               => $validated['status'],
                 'artwork_type'         => $validated['artwork_type'],
+                'product_category'     => $validated['product_category'],   // ← NEW
                 'material'             => $validated['material'],
                 'height'               => $validated['height'],
                 'width'                => $validated['width'],
@@ -133,10 +139,10 @@ class ArtworkSellController extends Controller
                 'bulk_sell_enabled'    => $bulkEnabled,
                 'bulk_sell_min_qty'    => $bulkEnabled ? $request->input('bulk_sell_min_qty') : null,
                 'bulk_sell_discount'   => $bulkEnabled ? $request->input('bulk_sell_discount') : null,
-                'promotion_enabled'    => $request->boolean('promotion_enabled'),
-                'promotion_discount'   => $request->boolean('promotion_enabled') ? $request->input('promotion_discount') : null,
-                'promotion_starts_at'  => $request->boolean('promotion_enabled') ? $request->input('promotion_starts_at') : null,
-                'promotion_ends_at'    => $request->boolean('promotion_enabled') ? $request->input('promotion_ends_at') : null,
+                'promotion_enabled'    => $promoEnabled,
+                'promotion_discount'   => $promoEnabled ? $request->input('promotion_discount') : null,
+                'promotion_starts_at'  => $promoEnabled ? $request->input('promotion_starts_at') : null,
+                'promotion_ends_at'    => $promoEnabled ? $request->input('promotion_ends_at') : null,
             ]);
 
             if ($newDemo) {
@@ -160,6 +166,7 @@ class ArtworkSellController extends Controller
                         'status'             => $artworkSell->status,
                         'status_label'       => $artworkSell->status_label,
                         'artwork_type'       => $artworkSell->artwork_type,
+                        'product_category'   => $artworkSell->product_category,   // ← NEW
                         'bulk_sell_enabled'  => $artworkSell->bulk_sell_enabled,
                         'bulk_sell_min_qty'  => $artworkSell->bulk_sell_min_qty,
                         'bulk_sell_discount' => $artworkSell->bulk_sell_discount,
@@ -210,6 +217,7 @@ class ArtworkSellController extends Controller
                 'image_url'           => $artwork->image_url,
                 'image_path'          => $artwork->image_path,
                 'artwork_type'        => $artwork->artwork_type,
+                'product_category'    => $artwork->product_category,   // ← NEW
                 'material'            => $artwork->material,
                 'height'              => $artwork->height,
                 'width'               => $artwork->width,
@@ -248,6 +256,7 @@ class ArtworkSellController extends Controller
                 'delete_images'       => 'nullable|array',
                 'delete_images.*'     => 'nullable|string',
                 'artwork_type'        => 'required|in:physical,digital',
+                'product_category'    => 'nullable|string|max:100',   // ← NEW
                 'material'            => 'required|string|max:255',
                 'height'              => 'required|numeric|min:0',
                 'width'               => 'required|numeric|min:0',
@@ -261,23 +270,21 @@ class ArtworkSellController extends Controller
                 'promotion_discount'  => 'nullable|numeric|min:1|max:99',
                 'promotion_starts_at' => 'nullable|date',
                 'promotion_ends_at'   => 'nullable|date|after_or_equal:promotion_starts_at',
-                'promotion_enabled'   => 'nullable|boolean',
-                'promotion_discount'  => 'nullable|numeric|min:1|max:99',
-                'promotion_starts_at' => 'nullable|date',
-                'promotion_ends_at'   => 'nullable|date|after_or_equal:promotion_starts_at',
             ]);
 
             $artwork = ArtworkSell::where('id', $id)->where('artist_id', $user->id)->firstOrFail();
 
             DB::beginTransaction();
 
-            $bulkEnabled = $request->boolean('bulk_sell_enabled');
+            $bulkEnabled  = $request->boolean('bulk_sell_enabled');
+            $promoEnabled = $request->boolean('promotion_enabled');
 
             $artwork->product_name        = $validated['product_name'];
             $artwork->product_description = $validated['product_description'];
             $artwork->product_price       = $validated['product_price'];
             $artwork->shipping_fee        = $request->input('shipping_fee') ?? 0;
             $artwork->artwork_type        = $validated['artwork_type'];
+            $artwork->product_category    = $validated['product_category'] ?? $artwork->product_category;  // ← NEW
             $artwork->material            = $validated['material'];
             $artwork->height              = $validated['height'];
             $artwork->width               = $validated['width'];
@@ -287,7 +294,6 @@ class ArtworkSellController extends Controller
             $artwork->bulk_sell_enabled   = $bulkEnabled;
             $artwork->bulk_sell_min_qty   = $bulkEnabled ? $request->input('bulk_sell_min_qty') : null;
             $artwork->bulk_sell_discount  = $bulkEnabled ? $request->input('bulk_sell_discount') : null;
-            $promoEnabled = $request->boolean('promotion_enabled');
             $artwork->promotion_enabled   = $promoEnabled;
             $artwork->promotion_discount  = $promoEnabled ? $request->input('promotion_discount') : null;
             $artwork->promotion_starts_at = $promoEnabled ? $request->input('promotion_starts_at') : null;
@@ -356,6 +362,7 @@ class ArtworkSellController extends Controller
                         'shipping_fee'        => $artwork->shipping_fee,
                         'image_url'           => $artwork->image_url,
                         'artwork_type'        => $artwork->artwork_type,
+                        'product_category'    => $artwork->product_category,   // ← NEW
                         'status'              => $artwork->status,
                         'status_label'        => $artwork->status_label,
                         'bulk_sell_enabled'   => $artwork->bulk_sell_enabled,
@@ -416,6 +423,7 @@ class ArtworkSellController extends Controller
             if ($artworkSell->image_path && Storage::disk('public')->exists($artworkSell->image_path)) {
                 Storage::disk('public')->delete($artworkSell->image_path);
             }
+
             $artworkSell->delete();
             DB::commit();
 

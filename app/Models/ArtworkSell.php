@@ -18,6 +18,7 @@ class ArtworkSell extends Model
         'image_path',
         'extra_images',
         'artwork_type',
+        'product_category',      // ← NEW: e.g. 'Drawing', 'Knitting'
         'material',
         'height',
         'width',
@@ -45,6 +46,8 @@ class ArtworkSell extends Model
         'bulk_sell_enabled'   => 'boolean',
         'promotion_enabled'   => 'boolean',
         'extra_images'        => 'array',
+        'promotion_starts_at' => 'datetime',
+        'promotion_ends_at'   => 'datetime',
     ];
 
     protected $appends = [
@@ -87,7 +90,6 @@ class ArtworkSell extends Model
 
     public function getIsOnPromotionAttribute(): bool
     {
-        // Read raw values directly to avoid cast issues
         $enabled  = $this->attributes['promotion_enabled']  ?? null;
         $discount = $this->attributes['promotion_discount'] ?? null;
         $price    = $this->attributes['product_price']      ?? null;
@@ -95,19 +97,17 @@ class ArtworkSell extends Model
         if (!$enabled || !$discount || !$price) return false;
         if ((float)$price <= 0 || (float)$discount <= 0) return false;
 
-        // Date check using raw string comparison (avoids timezone issues)
-        $today = date('Y-m-d'); // server local date
-
+        $today    = date('Y-m-d');
         $startsAt = $this->attributes['promotion_starts_at'] ?? null;
         $endsAt   = $this->attributes['promotion_ends_at']   ?? null;
 
         if ($startsAt) {
-            $startDate = substr($startsAt, 0, 10); // "2026-05-05"
+            $startDate = substr($startsAt, 0, 10);
             if ($today < $startDate) return false;
         }
 
         if ($endsAt) {
-            $endDate = substr($endsAt, 0, 10); // "2026-05-30"
+            $endDate = substr($endsAt, 0, 10);
             if ($today > $endDate) return false;
         }
 
@@ -122,6 +122,13 @@ class ArtworkSell extends Model
 
         if (!$enabled || !$discount || !$price) return null;
         if ((float)$price <= 0 || (float)$discount <= 0) return null;
+
+        $today    = date('Y-m-d');
+        $startsAt = $this->attributes['promotion_starts_at'] ?? null;
+        $endsAt   = $this->attributes['promotion_ends_at']   ?? null;
+
+        if ($startsAt && $today < substr($startsAt, 0, 10)) return null;
+        if ($endsAt   && $today > substr($endsAt,   0, 10)) return null;
 
         return round((float)$price * (1 - (float)$discount / 100), 2);
     }

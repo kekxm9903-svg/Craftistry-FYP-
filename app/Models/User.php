@@ -19,6 +19,8 @@ class User extends Authenticatable
         'role',
         'is_artist',
         'profile_image',
+        'preferred_artwork_type',  // e.g. 'Drawing', 'Knitting', 'Crochet' …
+        'preference_shown',        // bool — true once modal saved or skipped
         'artist_type',
         'artist_status',
         'address',
@@ -35,6 +37,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'is_artist'         => 'boolean',
+        'preference_shown'  => 'boolean',
     ];
 
     // ── Computed Attributes ──────────────────────────────────────────────────
@@ -47,22 +50,23 @@ class User extends Authenticatable
         return null;
     }
 
-    /**
-     * Passthrough: average seller rating via the artist profile.
-     * Usage: $user->seller_rating
-     */
     public function getSellerRatingAttribute(): float
     {
         return $this->artist?->seller_rating ?? 0.0;
     }
 
-    /**
-     * Passthrough: total review count via the artist profile.
-     * Usage: $user->seller_review_count
-     */
     public function getSellerReviewCountAttribute(): int
     {
         return $this->artist?->seller_review_count ?? 0;
+    }
+
+    /**
+     * Whether the preference modal should still be shown.
+     * Returns false once the user has saved OR skipped.
+     */
+    public function shouldShowPreferenceModal(): bool
+    {
+        return !$this->preference_shown;
     }
 
     // ── Relationships ────────────────────────────────────────────────────────
@@ -101,17 +105,11 @@ class User extends Authenticatable
         return $this->hasMany(ClassEvent::class, 'user_id');
     }
 
-    /**
-     * Raw Favorite records for this user (artist favourites).
-     */
     public function favorites()
     {
         return $this->hasMany(Favorite::class, 'user_id');
     }
 
-    /**
-     * Get the actual favourited artist User models (many-to-many shortcut).
-     */
     public function favoriteArtists()
     {
         return $this->belongsToMany(
@@ -122,10 +120,6 @@ class User extends Authenticatable
         )->withTimestamps();
     }
 
-    /**
-     * Artworks this user has saved to favourites.
-     * Pivot table: user_favorite_products (user_id, artwork_sell_id)
-     */
     public function favoriteProducts()
     {
         return $this->belongsToMany(
@@ -148,17 +142,11 @@ class User extends Authenticatable
         return in_array($this->artist_type, ['buyer', 'both']);
     }
 
-    /**
-     * Check if this user has favourited a specific artist.
-     */
     public function hasFavorited(User $artist): bool
     {
         return $this->favorites()->where('artist_id', $artist->id)->exists();
     }
 
-    /**
-     * Check if this user has favourited a specific product.
-     */
     public function hasFavoritedProduct(ArtworkSell $product): bool
     {
         return $this->favoriteProducts()->where('artwork_sell_id', $product->id)->exists();

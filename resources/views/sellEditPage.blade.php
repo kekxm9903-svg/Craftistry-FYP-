@@ -37,6 +37,8 @@
         </a>
     </div>
 
+    @php $artworkTypes = \App\Models\ArtworkType::orderBy('name')->get(); @endphp
+
     <form id="sellEditForm" action="{{ route('artist.artwork.update', $artwork->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
 
@@ -134,6 +136,7 @@
                         <h2>Product Info</h2>
                     </div>
                     <div class="form-card-body">
+
                         <div class="field-group">
                             <label for="editSellName" class="field-label">Product Name <span class="required">*</span></label>
                             <input type="text" id="editSellName" name="product_name"
@@ -141,6 +144,8 @@
                                    required maxlength="255" class="field-input">
                             <span class="field-counter" id="editNameCounter">0 / 255</span>
                         </div>
+
+                        {{-- Artwork Type --}}
                         <div class="field-group">
                             <label class="field-label">Artwork Type <span class="required">*</span></label>
                             <div class="type-selector">
@@ -156,12 +161,49 @@
                                 </label>
                             </div>
                         </div>
+
+                        {{-- ── Product Category (NEW) ── --}}
+                        <div class="field-group">
+                            <label class="field-label">
+                                Product Category <span class="required">*</span>
+                            </label>
+                            <p class="field-hint" style="margin-bottom:10px;">
+                                Select the category that best describes your artwork
+                            </p>
+                            @if($artworkTypes->isNotEmpty())
+                                <div class="category-grid" style="grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, auto);">
+                                    @foreach($artworkTypes as $type)
+                                    <label class="category-option" for="edit_cat_{{ Str::slug($type->name) }}">
+                                        <input type="radio"
+                                               id="edit_cat_{{ Str::slug($type->name) }}"
+                                               name="product_category"
+                                               value="{{ $type->name }}"
+                                               {{ old('product_category', $artwork->product_category) === $type->name ? 'checked' : '' }}>
+                                        <div class="category-option-inner">
+                                            <div class="category-icon"><i class="fas fa-palette"></i></div>
+                                            <span class="category-name">{{ $type->name }}</span>
+                                            <div class="category-check"><i class="fas fa-check"></i></div>
+                                        </div>
+                                    </label>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="field-hint" style="color:#dc2626;">
+                                    No artwork categories found. Please contact admin to add categories.
+                                </p>
+                            @endif
+                            @error('product_category')
+                                <span style="color:#dc2626;font-size:12px;margin-top:4px;display:block;">{{ $message }}</span>
+                            @enderror
+                        </div>
+
                         <div class="field-group">
                             <label for="editSellDesc" class="field-label">Description <span class="field-optional">(Optional)</span></label>
                             <textarea id="editSellDesc" name="product_description" rows="4" maxlength="2000"
                                       class="field-textarea">{{ old('product_description', $artwork->product_description) }}</textarea>
                             <span class="field-counter" id="editSellDescCounter">0 / 2000</span>
                         </div>
+
                     </div>
                 </div>
 
@@ -239,9 +281,9 @@
                                 <div class="dim-field unit-field">
                                     <label>Unit</label>
                                     <select name="unit" class="field-input">
-                                        <option value="cm" {{ old('unit', $artwork->unit) === 'cm' ? 'selected' : '' }}>cm</option>
+                                        <option value="cm"   {{ old('unit', $artwork->unit) === 'cm'   ? 'selected' : '' }}>cm</option>
                                         <option value="inch" {{ old('unit', $artwork->unit) === 'inch' ? 'selected' : '' }}>inch</option>
-                                        <option value="px" {{ old('unit', $artwork->unit) === 'px' ? 'selected' : '' }}>px</option>
+                                        <option value="px"   {{ old('unit', $artwork->unit) === 'px'   ? 'selected' : '' }}>px</option>
                                     </select>
                                 </div>
                             </div>
@@ -304,14 +346,14 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="bulk-preview-strip" id="bulkPreviewStrip" style="{{ old('bulk_sell_enabled', $artwork->bulk_sell_enabled) && $artwork->bulk_sell_min_qty ? 'display:flex;' : 'display:none;' }}">
+                            <div class="bulk-preview-strip" id="bulkPreviewStrip"
+                                 style="{{ old('bulk_sell_enabled', $artwork->bulk_sell_enabled) && $artwork->bulk_sell_min_qty ? 'display:flex;' : 'display:none;' }}">
                                 <i class="fas fa-tag"></i>
                                 <span id="bulkPreviewText">{{ $artwork->bulk_sell_enabled ? 'Buy ' . $artwork->bulk_sell_min_qty . ' or more and get ' . $artwork->bulk_sell_discount . '% off each item' : '' }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
-
 
                 {{-- Promotion --}}
                 <div class="form-card">
@@ -466,18 +508,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Override sell functions to use correct IDs
     document.getElementById('editSellPrice')?.addEventListener('input', updatePricingPreview);
     document.getElementById('editSellShipping')?.addEventListener('input', updatePricingPreview);
     document.getElementById('editSellPrice')?.addEventListener('input', updatePromoPreview);
 
-    // Init promo state on page load
     if (document.getElementById('promotionEnabled')?.checked) {
         updatePromoPreview();
     }
 });
 
-// Override for edit page field IDs
 function updatePricingPreview() {
     const price    = parseFloat(document.getElementById('editSellPrice')?.value || document.getElementById('sellPrice')?.value) || 0;
     const shipping = parseFloat(document.getElementById('editSellShipping')?.value || document.getElementById('sellShipping')?.value) || 0;
