@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ArtworkSell;
+use App\Services\NotificationService;
 use Stripe\Stripe;
 use Stripe\Checkout\Session;
 
@@ -24,7 +25,7 @@ class OrderCheckoutController extends Controller
             }
 
             $qty   = max(1, (int) $request->get('qty', 1));
-            $price = (float) ($artwork->product_price ?? 0);
+            $price = $artwork->effective_price; // ← promotion-aware
 
             $cartItems = [[
                 'artwork'  => $artwork,
@@ -33,7 +34,6 @@ class OrderCheckoutController extends Controller
             ]];
             $total = $price * $qty;
 
-            // Store buy_now context in session so process() knows
             session(['buy_now' => [
                 'artwork_id' => $artwork->id,
                 'qty'        => $qty,
@@ -43,7 +43,7 @@ class OrderCheckoutController extends Controller
         }
 
         // ── Normal cart checkout ─────────────────────────────────────────────
-        session()->forget('buy_now'); // clear any leftover buy_now session
+        session()->forget('buy_now');
 
         $cart = session('cart', []);
 
@@ -58,7 +58,7 @@ class OrderCheckoutController extends Controller
         foreach ($cart as $id => $item) {
             $artwork = ArtworkSell::find($id);
             if ($artwork) {
-                $price       = (float) ($artwork->product_price ?? $artwork->price ?? 0);
+                $price       = $artwork->effective_price; // ← promotion-aware
                 $qty         = (int) ($item['quantity'] ?? 1);
                 $cartItems[] = [
                     'artwork'  => $artwork,
@@ -94,7 +94,7 @@ class OrderCheckoutController extends Controller
                                  ->with('error', 'Artwork not found.');
             }
 
-            $price    = (float) ($artwork->product_price ?? 0);
+            $price    = $artwork->effective_price; // ← promotion-aware
             $qty      = (int) ($buyNow['qty'] ?? 1);
             $name     = $artwork->product_name ?? 'Artwork';
             $artistId = $artwork->artist_id;
@@ -132,8 +132,8 @@ class OrderCheckoutController extends Controller
                 $artwork = ArtworkSell::with('artist')->find($id);
                 if (!$artwork) continue;
 
-                $price    = (float) ($artwork->product_price ?? $artwork->price ?? 0);
-                $name     = $artwork->product_name ?? $artwork->title ?? 'Artwork';
+                $price    = $artwork->effective_price; // ← promotion-aware
+                $name     = $artwork->product_name ?? 'Artwork';
                 $qty      = (int) ($item['quantity'] ?? 1);
                 $artistId = $artwork->artist_id;
 
@@ -191,7 +191,7 @@ class OrderCheckoutController extends Controller
                     'order_id'        => $order->id,
                     'artwork_sell_id' => $item['artwork']->id,
                     'name'            => $item['name'] ?? $item['artwork']->product_name ?? 'Artwork',
-                    'price'           => $item['price'],
+                    'price'           => $item['price'], // ← effective_price already applied
                     'quantity'        => $item['qty'],
                 ]);
             }
@@ -208,7 +208,6 @@ class OrderCheckoutController extends Controller
 
         Stripe::setApiKey(config('services.stripe.secret'));
 
-        // Try to reuse existing Stripe session if still open
         if ($order->stripe_session_id) {
             try {
                 $stripeSession = Session::retrieve($order->stripe_session_id);
@@ -216,11 +215,11 @@ class OrderCheckoutController extends Controller
                     return redirect($stripeSession->url);
                 }
             } catch (\Exception $e) {
-                // Session expired, create a new one below
+                // Session expired — create a new one below
             }
         }
 
-        // Build line items from existing order items
+        // Use the stored price on OrderItem (already the discounted price at time of purchase)
         $lineItems = $order->items->map(fn($item) => [
             'price_data' => [
                 'currency'     => 'myr',
@@ -256,19 +255,37 @@ class OrderCheckoutController extends Controller
             $stripeSession = Session::retrieve($request->session_id);
 
             $orders = Order::where('stripe_session_id', $stripeSession->id)
-                           ->with('items')
+                           ->with('items', 'artist.user')
                            ->get();
 
             if ($orders->isNotEmpty() && $stripeSession->payment_status === 'paid') {
+                $buyer = auth()->user();
+
                 foreach ($orders as $order) {
+                    $alreadyPaid = $order->payment_status === 'paid';
+
                     $order->update([
                         'payment_status' => 'paid',
                         'payment_method' => $stripeSession->payment_method_types[0] ?? 'card',
                         'status'         => 'processing',
                     ]);
+
+                    if (!$alreadyPaid) {
+                        $sellerUserId = $order->artist->user_id ?? null;
+                        $firstItem    = $order->items->first();
+                        $productName  = $firstItem->name ?? 'Artwork';
+
+                        if ($sellerUserId) {
+                            NotificationService::newOrder(
+                                $sellerUserId,
+                                $order->id,
+                                $buyer->fullname ?? $buyer->name ?? 'A buyer',
+                                $productName
+                            );
+                        }
+                    }
                 }
 
-                // Clear cart AND buy_now session
                 session()->forget('cart');
                 session()->forget('buy_now');
             }
@@ -290,7 +307,6 @@ class OrderCheckoutController extends Controller
     // Payment cancelled
     public function cancel()
     {
-        // If it was a buy_now, clear the session and go back
         if (session('buy_now')) {
             session()->forget('buy_now');
             return redirect()->back()

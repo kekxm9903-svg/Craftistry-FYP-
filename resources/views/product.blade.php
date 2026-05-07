@@ -129,6 +129,33 @@
         gap: var(--sp-sm);
     }
 
+    /* ── Thumbnail gallery ── */
+    .sp-thumbs {
+        display: flex;
+        gap: var(--sp-xs);
+        flex-wrap: wrap;
+    }
+    .sp-thumb {
+        width: 60px;
+        height: 60px;
+        border: 2px solid var(--border);
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: border-color .15s, transform .12s;
+        background: #fafafa;
+    }
+    .sp-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .sp-thumb:hover { border-color: var(--primary); transform: scale(1.04); }
+    .sp-thumb.active { border-color: var(--primary); box-shadow: 0 0 0 2px #c4b5fd; }
+
+    /* CHANGE 1 — add position:relative so the promo badge can anchor to it */
     .sp-main-img {
         width: 100%;
         aspect-ratio: 1;
@@ -139,6 +166,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        position: relative;
     }
     .sp-main-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
     .sp-img-placeholder {
@@ -147,6 +175,22 @@
         background: linear-gradient(135deg, #ede9fe, #ddd6fe);
         color: var(--primary-2);
         font-size: 3.5rem;
+    }
+
+    /* CHANGE 1 — promotion badge on image */
+    .sp-promo-img-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 3px 8px;
+        border-radius: 20px;
+        letter-spacing: .5px;
+        z-index: 2;
+        box-shadow: 0 2px 6px rgba(220,38,38,.35);
     }
 
     .sp-artist-strip {
@@ -279,6 +323,7 @@
     .sp-rating-link { font-size: var(--fs-sm); color: var(--muted); text-decoration: none; }
     .sp-rating-link:hover { color: var(--primary); }
 
+    /* CHANGE 2 — normal price strip (unchanged) + promo variants */
     .sp-price-strip {
         background: linear-gradient(135deg, #f5f3ff 0%, #faf9ff 100%);
         padding: var(--sp-md) var(--sp-xl);
@@ -309,6 +354,66 @@
         background: linear-gradient(135deg, var(--primary), var(--primary-2));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    /* promotion active overrides */
+    .sp-price-strip.promo-active {
+        background: linear-gradient(135deg, #fff5f5 0%, #fef9f9 100%);
+        border-top-color: #fecaca;
+        border-bottom-color: #fecaca;
+        flex-wrap: wrap;
+        row-gap: 4px;
+    }
+    .sp-promo-price-rm {
+        font-size: var(--fs-base);
+        font-weight: 700;
+        color: #dc2626;
+        align-self: flex-start;
+        margin-top: 5px;
+    }
+    .sp-promo-price-val {
+        font-size: var(--fs-xl);
+        font-weight: 800;
+        line-height: 1;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .sp-promo-original {
+        align-self: flex-end;
+        margin-bottom: 3px;
+        font-size: var(--fs-base);
+        color: var(--muted);
+        text-decoration: line-through;
+        margin-left: var(--sp-xs);
+    }
+    .sp-promo-badge-strip {
+        align-self: flex-end;
+        margin-bottom: 3px;
+        margin-left: var(--sp-xs);
+        background: #ef4444;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 2px 7px;
+        border-radius: 20px;
+        letter-spacing: .4px;
+    }
+    .sp-promo-ends {
+        width: 100%;
+        font-size: var(--fs-sm);
+        color: #dc2626;
+        margin-top: 2px;
+        padding-left: var(--label-w);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    /* total price promo colour */
+    .sp-total-price.promo {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        -webkit-background-clip: text;
         background-clip: text;
     }
 
@@ -650,8 +755,22 @@
 </form>
 
 @php
-    $isSoldOut  = in_array(strtolower($artwork->status ?? ''), ['sold', 'sold_out']);
+    $isSoldOut   = in_array(strtolower($artwork->status ?? ''), ['sold', 'sold_out']);
     $isFavorited = auth()->check() && auth()->user()->favoriteProducts->contains($artwork->id);
+    // Compute directly — no model accessor dependency
+    $promoEnabled  = (bool) ($artwork->getRawOriginal('promotion_enabled') ?? false);
+    $promoDiscount = (float) ($artwork->getRawOriginal('promotion_discount') ?? 0);
+    $origPrice     = (float) ($artwork->getRawOriginal('product_price') ?? 0);
+    $promoStarts   = $artwork->getRawOriginal('promotion_starts_at');
+    $promoEnds     = $artwork->getRawOriginal('promotion_ends_at');
+    $now           = now();
+    $promoActive   = $promoEnabled
+                     && $promoDiscount > 0
+                     && $origPrice > 0
+                     && (!$promoStarts || $now->gte(\Carbon\Carbon::parse($promoStarts)))
+                     && (!$promoEnds   || $now->lte(\Carbon\Carbon::parse($promoEnds)));
+    $promoPrice    = $promoActive ? round($origPrice * (1 - $promoDiscount / 100), 2) : null;
+    $unitPrice     = $promoPrice ?? $origPrice;
 @endphp
 
 <div class="sp-page">
@@ -665,13 +784,37 @@
 
         {{-- Image pane --}}
         <div class="sp-img-pane">
+            @php
+                $allImages = array_values(array_filter(
+                    array_merge([$artwork->image_path], $artwork->extra_images ?? [])
+                ));
+            @endphp
+
             <div class="sp-main-img">
-                @if($artwork->image_path)
-                    <img src="{{ asset('storage/' . $artwork->image_path) }}" alt="{{ $artwork->product_name }}">
+                @if(count($allImages))
+                    <img id="sp-main-img"
+                         src="{{ asset('storage/' . $allImages[0]) }}"
+                         alt="{{ $artwork->product_name }}">
                 @else
                     <div class="sp-img-placeholder"><i class="fas fa-image"></i></div>
                 @endif
+                {{-- promo badge on image --}}
+                @if($promoPrice !== null)
+                    <div class="sp-promo-img-badge">-{{ number_format($promoDiscount, 0) }}% OFF</div>
+                @endif
             </div>
+
+            {{-- Thumbnails (only shown when more than 1 image) --}}
+            @if(count($allImages) > 1)
+            <div class="sp-thumbs">
+                @foreach($allImages as $i => $img)
+                <div class="sp-thumb {{ $i === 0 ? 'active' : '' }}"
+                     onclick="switchImg(this, '{{ asset('storage/' . $img) }}')">
+                    <img src="{{ asset('storage/' . $img) }}" alt="Image {{ $i + 1 }}">
+                </div>
+                @endforeach
+            </div>
+            @endif
 
             @if($artwork->artist && $artwork->artist->user)
             @php
@@ -744,13 +887,27 @@
             </div>
             @endif
 
-            {{-- Price --}}
-            @if($artwork->product_price)
-            <div class="sp-price-strip">
-                <span class="sp-price-label">Price</span>
-                <span class="sp-price-rm">RM</span>
-                <span class="sp-price-val">{{ number_format($artwork->product_price, 2) }}</span>
-            </div>
+            {{-- CHANGE 2: price strip — shows promo or normal --}}
+            @if($promoPrice !== null)
+                <div class="sp-price-strip promo-active">
+                    <span class="sp-price-label">Price</span>
+                    <span class="sp-promo-price-rm">RM</span>
+                    <span class="sp-promo-price-val">{{ number_format($promoPrice, 2) }}</span>
+                    <span class="sp-promo-original">RM {{ number_format($artwork->product_price, 2) }}</span>
+                    <span class="sp-promo-badge-strip">-{{ number_format($artwork->promotion_discount, 0) }}%</span>
+                    @if($artwork->promotion_ends_at)
+                        <div class="sp-promo-ends">
+                            <i class="fas fa-clock"></i>
+                            Promotion ends {{ $artwork->promotion_ends_at->format('d M Y') }}
+                        </div>
+                    @endif
+                </div>
+            @else
+                <div class="sp-price-strip">
+                    <span class="sp-price-label">Price</span>
+                    <span class="sp-price-rm">RM</span>
+                    <span class="sp-price-val">{{ number_format($artwork->product_price, 2) }}</span>
+                </div>
             @endif
 
             {{-- Bulk deal banner --}}
@@ -813,11 +970,12 @@
                 <div class="sp-row" style="align-items:center;">
                     <span class="sp-row-key">Total</span>
                     <div style="display:flex;align-items:baseline;gap:var(--sp-xs);">
-                        <span class="sp-total-price" id="total-price">
-                            RM {{ number_format($artwork->product_price ?? 0, 2) }}
+                        {{-- CHANGE 3: start from effective price, red colour when promo --}}
+                        <span class="sp-total-price{{ $promoPrice !== null ? ' promo' : '' }}" id="total-price">
+                            RM {{ number_format($unitPrice, 2) }}
                         </span>
                         <span class="sp-total-hint" id="total-hint" style="display:none;">
-                            (RM {{ number_format($artwork->product_price ?? 0, 2) }} × <span id="qty-hint-val">1</span>)
+                            (RM {{ number_format($unitPrice, 2) }} × <span id="qty-hint-val">1</span>)
                         </span>
                         @if($artwork->bulk_sell_enabled && $artwork->bulk_sell_min_qty && $artwork->bulk_sell_discount)
                         <span id="bulk-discount-note" style="display:none;font-size:var(--fs-sm);color:var(--primary-2);font-weight:600;">
@@ -1031,7 +1189,8 @@
 </div>
 
 <script>
-    const UNIT_PRICE    = {{ $artwork->product_price ?? 0 }};
+    // UNIT_PRICE = effective_price (promo if active, else original)
+    const UNIT_PRICE    = {{ (float) $unitPrice }};
     const BULK_ENABLED  = {{ $artwork->bulk_sell_enabled ? 'true' : 'false' }};
     const BULK_MIN_QTY  = {{ $artwork->bulk_sell_min_qty ?? 0 }};
     const BULK_DISCOUNT = {{ $artwork->bulk_sell_discount ?? 0 }};
@@ -1165,6 +1324,12 @@
         setTimeout(() => toast.classList.remove('show'), 3500);
     }
 
+    function switchImg(thumb, src) {
+        document.getElementById('sp-main-img').src = src;
+        document.querySelectorAll('.sp-thumb').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+    }
+
     function openLightbox(type, src) {
         const lb  = document.getElementById('lightbox');
         const img = document.getElementById('lb-img');
@@ -1182,5 +1347,8 @@
     }
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+    // Initialize total on page load
+    updateQtyDisplay();
 </script>
 @endsection

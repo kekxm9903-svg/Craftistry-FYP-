@@ -40,22 +40,32 @@ class CartController extends Controller
         $shipping  = 0;
 
         foreach ($cart as $artworkId => $item) {
-            // Always re-fetch shipping_fee fresh from DB in case it was updated or session is stale
-            $fresh = ArtworkSell::select('shipping_fee', 'product_price')
-                        ->find($artworkId);
+            // Always re-fetch fresh from DB so promotion changes are reflected immediately
+            $fresh = ArtworkSell::find($artworkId);
 
-            $item['shipping_fee'] = $fresh ? (float)($fresh->shipping_fee ?? 0) : 0;
-            $item['price']        = $fresh ? (float)($fresh->product_price ?? $item['price']) : $item['price'];
+            $effectivePrice   = $fresh ? $fresh->effective_price            : (float) ($item['price'] ?? 0);
+            $originalPrice    = $fresh ? (float) $fresh->product_price      : $effectivePrice;
+            $promotionPrice   = $fresh ? $fresh->promotion_price            : null;
+            $promotionDiscount= $fresh ? $fresh->promotion_discount         : null;
+            $shippingFee      = $fresh ? (float) ($fresh->shipping_fee ?? 0): 0;
 
-            // Sync the session with fresh values
-            $cart[$artworkId]['shipping_fee'] = $item['shipping_fee'];
+            // Keep session in sync
+            $cart[$artworkId]['price']        = $effectivePrice;
+            $cart[$artworkId]['shipping_fee'] = $shippingFee;
+
+            // Build item array for blade
+            $item['price']              = $effectivePrice;
+            $item['original_price']     = $originalPrice;
+            $item['promotion_price']    = $promotionPrice;
+            $item['promotion_discount'] = $promotionDiscount;
+            $item['shipping_fee']       = $shippingFee;
 
             $cartItems[] = $item;
-            $subtotal   += $item['price']        * $item['quantity'];
-            $shipping   += $item['shipping_fee'];
+            $subtotal   += $effectivePrice * $item['quantity'];
+            $shipping   += $shippingFee;
         }
 
-        // Save refreshed shipping fees back to session
+        // Persist refreshed values back to session
         session(['cart' => $cart]);
 
         $total = $subtotal + $shipping;
@@ -65,7 +75,7 @@ class CartController extends Controller
 
     /**
      * Add an artwork to the cart.
-     * POST /cart/add  { artwork_id: int }
+     * POST /cart/add  { artwork_id: int, quantity?: int }
      */
     public function add(Request $request)
     {
@@ -89,16 +99,16 @@ class CartController extends Controller
         $cart = session('cart', []);
 
         if (isset($cart[$artworkId])) {
-            // Already in cart — increment by requested quantity and refresh shipping_fee
-            $cart[$artworkId]['quantity']     += $addQty;
-            $cart[$artworkId]['shipping_fee']  = (float)($artwork->shipping_fee ?? 0);
+            // Already in cart — increment and refresh price
+            $cart[$artworkId]['quantity']      += $addQty;
+            $cart[$artworkId]['price']          = $artwork->effective_price; // ← promotion-aware
+            $cart[$artworkId]['shipping_fee']   = (float) ($artwork->shipping_fee ?? 0);
             $message = 'Quantity updated in cart.';
         } else {
-            // Add new item
             $cart[$artworkId] = [
                 'id'           => $artworkId,
                 'name'         => $artwork->product_name ?? 'Untitled Artwork',
-                'price'        => (float) ($artwork->product_price ?? 0),
+                'price'        => $artwork->effective_price, // ← promotion-aware
                 'shipping_fee' => (float) ($artwork->shipping_fee ?? 0),
                 'image_path'   => $artwork->image_path ?? null,
                 'artwork_type' => $artwork->artwork_type ?? null,
@@ -111,7 +121,7 @@ class CartController extends Controller
         }
 
         session(['cart' => $cart]);
-        $this->syncToDb(); // ← persist to DB
+        $this->syncToDb();
 
         return response()->json([
             'success'    => true,
@@ -148,7 +158,7 @@ class CartController extends Controller
         }
 
         session(['cart' => $cart]);
-        $this->syncToDb(); // ← persist to DB
+        $this->syncToDb();
 
         $subtotal  = collect($cart)->sum(fn($i) => $i['price'] * $i['quantity']);
         $shipping  = collect($cart)->sum(fn($i) => $i['shipping_fee'] ?? 0);
@@ -179,7 +189,7 @@ class CartController extends Controller
 
         unset($cart[$artworkId]);
         session(['cart' => $cart]);
-        $this->syncToDb(); // ← persist to DB
+        $this->syncToDb();
 
         $subtotal  = collect($cart)->sum(fn($i) => $i['price'] * $i['quantity']);
         $shipping  = collect($cart)->sum(fn($i) => $i['shipping_fee'] ?? 0);
@@ -201,7 +211,7 @@ class CartController extends Controller
     public function clear()
     {
         session()->forget('cart');
-        CartItem::where('user_id', auth()->id())->delete(); // ← clear from DB too
+        CartItem::where('user_id', auth()->id())->delete();
 
         return response()->json([
             'success'    => true,

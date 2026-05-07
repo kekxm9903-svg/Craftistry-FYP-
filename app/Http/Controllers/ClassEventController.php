@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ClassEvent;
 use App\Models\Booking;
+use App\Services\NotificationService;   // ← NEW
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -117,8 +118,9 @@ class ClassEventController extends Controller
     public function enroll($id)
     {
         $classEvent = ClassEvent::findOrFail($id);
+        $user       = Auth::user();
 
-        if ($classEvent->user_id === Auth::id()) {
+        if ($classEvent->user_id === $user->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'You cannot enroll in your own class/event.',
@@ -144,7 +146,7 @@ class ClassEventController extends Controller
         }
 
         $existing = Booking::where('class_event_id', $id)
-            ->where('user_id', Auth::id())
+            ->where('user_id', $user->id)
             ->first();
 
         if ($existing) {
@@ -168,12 +170,20 @@ class ClassEventController extends Controller
         try {
             Booking::create([
                 'class_event_id' => $id,
-                'user_id'        => Auth::id(),
+                'user_id'        => $user->id,
                 'booked_at'      => now(),
                 'payment_status' => 'free',
             ]);
 
             $newCount = Booking::where('class_event_id', $id)->count();
+
+            // ── Notify organiser (seller) of new enrollment ── ← NEW
+            NotificationService::newClassEnrollment(
+                $classEvent->user_id,
+                $classEvent->id,
+                $user->fullname ?? $user->name ?? 'A user',
+                $classEvent->title
+            );
 
             return response()->json([
                 'success'           => true,
@@ -193,7 +203,6 @@ class ClassEventController extends Controller
 
     /**
      * Unenroll the authenticated user from a class/event (AJAX)
-     * — Auto-refunds via Stripe if booking was paid
      */
     public function unenroll($id)
     {

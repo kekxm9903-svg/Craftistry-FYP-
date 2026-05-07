@@ -396,8 +396,8 @@
     <script src="{{ asset('js/notification.js') }}" defer></script>
     @endif
 
-    {{-- Preference modal — dashboard only ──}}
-    @include('preferenceModal')
-
+    @auth
+        @include('preferenceModal')
+    @endauth
 </body>
 </html>

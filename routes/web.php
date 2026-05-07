@@ -25,7 +25,8 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\CustomOrderController;
 use App\Http\Controllers\ArtistCustomOrderController;
 use App\Http\Controllers\BulkOrderController;
-use App\Http\Controllers\PreferenceController;   // ← NEW
+use App\Http\Controllers\PreferenceController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
@@ -201,6 +202,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/custom-orders/{customOrder}/pay/success',     [CustomOrderController::class, 'paySuccess'])   ->name('custom-orders.pay.success');
     Route::get('/custom-orders/{customOrder}',                 [CustomOrderController::class, 'show'])         ->name('custom-orders.show');
     Route::get('/custom-orders',                               [CustomOrderController::class, 'index'])        ->name('custom-orders.index');
+
+
+        // --- NOTIFICATION ROUTES ---
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/',         [App\Http\Controllers\NotificationController::class, 'index'])      ->name('index');
+        Route::get('/dropdown', [App\Http\Controllers\NotificationController::class, 'dropdown'])   ->name('dropdown');
+        Route::post('/read-all',[App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('read-all');
+        Route::post('/{id}/read',[App\Http\Controllers\NotificationController::class, 'markRead'])  ->name('read');
+    });
 
     // --- ADMIN ROUTES ---
     Route::prefix('admin')->group(function () {

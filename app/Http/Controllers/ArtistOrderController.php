@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Services\NotificationService;   // ← NEW
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,12 +20,10 @@ class ArtistOrderController extends Controller
             return redirect()->route('studio')->with('error', 'Artist profile not found.');
         }
 
-        // All orders for stats (unfiltered)
         $orders = Order::where('artist_id', $artist->id)
                        ->with(['user', 'items'])
                        ->get();
 
-        // Filtered orders for the list
         $status = $request->get('status');
 
         $filteredOrders = Order::where('artist_id', $artist->id)
@@ -39,7 +38,6 @@ class ArtistOrderController extends Controller
 
     /**
      * Seller accepts → processing becomes preparing.
-     * Triggered when seller clicks "Accept Order".
      */
     public function accept(Order $order)
     {
@@ -51,12 +49,14 @@ class ArtistOrderController extends Controller
 
         $order->update(['status' => 'preparing']);
 
+        // ── Notify buyer ── ← NEW
+        NotificationService::orderStatusChanged($order->user_id, $order->id, 'preparing');
+
         return back()->with('success', 'Order accepted! Start preparing the item.');
     }
 
     /**
      * Seller ships → preparing becomes shipped + tracking saved.
-     * Triggered when seller clicks "Mark as Shipped".
      */
     public function ship(Request $request, Order $order)
     {
@@ -76,6 +76,9 @@ class ArtistOrderController extends Controller
             'courier'         => $request->courier,
             'tracking_number' => $request->tracking_number,
         ]);
+
+        // ── Notify buyer ── ← NEW
+        NotificationService::orderStatusChanged($order->user_id, $order->id, 'shipped');
 
         return back()->with('success', 'Order marked as shipped! Buyer can now track the parcel.');
     }

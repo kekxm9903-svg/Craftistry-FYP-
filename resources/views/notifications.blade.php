@@ -4,6 +4,27 @@
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/notification.css') }}">
+<style>
+    /* ── Breadcrumb ── */
+    .bc-bar {
+        background: #ffffff;
+        border-bottom: 1px solid #e0e0ee;
+        padding: 6px 0;
+        font-size: 12px;
+    }
+    .bc-inner {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .bc-inner a { color: #6b6b8a; text-decoration: none; transition: color .15s; }
+    .bc-inner a:hover { color: #667eea; }
+    .bc-inner .sep { color: #ccc; }
+    .bc-inner .cur { color: #1a1a2e; font-weight: 500; }
+</style>
 @endsection
 
 @section('content')
@@ -14,6 +35,10 @@
         <span class="sep">/</span>
         <span class="cur">Notifications</span>
     </div>
+</div>
+
+<div style="max-width:800px;margin:0 auto;padding:10px 20px 0;">
+    <a href="{{ route('dashboard') }}" style="display:inline-flex;align-items:center;gap:6px;color:#6b6b8a;text-decoration:none;font-size:14px;font-weight:500;">← Back</a>
 </div>
 
 <div class="noti-page">

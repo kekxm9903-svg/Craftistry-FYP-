@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ArtworkSell;
 use App\Models\Review;
+use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
@@ -18,7 +19,7 @@ class ProductController extends Controller
             ->get();
 
         // Summary stats
-        $reviewCount  = $reviews->count();
+        $reviewCount   = $reviews->count();
         $averageRating = $reviewCount > 0 ? round($reviews->avg('rating'), 1) : 0;
 
         // Count per star (5 down to 1)
@@ -27,6 +28,22 @@ class ProductController extends Controller
             $starCounts[$i] = $reviews->where('rating', $i)->count();
         }
 
-        return view('product', compact('artwork', 'reviews', 'reviewCount', 'averageRating', 'starCounts'));
+        // Whether the logged-in user has favourited this product
+        $isFavorited = false;
+        if (Auth::check()) {
+            $isFavorited = Auth::user()
+                ->favoriteProducts()
+                ->where('artwork_sell_id', $id)
+                ->exists();
+        }
+
+        return view('product', compact(
+            'artwork',
+            'reviews',
+            'reviewCount',
+            'averageRating',
+            'starCounts',
+            'isFavorited'
+        ));
     }
 }

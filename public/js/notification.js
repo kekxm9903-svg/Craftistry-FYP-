@@ -96,7 +96,7 @@
     }
 
     pollUnreadCount(); // Run once on page load
-    pollTimer = setInterval(pollUnreadCount, 30000); // Then every 30s
+    pollTimer = setInterval(pollUnreadCount, 5000); // Poll every 5s — near real-time
 
     // ── Update badge ──────────────────────────────────────────────
 
