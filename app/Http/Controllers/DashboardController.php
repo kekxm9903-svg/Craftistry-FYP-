@@ -28,9 +28,18 @@ class DashboardController extends Controller
                              ->whereIn('status', ['processing', 'preparing', 'shipped'])
                              ->count();
 
-        $enrolledClasses  = Booking::where('user_id', $user->id)->count();
+        $enrolledClasses   = Booking::where('user_id', $user->id)->count();
         $customOrdersCount = CustomOrderRequest::where('buyer_id', $user->id)->count();
 
+        // ── Badge counts for Quick Action cards ──────────────────────────────
+
+        // My Orders badge: orders that are shipped — buyer needs to confirm receipt
+        $activeOrdersPending = Order::where('user_id', $user->id)
+                                    ->where('payment_status', 'paid')
+                                    ->where('status', 'shipped')
+                                    ->count();
+
+        // Custom Orders badge: seller sent counter-offer, buyer hasn't responded yet
         $customOrdersPending = CustomOrderRequest::where('buyer_id', $user->id)
                                 ->where('status', 'refused')
                                 ->whereNotNull('counter_price')
@@ -55,7 +64,6 @@ class DashboardController extends Controller
                         ->whereNotNull('image_path');
 
         if ($pref) {
-            // Preferred category at top, rest after — limit 8 total
             $preferred = (clone $baseQuery)
                             ->where('product_category', $pref)
                             ->latest()
@@ -90,6 +98,7 @@ class DashboardController extends Controller
             'activeOrders',
             'enrolledClasses',
             'customOrdersCount',
+            'activeOrdersPending',
             'customOrdersPending',
             'topArtists',
             'hotProducts',

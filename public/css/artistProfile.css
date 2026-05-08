@@ -1026,6 +1026,43 @@ body {
     line-height: 1.3;
 }
 
+/* ══════════════════════════════════════════
+   QUICK-ACTION CARD NOTIFICATION BADGE
+   Paste at the bottom of artistProfile.css
+   (replaces the previous badge CSS block)
+══════════════════════════════════════════ */
+
+.profile-section { overflow: visible !important; }
+.quick-actions-grid { overflow: visible !important; }
+
+.action-card {
+    position: relative;
+    overflow: visible !important;
+}
+
+.card-noti-badge {
+    position: absolute;
+    top: -13px;
+    right: -13px;
+    min-width: 30px;
+    height: 30px;
+    padding: 0 8px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    font-family: 'Inter', sans-serif;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, .55);
+    line-height: 1;
+    z-index: 20;
+    white-space: nowrap;
+    pointer-events: none;
+}
 
 /* ══════════════════════════════
    RESPONSIVE

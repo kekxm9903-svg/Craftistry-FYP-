@@ -67,6 +67,8 @@
         </div>
         <div class="sp-card-body">
             <div class="action-grid">
+
+                {{-- Favourite List — no badge needed --}}
                 <a href="{{ route('favorites.index') }}" class="action-card">
                     <div class="action-icon purple"><i class="fas fa-heart"></i></div>
                     <div class="action-body">
@@ -75,14 +77,21 @@
                     </div>
                     <i class="fas fa-chevron-right action-arrow"></i>
                 </a>
+
+                {{-- My Orders — badge when orders are shipped awaiting confirmation --}}
                 <a href="{{ route('orders.index') }}" class="action-card">
                     <div class="action-icon blue"><i class="fas fa-clipboard-list"></i></div>
                     <div class="action-body">
                         <div class="action-title">My Orders</div>
                         <div class="action-desc">Track and view order history</div>
                     </div>
+                    @if(($activeOrdersPending ?? 0) > 0)
+                        <span class="action-noti-badge">{{ ($activeOrdersPending ?? 0) > 99 ? '99+' : $activeOrdersPending }}</span>
+                    @endif
                     <i class="fas fa-chevron-right action-arrow"></i>
                 </a>
+
+                {{-- My Classes — no badge needed --}}
                 <a href="{{ route('my.classes') }}" class="action-card">
                     <div class="action-icon orange"><i class="fas fa-graduation-cap"></i></div>
                     <div class="action-body">
@@ -91,6 +100,8 @@
                     </div>
                     <i class="fas fa-chevron-right action-arrow"></i>
                 </a>
+
+                {{-- Custom Orders — badge when seller sent counter-offer awaiting buyer response --}}
                 <a href="{{ route('custom-orders.index') }}" class="action-card">
                     <div class="action-icon green"><i class="fas fa-paint-brush"></i></div>
                     <div class="action-body">
@@ -98,11 +109,11 @@
                         <div class="action-desc">View your custom requests</div>
                     </div>
                     @if(($customOrdersPending ?? 0) > 0)
-                        <span class="action-badge">{{ $customOrdersPending }}</span>
-                    @else
-                        <i class="fas fa-chevron-right action-arrow"></i>
+                        <span class="action-noti-badge">{{ ($customOrdersPending ?? 0) > 99 ? '99+' : $customOrdersPending }}</span>
                     @endif
+                    <i class="fas fa-chevron-right action-arrow"></i>
                 </a>
+
             </div>
         </div>
     </div>

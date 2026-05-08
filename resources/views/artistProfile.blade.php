@@ -93,6 +93,8 @@
         </h2>
 
         <div class="quick-actions-grid">
+
+            {{-- Order Summary --}}
             <div class="action-card purple">
                 <div class="card-icon">
                     <i class="fas fa-clipboard-list"></i>
@@ -102,7 +104,13 @@
                 <a href="{{ route('artist.order.summary') }}" class="card-link">View Orders <i class="fas fa-arrow-right"></i></a>
             </div>
 
+            {{-- Order List — badge when there are new paid orders to process --}}
             <div class="action-card blue">
+                @if(($pendingOrdersCount ?? 0) > 0)
+                    <span class="card-noti-badge">
+                        {{ $pendingOrdersCount > 99 ? '99+' : $pendingOrdersCount }}
+                    </span>
+                @endif
                 <div class="card-icon">
                     <i class="fas fa-list-alt"></i>
                 </div>
@@ -111,7 +119,13 @@
                 <a href="{{ route('artist.orders') }}" class="card-link">Manage Orders <i class="fas fa-arrow-right"></i></a>
             </div>
 
+            {{-- Request List — badge when there are pending custom/bulk requests --}}
             <div class="action-card orange">
+                @if(($pendingRequestsCount ?? 0) > 0)
+                    <span class="card-noti-badge">
+                        {{ $pendingRequestsCount > 99 ? '99+' : $pendingRequestsCount }}
+                    </span>
+                @endif
                 <div class="card-icon">
                     <i class="fas fa-paper-plane"></i>
                 </div>
@@ -120,6 +134,7 @@
                 <a href="{{ route('artist.custom-orders.index') }}" class="card-link">View Requests <i class="fas fa-arrow-right"></i></a>
             </div>
 
+            {{-- Upload Class or Event --}}
             <div class="action-card green">
                 <div class="card-icon">
                     <i class="fas fa-graduation-cap"></i>
@@ -128,6 +143,7 @@
                 <p>Create and share new tutorials and events</p>
                 <a href="{{ route('class.event.index') }}" class="card-link">Create Class <i class="fas fa-arrow-right"></i></a>
             </div>
+
         </div>
     </div>
 

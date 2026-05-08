@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Artist;
 use App\Models\ArtworkType;
+use App\Models\Order;
+use App\Models\CustomOrderRequest;
+use App\Models\BulkOrder;
 use App\Models\DemoArtwork;
 use App\Models\ArtworkSell;
 use App\Models\Report;
@@ -18,19 +21,44 @@ class ArtistController extends Controller
     // PROFILE METHODS
     // ========================================
     
-    public function profile()
-    {
-        $user = Auth::user();
-        
-        if (!$user->artist) {
-            return redirect()->route('studio')->with('error', 'Please register as an artist first.');
-        }
-
-        // Load both demoArtworks and artworkSells
-        $artist = $user->artist()->with(['artworkTypes', 'demoArtworks', 'artworkSells'])->first();
-        
-        return view('artistProfile', compact('artist', 'user'));
+public function profile()
+{
+    $user = Auth::user();
+ 
+    if (!$user->artist) {
+        return redirect()->route('studio')->with('error', 'Please register as an artist first.');
     }
+ 
+    $artist = $user->artist()->with(['artworkTypes', 'demoArtworks', 'artworkSells'])->first();
+ 
+    // ── Badge counts for quick-action cards ──────────────────────────
+    // Orders: paid + newly processing (seller needs to act)
+    $pendingOrdersCount = Order::where('artist_id', $artist->id)
+        ->whereIn('status', ['processing', 'preparing'])
+        ->where('payment_status', 'paid')
+        ->count();
+ 
+    // Custom order requests still waiting for seller response
+    $pendingRequestsCount = CustomOrderRequest::where('seller_id', $user->id)
+        ->where('status', 'pending')
+        ->count();
+ 
+    // Bulk orders pending seller acceptance — join through artwork_sells
+    $pendingBulkCount = BulkOrder::whereHas('artworkSell', function ($q) use ($artist) {
+            $q->where('artist_id', $artist->id);
+        })
+        ->where('status', 'pending')
+        ->count();
+ 
+    // Combined badge for the "Request List" card (custom + bulk pending)
+    $pendingRequestsCount = $pendingRequestsCount + $pendingBulkCount;
+ 
+    return view('artistProfile', compact(
+        'artist',
+        'pendingOrdersCount',
+        'pendingRequestsCount'
+    ));
+}
 
     /**
      * Show the form for editing the artist profile

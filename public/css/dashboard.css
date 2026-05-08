@@ -721,6 +721,42 @@ body {
 
 .fee-free { font-size: var(--fs-base); font-weight: 700; color: #16a34a; }
 
+/* ══════════════════════════════════════════
+   QUICK-ACTION CARD NOTIFICATION BADGE
+   Same style as artistProfile card-noti-badge
+   Paste at the bottom of dashboard.css
+══════════════════════════════════════════ */
+
+.action-grid { overflow: visible !important; }
+
+.action-card {
+    overflow: visible !important;
+    position: relative;
+}
+
+.action-noti-badge {
+    position: absolute;
+    top: -13px;
+    right: -13px;
+    min-width: 30px;
+    height: 30px;
+    padding: 0 8px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    font-family: 'Inter', sans-serif;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, .55);
+    line-height: 1;
+    z-index: 20;
+    white-space: nowrap;
+    pointer-events: none;
+}
 
 /* ══════════════════════════════
    RESPONSIVE
