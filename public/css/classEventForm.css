@@ -1,0 +1,59 @@
+/* ═══════════════════════════════════════════
+   CRAFTISTRY — classEventForm.css
+   Supplement styles for classEventCreate
+   and classEventEdit pages
+═══════════════════════════════════════════ */
+
+/* Constrain form width on wide screens */
+.form-page {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+/* Optional label suffix */
+.form-label-opt {
+    font-weight: 400;
+    font-size: 0.85em;
+    color: var(--muted);
+}
+
+/* Allow <a> tags styled as buttons */
+a.btn-cancel,
+a.upload-btn,
+a.btn-empty {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+/* ── Delete confirm modal body (index page) ── */
+.delete-confirm-body {
+    padding: 2rem;
+    text-align: center;
+}
+
+.delete-modal-icon {
+    font-size: 2.4rem;
+    color: var(--warning);
+    margin-bottom: 0.75rem;
+}
+
+.delete-modal-title {
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+}
+
+.delete-modal-name {
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.25rem;
+    font-size: var(--fs-base);
+}
+
+.delete-modal-warning {
+    font-size: var(--fs-sm);
+    color: var(--danger);
+}

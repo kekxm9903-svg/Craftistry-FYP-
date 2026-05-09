@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ClassEvent;
 use App\Models\Booking;
-use App\Services\NotificationService;   // ← NEW
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -23,6 +23,26 @@ class ClassEventController extends Controller
                                  ->paginate(12);
 
         return view('classEvent', compact('classEvents'));
+    }
+
+    /**
+     * Show the create form page.
+     * GET /class-event/create
+     */
+    public function create()
+    {
+        return view('classEventCreate');
+    }
+
+    /**
+     * Show the edit form page.
+     * GET /class-event/{id}/edit  →  name: class.event.edit
+     */
+    public function editPage($id)
+    {
+        $classEvent = ClassEvent::where('user_id', Auth::id())->findOrFail($id);
+
+        return view('classEventEdit', compact('classEvent'));
     }
 
     /**
@@ -157,7 +177,6 @@ class ClassEventController extends Controller
             ], 409);
         }
 
-        // ── Paid class → redirect to checkout instead ──────────────
         if ($classEvent->is_paid && $classEvent->price > 0) {
             return response()->json([
                 'success'          => false,
@@ -177,7 +196,6 @@ class ClassEventController extends Controller
 
             $newCount = Booking::where('class_event_id', $id)->count();
 
-            // ── Notify organiser (seller) of new enrollment ── ← NEW
             NotificationService::newClassEnrollment(
                 $classEvent->user_id,
                 $classEvent->id,
@@ -228,7 +246,6 @@ class ClassEventController extends Controller
             ], 404);
         }
 
-        // ── Paid booking → issue Stripe refund first ────────────────
         $wasRefunded = false;
         if ($booking->payment_status === 'paid' && $booking->stripe_session_id) {
             try {
@@ -345,7 +362,7 @@ class ClassEventController extends Controller
     }
 
     /**
-     * Get class data as JSON (for edit modal)
+     * Get class data as JSON (for AJAX — kept for any existing JS that uses it)
      */
     public function getData($id)
     {
@@ -404,117 +421,90 @@ class ClassEventController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-        $classEvent = ClassEvent::findOrFail($id);
-
-        if ($classEvent->user_id !== Auth::id()) {
-            abort(403);
-        }
-
-        return view('classEventEdit', compact('classEvent'));
-    }
-
-    /**
      * Store a newly created resource in storage.
+     * POST /class-event
+     * Now returns a redirect instead of JSON (form page submission).
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title'               => 'required|string|max:255',
-            'description'         => 'nullable|string|max:1000',
-            'poster_image'        => 'required|image|mimes:jpeg,jpg,png,gif,webp|max:5120',
-            'is_paid'             => 'required|boolean',
-            'price'               => 'nullable|numeric|min:0.01|required_if:is_paid,1',
-            'media_type'          => 'required|in:online,physical',
-            'platform'            => 'required_if:media_type,online|nullable|string|max:255',
-            'location'            => 'required_if:media_type,physical|nullable|string|max:255',
-            'start_date'          => 'required|date|after_or_equal:today',
-            'end_date'            => 'required|date|after_or_equal:start_date',
-            'enrollment_deadline' => 'nullable|date|before_or_equal:start_date',
+            'title'                 => 'required|string|max:255',
+            'description'           => 'nullable|string|max:1000',
+            'poster_image'          => 'required|image|mimes:jpeg,jpg,png,gif,webp|max:5120',
+            'is_paid'               => 'required|boolean',
+            'price'                 => 'nullable|numeric|min:0.01|required_if:is_paid,1',
+            'media_type'            => 'required|in:online,physical',
+            'platform'              => 'required_if:media_type,online|nullable|string|max:255',
+            'location'              => 'required_if:media_type,physical|nullable|string|max:255',
+            'start_date'            => 'required|date|after_or_equal:today',
+            'end_date'              => 'required|date|after_or_equal:start_date',
+            'enrollment_deadline'   => 'nullable|date|before_or_equal:start_date',
             'cancellation_deadline' => 'nullable|date',
-            'require_form'        => 'nullable|boolean',
-            'enrollment_form_url' => 'nullable|url|max:2048',
-            'max_participants'    => 'nullable|integer|min:1|max:99999',
-            'start_time'          => 'required|date_format:H:i',
-            'end_time'            => 'required|date_format:H:i',
-            'duration_weeks'      => 'nullable|numeric',
-            'duration_hours'      => 'nullable|integer',
-            'duration_minutes'    => 'nullable|integer',
+            'require_form'          => 'nullable|boolean',
+            'enrollment_form_url'   => 'nullable|url|max:2048',
+            'max_participants'      => 'nullable|integer|min:1|max:99999',
+            'start_time'            => 'required|date_format:H:i',
+            'end_time'              => 'required|date_format:H:i',
+            'duration_weeks'        => 'nullable|numeric',
+            'duration_hours'        => 'nullable|integer',
+            'duration_minutes'      => 'nullable|integer',
         ]);
 
-        try {
-            $posterPath = null;
-            if ($request->hasFile('poster_image')) {
-                $posterPath = $request->file('poster_image')->store('class-events', 'public');
-            }
-
-            if (!$request->duration_weeks) {
-                $start                       = Carbon::parse($request->start_date);
-                $end                         = Carbon::parse($request->end_date);
-                $diffDays                    = $start->diffInDays($end);
-                $validated['duration_weeks'] = round($diffDays / 7, 1);
-            }
-
-            if (!$request->duration_hours || !$request->duration_minutes) {
-                $startTime                     = Carbon::parse($request->start_time);
-                $endTime                       = Carbon::parse($request->end_time);
-                $diffMinutes                   = $startTime->diffInMinutes($endTime);
-                $validated['duration_hours']   = floor($diffMinutes / 60);
-                $validated['duration_minutes'] = $diffMinutes % 60;
-            }
-
-            $classEvent = ClassEvent::create([
-                'user_id'                => Auth::id(),
-                'title'                  => $validated['title'],
-                'description'            => $validated['description'] ?? null,
-                'poster_image'           => $posterPath,
-                'is_paid'                => $validated['is_paid'],
-                'price'                  => $validated['is_paid'] ? $validated['price'] : null,
-                'media_type'             => $validated['media_type'],
-                'platform'               => $validated['platform'] ?? null,
-                'location'               => $validated['location'] ?? null,
-                'start_date'             => $validated['start_date'],
-                'end_date'               => $validated['end_date'],
-                'enrollment_deadline'    => $validated['enrollment_deadline'] ?? null,
-                'cancellation_deadline'  => $validated['cancellation_deadline'] ?? null,
-                'require_form'           => $validated['require_form'] ?? 0,
-                'enrollment_form_url'    => $validated['enrollment_form_url'] ?? null,
-                'max_participants'       => $validated['max_participants'] ?? null,
-                'duration_weeks'         => $validated['duration_weeks'],
-                'start_time'             => $validated['start_time'],
-                'end_time'               => $validated['end_time'],
-                'duration_hours'         => $validated['duration_hours'],
-                'duration_minutes'       => $validated['duration_minutes'],
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Class/Event created successfully!',
-                'data'    => $classEvent,
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create class/event. Please try again.',
-                'error'   => $e->getMessage(),
-            ], 500);
+        $posterPath = null;
+        if ($request->hasFile('poster_image')) {
+            $posterPath = $request->file('poster_image')->store('class-events', 'public');
         }
+
+        if (!$request->duration_weeks) {
+            $start                       = Carbon::parse($request->start_date);
+            $end                         = Carbon::parse($request->end_date);
+            $validated['duration_weeks'] = round($start->diffInDays($end) / 7, 1);
+        }
+
+        if (!$request->duration_hours || !$request->duration_minutes) {
+            $startTime                     = Carbon::parse($request->start_time);
+            $endTime                       = Carbon::parse($request->end_time);
+            $diffMinutes                   = $startTime->diffInMinutes($endTime);
+            $validated['duration_hours']   = floor($diffMinutes / 60);
+            $validated['duration_minutes'] = $diffMinutes % 60;
+        }
+
+        ClassEvent::create([
+            'user_id'               => Auth::id(),
+            'title'                 => $validated['title'],
+            'description'           => $validated['description'] ?? null,
+            'poster_image'          => $posterPath,
+            'is_paid'               => $validated['is_paid'],
+            'price'                 => $validated['is_paid'] ? $validated['price'] : null,
+            'media_type'            => $validated['media_type'],
+            'platform'              => $validated['platform'] ?? null,
+            'location'              => $validated['location'] ?? null,
+            'start_date'            => $validated['start_date'],
+            'end_date'              => $validated['end_date'],
+            'enrollment_deadline'   => $validated['enrollment_deadline'] ?? null,
+            'cancellation_deadline' => $validated['cancellation_deadline'] ?? null,
+            'require_form'          => $validated['require_form'] ?? 0,
+            'enrollment_form_url'   => $validated['enrollment_form_url'] ?? null,
+            'max_participants'      => $validated['max_participants'] ?? null,
+            'duration_weeks'        => $validated['duration_weeks'],
+            'start_time'            => $validated['start_time'],
+            'end_time'              => $validated['end_time'],
+            'duration_hours'        => $validated['duration_hours'],
+            'duration_minutes'      => $validated['duration_minutes'],
+        ]);
+
+        return redirect()->route('class.event.index')
+                         ->with('success', 'Class/Event uploaded successfully!');
     }
 
     /**
      * Update the specified resource in storage.
+     * POST /class-event/{id}
+     * Now returns a redirect instead of JSON (form page submission).
      */
     public function update(Request $request, $id)
     {
-        $classEvent = ClassEvent::findOrFail($id);
-
-        if ($classEvent->user_id !== Auth::id()) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
-        }
+        $classEvent = ClassEvent::where('user_id', Auth::id())->findOrFail($id);
 
         $validated = $request->validate([
             'title'                 => 'required|string|max:255',
@@ -536,70 +526,54 @@ class ClassEventController extends Controller
             'end_time'              => 'required|date_format:H:i',
         ]);
 
-        try {
-            $updateData = [
-                'title'                  => $validated['title'],
-                'description'            => $validated['description'] ?? null,
-                'is_paid'                => $validated['is_paid'],
-                'price'                  => $validated['is_paid'] ? $validated['price'] : null,
-                'media_type'             => $validated['media_type'],
-                'platform'               => $validated['platform'] ?? null,
-                'location'               => $validated['location'] ?? null,
-                'start_date'             => $validated['start_date'],
-                'end_date'               => $validated['end_date'],
-                'enrollment_deadline'    => $validated['enrollment_deadline'] ?? null,
-                'cancellation_deadline'  => $request->input('cancellation_deadline') ?: null,
-                'require_form'           => $request->input('require_form', 0),
-                'enrollment_form_url'    => $request->input('enrollment_form_url') ?: null,
-                'max_participants'       => $request->input('max_participants') ?: null,
-                'start_time'             => $validated['start_time'],
-                'end_time'               => $validated['end_time'],
-            ];
+        $updateData = [
+            'title'                 => $validated['title'],
+            'description'           => $validated['description'] ?? null,
+            'is_paid'               => $validated['is_paid'],
+            'price'                 => $validated['is_paid'] ? $validated['price'] : null,
+            'media_type'            => $validated['media_type'],
+            'platform'              => $validated['platform'] ?? null,
+            'location'              => $validated['location'] ?? null,
+            'start_date'            => $validated['start_date'],
+            'end_date'              => $validated['end_date'],
+            'enrollment_deadline'   => $validated['enrollment_deadline'] ?? null,
+            'cancellation_deadline' => $request->input('cancellation_deadline') ?: null,
+            'require_form'          => $request->input('require_form', 0),
+            'enrollment_form_url'   => $request->input('enrollment_form_url') ?: null,
+            'max_participants'      => $request->input('max_participants') ?: null,
+            'start_time'            => $validated['start_time'],
+            'end_time'              => $validated['end_time'],
+        ];
 
-            if ($request->hasFile('poster_image')) {
-                if ($classEvent->poster_image) {
-                    Storage::disk('public')->delete($classEvent->poster_image);
-                }
-                $updateData['poster_image'] = $request->file('poster_image')->store('class-events', 'public');
+        if ($request->hasFile('poster_image')) {
+            if ($classEvent->poster_image) {
+                Storage::disk('public')->delete($classEvent->poster_image);
             }
-
-            $start                          = Carbon::parse($validated['start_date']);
-            $end                            = Carbon::parse($validated['end_date']);
-            $updateData['duration_weeks']   = round($start->diffInDays($end) / 7, 1);
-
-            $startTime                      = Carbon::parse($validated['start_time']);
-            $endTime                        = Carbon::parse($validated['end_time']);
-            $diffMinutes                    = $startTime->diffInMinutes($endTime);
-            $updateData['duration_hours']   = floor($diffMinutes / 60);
-            $updateData['duration_minutes'] = $diffMinutes % 60;
-
-            $classEvent->update($updateData);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Class/Event updated successfully!',
-                'data'    => $classEvent,
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update class/event.',
-                'error'   => $e->getMessage(),
-            ], 500);
+            $updateData['poster_image'] = $request->file('poster_image')->store('class-events', 'public');
         }
+
+        $start                          = Carbon::parse($validated['start_date']);
+        $end                            = Carbon::parse($validated['end_date']);
+        $updateData['duration_weeks']   = round($start->diffInDays($end) / 7, 1);
+
+        $startTime                      = Carbon::parse($validated['start_time']);
+        $endTime                        = Carbon::parse($validated['end_time']);
+        $diffMinutes                    = $startTime->diffInMinutes($endTime);
+        $updateData['duration_hours']   = floor($diffMinutes / 60);
+        $updateData['duration_minutes'] = $diffMinutes % 60;
+
+        $classEvent->update($updateData);
+
+        return redirect()->route('class.event.index')
+                         ->with('success', 'Class/Event updated successfully!');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified resource from storage. (AJAX)
      */
     public function destroy($id)
     {
-        $classEvent = ClassEvent::findOrFail($id);
-
-        if ($classEvent->user_id !== Auth::id()) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
-        }
+        $classEvent = ClassEvent::where('user_id', Auth::id())->findOrFail($id);
 
         try {
             if ($classEvent->poster_image) {

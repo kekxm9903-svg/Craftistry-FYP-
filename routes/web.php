@@ -159,11 +159,12 @@ Route::middleware('auth')->group(function () {
     Route::prefix('class-event')->group(function () {
         Route::get('/browse',                           [ClassEventController::class, 'browse'])         ->name('class.event.browse');
         Route::get('/',                                 [ClassEventController::class, 'index'])          ->name('class.event.index');
+        Route::get('/create',                           [ClassEventController::class, 'create'])         ->name('class.event.create');
         Route::post('/',                                [ClassEventController::class, 'store'])          ->name('class.event.store');
         Route::get('/{id}/data',                        [ClassEventController::class, 'getData'])        ->name('class.event.data');
         Route::get('/{id}/participants',                [ClassEventController::class, 'getParticipants'])->name('class.event.participants');
         Route::delete('/{id}/participants/{bookingId}', [ClassEventController::class, 'dropParticipant'])->name('class.event.participants.drop');
-        Route::get('/{id}/edit',                        [ClassEventController::class, 'edit'])           ->name('class.event.edit');
+        Route::get('/{id}/edit',                        [ClassEventController::class, 'editPage'])       ->name('class.event.edit');
         Route::post('/{id}/enroll',                     [ClassEventController::class, 'enroll'])         ->name('class.event.enroll');
         Route::delete('/{id}/enroll',                   [ClassEventController::class, 'unenroll'])       ->name('class.event.unenroll');
         Route::get('/{id}',                             [ClassEventController::class, 'show'])           ->name('class.event.show');
@@ -203,12 +204,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/custom-orders/{customOrder}',                 [CustomOrderController::class, 'show'])         ->name('custom-orders.show');
     Route::get('/custom-orders',                               [CustomOrderController::class, 'index'])        ->name('custom-orders.index');
 
-
-        // --- NOTIFICATION ROUTES ---
+    // --- NOTIFICATION ROUTES ---
     Route::prefix('notifications')->name('notifications.')->group(function () {
-        Route::get('/',         [App\Http\Controllers\NotificationController::class, 'index'])      ->name('index');
-        Route::get('/dropdown', [App\Http\Controllers\NotificationController::class, 'dropdown'])   ->name('dropdown');
-        Route::post('/read-all',[App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('read-all');
+        Route::get('/',          [App\Http\Controllers\NotificationController::class, 'index'])      ->name('index');
+        Route::get('/dropdown',  [App\Http\Controllers\NotificationController::class, 'dropdown'])   ->name('dropdown');
+        Route::post('/read-all', [App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('read-all');
         Route::post('/{id}/read',[App\Http\Controllers\NotificationController::class, 'markRead'])  ->name('read');
     });
 

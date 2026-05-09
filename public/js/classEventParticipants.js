@@ -1,26 +1,27 @@
 /**
  * classEventParticipants.js
  * Handles the participants modal — open, fetch, render, close.
+ * Icons: Bootstrap Icons only (bi-*)
  */
 
 // ── Open modal & fetch participants ─────────────────────────────────────────
 
 function viewParticipants(eventId, eventTitle) {
     // Reset state
-    document.getElementById('participantsEventTitle').textContent = eventTitle;
-    document.getElementById('participantsTotalCount').textContent  = '0';
-    document.getElementById('participantsLoading').style.display   = 'flex';
-    document.getElementById('participantsEmpty').style.display     = 'none';
-    document.getElementById('participantsTableWrapper').style.display = 'none';
-    document.getElementById('participantsTableBody').innerHTML     = '';
-    document.getElementById('participantsEmptyMsg').textContent    = 'No one has booked this class/event yet.';
+    document.getElementById('participantsEventTitle').textContent     = eventTitle;
+    document.getElementById('participantsTotalCount').textContent      = '0';
+    document.getElementById('participantsLoading').style.display       = 'block';
+    document.getElementById('participantsEmpty').style.display         = 'none';
+    document.getElementById('participantsTableWrapper').style.display  = 'none';
+    document.getElementById('participantsTableBody').innerHTML         = '';
+    document.getElementById('participantsEmptyMsg').textContent        = 'No one has booked this class/event yet.';
 
     // Store current event ID on modal element for drop function
     document.getElementById('participantsModal').dataset.eventId = eventId;
 
-    // Open modal
-    document.getElementById('participantsModal').classList.add('active');
-    document.body.style.overflow = 'hidden';
+    // Open Bootstrap modal
+    var bsModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('participantsModal'));
+    bsModal.show();
 
     // Fetch from controller
     fetch(`${participantsBaseRoute}/${eventId}/participants`, {
@@ -41,7 +42,7 @@ function viewParticipants(eventId, eventTitle) {
     .catch(function(error) {
         console.error('Participants fetch error:', error);
         document.getElementById('participantsLoading').style.display = 'none';
-        document.getElementById('participantsEmpty').style.display   = 'flex';
+        document.getElementById('participantsEmpty').style.display   = 'block';
         document.getElementById('participantsEmptyMsg').textContent  = 'Failed to load participants. Please try again.';
     });
 }
@@ -55,11 +56,11 @@ function renderParticipants(data) {
     var tbody        = document.getElementById('participantsTableBody');
     var totalCount   = document.getElementById('participantsTotalCount');
 
-    loading.style.display = 'none';
+    loading.style.display  = 'none';
     totalCount.textContent = data.participant_count;
 
     if (data.participant_count === 0) {
-        empty.style.display        = 'flex';
+        empty.style.display        = 'block';
         tableWrapper.style.display = 'none';
         return;
     }
@@ -79,14 +80,14 @@ function renderParticipants(data) {
                 '</td>' +
                 '<td class="participants-email-cell">' + escapeHtml(p.email) + '</td>' +
                 '<td class="participants-date-cell">' +
-                    '<i class="fas fa-calendar-check"></i>' +
+                    '<i class="bi bi-calendar-check me-1"></i>' +
                     escapeHtml(p.booked_at) +
                 '</td>' +
                 '<td class="participants-action-cell">' +
                     '<button class="btn-drop-participant" ' +
                         'onclick="dropParticipant(' + p.booking_id + ', \'' + escapeHtml(p.name) + '\')" ' +
                         'title="Remove participant">' +
-                        '<i class="fas fa-user-minus"></i>' +
+                        '<i class="bi bi-person-dash-fill"></i>' +
                     '</button>' +
                 '</td>' +
             '</tr>'
@@ -97,16 +98,9 @@ function renderParticipants(data) {
 // ── Close modal ──────────────────────────────────────────────────────────────
 
 function closeParticipantsModal() {
-    document.getElementById('participantsModal').classList.remove('active');
-    document.body.style.overflow = '';
+    var bsModal = bootstrap.Modal.getInstance(document.getElementById('participantsModal'));
+    if (bsModal) bsModal.hide();
 }
-
-// Close on Escape key (add alongside existing Escape handler in classEvent.js)
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeParticipantsModal();
-    }
-});
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -127,7 +121,6 @@ function escapeHtml(str) {
         .replace(/'/g,  '&#39;');
 }
 
-
 // ── Drop a participant (artist only) ────────────────────────────────────────
 
 async function dropParticipant(bookingId, participantName) {
@@ -139,8 +132,8 @@ async function dropParticipant(bookingId, participantName) {
     const btn     = row ? row.querySelector('.btn-drop-participant') : null;
 
     if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btn.disabled  = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
     }
 
     try {
@@ -157,7 +150,6 @@ async function dropParticipant(bookingId, participantName) {
         const data = await response.json();
 
         if (data.success) {
-            // Fade out and remove the row
             if (row) {
                 row.style.transition = 'opacity 0.3s, transform 0.3s';
                 row.style.opacity    = '0';
@@ -165,42 +157,41 @@ async function dropParticipant(bookingId, participantName) {
                 setTimeout(function() {
                     row.remove();
                     // Re-number remaining rows
-                    var rows = document.querySelectorAll('#participantsTableBody tr');
-                    rows.forEach(function(r, i) {
+                    document.querySelectorAll('#participantsTableBody tr').forEach(function(r, i) {
                         var numCell = r.querySelector('.participants-row-number');
                         if (numCell) numCell.textContent = i + 1;
                     });
                     // Update total count
                     document.getElementById('participantsTotalCount').textContent = data.participant_count;
-                    // Show empty state if no participants left
+                    // Show empty state if none left
                     if (data.participant_count === 0) {
                         document.getElementById('participantsTableWrapper').style.display = 'none';
-                        document.getElementById('participantsEmpty').style.display        = 'flex';
+                        document.getElementById('participantsEmpty').style.display        = 'block';
                         document.getElementById('participantsEmptyMsg').textContent       = 'No one has booked this class/event yet.';
                     }
-                    // Also update the participant count badge on the card
+                    // Update participant badge on the card
                     var card = document.querySelector('.class-card[data-id="' + eventId + '"]');
                     if (card) {
                         var badge = card.querySelector('.participant-count-badge span');
                         if (badge) {
                             var n = data.participant_count;
-                            badge.textContent = n + ' participant' + (n !== 1 ? 's' : '');
+                            badge.textContent = n + '/' + (badge.textContent.split('/')[1] || '∞');
                         }
                     }
                 }, 300);
             }
         } else {
             if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-user-minus"></i>';
+                btn.disabled  = false;
+                btn.innerHTML = '<i class="bi bi-person-dash-fill"></i>';
             }
             alert(data.message || 'Failed to remove participant.');
         }
     } catch (err) {
         console.error('Drop participant error:', err);
         if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-user-minus"></i>';
+            btn.disabled  = false;
+            btn.innerHTML = '<i class="bi bi-person-dash-fill"></i>';
         }
         alert('Network error. Please try again.');
     }
