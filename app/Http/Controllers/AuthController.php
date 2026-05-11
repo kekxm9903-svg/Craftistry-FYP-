@@ -87,14 +87,16 @@ class AuthController extends Controller
             'location'         => $validated['location'],
             'password'         => Hash::make($validated['password']),
             'role'             => 'buyer',
-            'preference_shown' => false,  // new user — show modal
+            'preference_shown' => false,
         ]);
 
+        // Log the user in so the verification routes (auth middleware) work,
+        // then send the verification email and redirect to the notice page.
         Auth::login($user);
-        $this->restoreCartFromDb($user->id);
+        $user->sendEmailVerificationNotification();
 
-        return redirect()->route('dashboard')
-            ->with('success', 'Welcome! Your account has been created successfully.');
+        return redirect()->route('verification.notice')
+            ->with('success', 'Account created! Please check your email to verify your address before continuing.');
     }
 
     // ─── Login ────────────────────────────────────────────────────────────────
@@ -131,6 +133,13 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
+
+            // Block unverified users — send them to the verify notice page
+            if (!Auth::user()->hasVerifiedEmail()) {
+                return redirect()->route('verification.notice')
+                    ->with('warning', 'Please verify your email address before logging in.');
+            }
+
             $this->restoreCartFromDb(Auth::id());
 
             // Admin — skip preference modal entirely

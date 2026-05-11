@@ -325,7 +325,7 @@ body {
 
 
 /* ══════════════════════════════
-   TOP ARTISTS
+   HOT ARTISTS (scroll row)
 ══════════════════════════════ */
 
 .artist-scroll-row {
@@ -367,6 +367,7 @@ body {
     overflow: hidden;
     background: linear-gradient(135deg, var(--lavender), #ddd6fe);
     flex-shrink: 0;
+    position: relative;
 }
 
 .asc-cover img {
@@ -438,7 +439,16 @@ body {
     font-size: 11px;
     color: var(--muted);
     text-align: center;
-    padding: 2px var(--sp-sm) var(--sp-sm);
+    padding: 2px var(--sp-sm) 4px;
+}
+
+/* Sold count under artist card */
+.asc-sold {
+    font-size: 11px;
+    color: #e8540a;
+    font-weight: 700;
+    text-align: center;
+    padding: 0 var(--sp-sm) var(--sp-sm);
 }
 
 
@@ -500,10 +510,10 @@ body {
     background: linear-gradient(135deg, #f5f3ff, var(--lavender));
 }
 
-/* ── Artwork type badge (top-left) ── */
+/* Artwork type badge (bottom-left, avoid clash with rank badge) */
 .product-type-badge {
     position: absolute;
-    top: var(--sp-xs);
+    bottom: var(--sp-xs);
     left: var(--sp-xs);
     padding: 2px var(--sp-xs);
     border-radius: var(--radius-sm);
@@ -514,13 +524,10 @@ body {
     color: #fff;
 }
 
-/* Digital → bold blue */
 .product-type-badge.digital  { background: #2563eb; }
-
-/* Physical → forest green */
 .product-type-badge.physical { background: #16a34a; }
 
-/* Promo badge — top-right of product image */
+/* Promo badge — top-right */
 .product-promo-badge {
     position: absolute;
     top: var(--sp-xs);
@@ -534,6 +541,18 @@ body {
     pointer-events: none;
     z-index: 2;
     box-shadow: 0 2px 6px rgba(220, 38, 38, .4);
+}
+
+/* 🥇🥈🥉 rank badge — top-left of image */
+.hot-rank-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    font-size: 20px;
+    line-height: 1;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,.35));
+    z-index: 3;
+    pointer-events: none;
 }
 
 .product-info {
@@ -617,6 +636,14 @@ body {
     text-decoration: line-through;
     font-weight: 400;
     line-height: 1.2;
+}
+
+/* Sold count under price */
+.product-sold-count {
+    font-size: 11px;
+    color: #e8540a;
+    font-weight: 700;
+    margin-top: 3px;
 }
 
 
@@ -721,11 +748,10 @@ body {
 
 .fee-free { font-size: var(--fs-base); font-weight: 700; color: #16a34a; }
 
-/* ══════════════════════════════════════════
-   QUICK-ACTION CARD NOTIFICATION BADGE
-   Same style as artistProfile card-noti-badge
-   Paste at the bottom of dashboard.css
-══════════════════════════════════════════ */
+
+/* ══════════════════════════════
+   NOTIFICATION BADGE
+══════════════════════════════ */
 
 .action-grid { overflow: visible !important; }
 
@@ -758,12 +784,13 @@ body {
     pointer-events: none;
 }
 
+
 /* ══════════════════════════════
    RESPONSIVE
 ══════════════════════════════ */
 
 @media (max-width: 900px) {
-    .stats-row  { grid-template-columns: repeat(2, 1fr); }
+    .stats-row   { grid-template-columns: repeat(2, 1fr); }
     .action-grid { grid-template-columns: repeat(2, 1fr); }
 }
 

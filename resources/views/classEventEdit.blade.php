@@ -162,11 +162,20 @@
                 </div>
 
                 {{-- Dates --}}
+                @php
+                    $startDate            = old('start_date',            $classEvent->start_date            ? \Carbon\Carbon::parse($classEvent->start_date)->format('Y-m-d')            : '');
+                    $endDate              = old('end_date',              $classEvent->end_date              ? \Carbon\Carbon::parse($classEvent->end_date)->format('Y-m-d')              : '');
+                    $enrollmentDeadline   = old('enrollment_deadline',   $classEvent->enrollment_deadline   ? \Carbon\Carbon::parse($classEvent->enrollment_deadline)->format('Y-m-d')   : '');
+                    $cancellationDeadline = old('cancellation_deadline', $classEvent->cancellation_deadline ? \Carbon\Carbon::parse($classEvent->cancellation_deadline)->format('Y-m-d') : '');
+                    $startTime            = old('start_time',            $classEvent->start_time            ? \Carbon\Carbon::parse($classEvent->start_time)->format('H:i')             : '');
+                    $endTime              = old('end_time',              $classEvent->end_time              ? \Carbon\Carbon::parse($classEvent->end_time)->format('H:i')               : '');
+                @endphp
+
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Start Date <span class="required">*</span></label>
                         <input type="date" name="start_date" class="form-input" required
-                               value="{{ old('start_date', $classEvent->start_date) }}">
+                               value="{{ $startDate }}">
                         @error('start_date')
                             <span class="error-message">{{ $message }}</span>
                         @enderror
@@ -174,7 +183,7 @@
                     <div class="form-group">
                         <label class="form-label">End Date <span class="required">*</span></label>
                         <input type="date" name="end_date" class="form-input" required
-                               value="{{ old('end_date', $classEvent->end_date) }}">
+                               value="{{ $endDate }}">
                         @error('end_date')
                             <span class="error-message">{{ $message }}</span>
                         @enderror
@@ -186,13 +195,13 @@
                     <div class="form-group">
                         <label class="form-label">Enrollment Deadline <span class="form-label-opt">(optional)</span></label>
                         <input type="date" name="enrollment_deadline" class="form-input"
-                               value="{{ old('enrollment_deadline', $classEvent->enrollment_deadline) }}">
+                               value="{{ $enrollmentDeadline }}">
                         <span class="char-count">Leave blank for no deadline.</span>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Cancellation Deadline <span class="form-label-opt">(optional)</span></label>
                         <input type="date" name="cancellation_deadline" class="form-input"
-                               value="{{ old('cancellation_deadline', $classEvent->cancellation_deadline) }}">
+                               value="{{ $cancellationDeadline }}">
                         <span class="char-count">Leave blank to allow cancellation anytime.</span>
                     </div>
                 </div>
@@ -239,7 +248,7 @@
                     <div class="form-group">
                         <label class="form-label">Start Time <span class="required">*</span></label>
                         <input type="time" id="editStartTime" name="start_time" class="form-input" required
-                               value="{{ old('start_time', $classEvent->start_time) }}">
+                               value="{{ $startTime }}">
                         @error('start_time')
                             <span class="error-message">{{ $message }}</span>
                         @enderror
@@ -247,7 +256,7 @@
                     <div class="form-group">
                         <label class="form-label">End Time <span class="required">*</span></label>
                         <input type="time" id="editEndTime" name="end_time" class="form-input" required
-                               value="{{ old('end_time', $classEvent->end_time) }}">
+                               value="{{ $endTime }}">
                         @error('end_time')
                             <span class="error-message">{{ $message }}</span>
                         @enderror

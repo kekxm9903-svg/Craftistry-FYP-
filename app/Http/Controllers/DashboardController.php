@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\Booking;
 use App\Models\Order;
 use App\Models\Artist;
@@ -16,7 +17,7 @@ class DashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $pref = $user->preferred_artwork_type; // e.g. 'Drawing', 'Knitting', or null
+        $pref = $user->preferred_artwork_type;
 
         // ── Favourite count ──
         $favoriteArtists = $user->favorites()->count()
@@ -31,58 +32,75 @@ class DashboardController extends Controller
         $enrolledClasses   = Booking::where('user_id', $user->id)->count();
         $customOrdersCount = CustomOrderRequest::where('buyer_id', $user->id)->count();
 
-        // ── Badge counts for Quick Action cards ──────────────────────────────
-
-        // My Orders badge: orders that are shipped — buyer needs to confirm receipt
+        // ── Badge counts ──
         $activeOrdersPending = Order::where('user_id', $user->id)
                                     ->where('payment_status', 'paid')
                                     ->where('status', 'shipped')
                                     ->count();
 
-        // Custom Orders badge: seller sent counter-offer, buyer hasn't responded yet
         $customOrdersPending = CustomOrderRequest::where('buyer_id', $user->id)
                                 ->where('status', 'refused')
                                 ->whereNotNull('counter_price')
                                 ->whereNull('buyer_response')
                                 ->count();
 
-        // ── Top Artists ──
-        $topArtists = Artist::with(['user', 'artworkSells' => function ($q) {
+        // ── Hot Artworks — ranked by total units sold in completed orders ──
+        $hotProducts = ArtworkSell::with(['artist.user'])
+            ->whereHas('artist.user')
+            ->whereNotNull('image_path')
+            ->whereNotIn('status', ['sold', 'sold_out'])
+            ->addSelect([
+                'artwork_sells.*',
+                DB::raw('(
+                    SELECT COALESCE(SUM(oi.quantity), 0)
+                    FROM order_items oi
+                    JOIN orders o ON oi.order_id = o.id
+                    WHERE oi.artwork_sell_id = artwork_sells.id
+                      AND o.status = "completed"
+                ) as total_sold'),
+            ])
+            ->orderByDesc('total_sold')
+            ->take(8)
+            ->get();
+
+        // If not enough sold artworks, pad with latest unsold ones
+        if ($hotProducts->count() < 4) {
+            $existingIds = $hotProducts->pluck('id')->toArray();
+            $padding = ArtworkSell::with(['artist.user'])
+                ->whereHas('artist.user')
+                ->whereNotNull('image_path')
+                ->whereNotIn('status', ['sold', 'sold_out'])
+                ->whereNotIn('id', $existingIds)
+                ->latest()
+                ->take(8 - $hotProducts->count())
+                ->get()
+                ->map(function ($item) {
+                    $item->total_sold = 0;
+                    return $item;
+                });
+            $hotProducts = $hotProducts->merge($padding);
+        }
+
+        // ── Hot Artists — ranked by total units sold across all their artworks ──
+        $hotArtists = Artist::with(['user', 'artworkSells' => function ($q) {
                                 $q->whereNotIn('status', ['sold', 'sold_out'])
                                   ->whereNotNull('image_path');
                             }])
                             ->whereHas('user')
-                            ->withCount('artworkSells')
-                            ->orderBy('artwork_sells_count', 'desc')
+                            ->addSelect([
+                                'artists.*',
+                                DB::raw('(
+                                    SELECT COALESCE(SUM(oi.quantity), 0)
+                                    FROM order_items oi
+                                    JOIN orders o ON oi.order_id = o.id
+                                    JOIN artwork_sells aws ON oi.artwork_sell_id = aws.id
+                                    WHERE aws.artist_id = artists.id
+                                      AND o.status = "completed"
+                                ) as total_sold'),
+                            ])
+                            ->orderByDesc('total_sold')
                             ->take(10)
                             ->get();
-
-        // ── Hot Products — preferred product_category first ──
-        $baseQuery = ArtworkSell::with(['artist.user'])
-                        ->whereHas('artist.user')
-                        ->whereNotIn('status', ['sold', 'sold_out'])
-                        ->whereNotNull('image_path');
-
-        if ($pref) {
-            $preferred = (clone $baseQuery)
-                            ->where('product_category', $pref)
-                            ->latest()
-                            ->take(8)
-                            ->get();
-
-            $others = (clone $baseQuery)
-                            ->where(function ($q) use ($pref) {
-                                $q->where('product_category', '!=', $pref)
-                                  ->orWhereNull('product_category');
-                            })
-                            ->latest()
-                            ->take(8)
-                            ->get();
-
-            $hotProducts = $preferred->merge($others)->take(8);
-        } else {
-            $hotProducts = $baseQuery->latest()->take(8)->get();
-        }
 
         // ── Upcoming Classes ──
         $upcomingClasses = ClassEvent::with('user')
@@ -100,7 +118,7 @@ class DashboardController extends Controller
             'customOrdersCount',
             'activeOrdersPending',
             'customOrdersPending',
-            'topArtists',
+            'hotArtists',
             'hotProducts',
             'upcomingClasses'
         ));

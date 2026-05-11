@@ -27,6 +27,9 @@ use App\Http\Controllers\ArtistCustomOrderController;
 use App\Http\Controllers\BulkOrderController;
 use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\KycController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
@@ -42,11 +45,36 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
+// --- EMAIL VERIFICATION ROUTES ---
+Route::get('/email/verify', fn() => view('auth.verify-email'))
+    ->middleware('auth')
+    ->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect()->route('kyc.show')
+        ->with('success', 'Email verified! Please complete identity verification.');
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+Route::post('/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('status', 'verification-link-sent');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
+// --- KYC ROUTES ---
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/kyc',  [KycController::class, 'show'])  ->name('kyc.show');
+    Route::post('/kyc', [KycController::class, 'submit'])->name('kyc.submit');
+});
+
 // --- STRIPE CALLBACK ROUTES (outside auth) ---
 Route::get('/checkout/class/success', [ClassCheckoutController::class, 'success'])->name('class.checkout.success');
 Route::get('/checkout/order/success', [OrderCheckoutController::class, 'success'])->name('order.checkout.success');
 Route::get('/checkout/order/cancel',  [OrderCheckoutController::class, 'cancel']) ->name('order.checkout.cancel');
 
+// ============================================================
+// AUTH ONLY (no email verification required)
+// ============================================================
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/my-classes', [MyClassesController::class, 'index'])->name('my.classes');
@@ -55,6 +83,56 @@ Route::middleware('auth')->group(function () {
     Route::post('/user/preference',        [PreferenceController::class, 'store']) ->name('preference.store');
     Route::post('/user/preference/skip',   [PreferenceController::class, 'skip'])  ->name('preference.skip');
     Route::post('/user/preference/update', [PreferenceController::class, 'update'])->name('preference.update');
+
+    // --- USER PROFILE ROUTES ---
+    Route::prefix('profile')->group(function () {
+        Route::get('/',                [UserProfileController::class, 'show'])                  ->name('user.profile.show');
+        Route::get('/edit',            [UserProfileController::class, 'edit'])                  ->name('user.profile.edit');
+        Route::put('/update',          [UserProfileController::class, 'update'])                ->name('user.profile.update');
+        Route::post('/update-image',   [UserProfileController::class, 'updateProfileImage'])   ->name('user.profile.image.update');
+        Route::get('/change-password', [UserProfileController::class, 'showChangePasswordForm'])->name('user.profile.change-password');
+        Route::put('/change-password', [UserProfileController::class, 'updatePassword'])        ->name('user.profile.update-password');
+    });
+
+    // --- FEEDBACK ROUTES ---
+    Route::get('/feedback',  [FeedbackController::class, 'create'])->name('feedback.create');
+    Route::post('/feedback', [FeedbackController::class, 'store']) ->name('feedback.store');
+
+    // --- NOTIFICATION ROUTES ---
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/',           [NotificationController::class, 'index'])      ->name('index');
+        Route::get('/dropdown',   [NotificationController::class, 'dropdown'])   ->name('dropdown');
+        Route::post('/read-all',  [NotificationController::class, 'markAllRead'])->name('read-all');
+        Route::post('/{id}/read', [NotificationController::class, 'markRead'])  ->name('read');
+    });
+
+    // --- ADMIN ROUTES ---
+    Route::prefix('admin')->group(function () {
+        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+
+        Route::get('/users',                [AdminController::class, 'users'])      ->name('admin.users');
+        Route::post('/users/{user}/ban',    [AdminController::class, 'banUser'])    ->name('admin.users.ban');
+        Route::post('/users/{user}/unban',  [AdminController::class, 'unbanUser'])  ->name('admin.users.unban');
+
+        Route::get('/feedbacks',                  [AdminController::class, 'feedbacks'])       ->name('admin.feedbacks');
+        Route::post('/feedbacks/{feedback}/read', [AdminController::class, 'markFeedbackRead'])->name('admin.feedbacks.read');
+        Route::delete('/feedbacks/{feedback}',    [AdminController::class, 'deleteFeedback'])  ->name('admin.feedbacks.delete');
+
+        Route::get('/reports',                  [AdminController::class, 'reports'])           ->name('admin.reports');
+        Route::post('/reports/{report}/status', [AdminController::class, 'updateReportStatus'])->name('admin.reports.status');
+
+        Route::get('/admins',                [AdminController::class, 'admins'])     ->name('admin.admins');
+        Route::post('/admins/add',           [AdminController::class, 'addAdmin'])   ->name('admin.admins.add');
+        Route::post('/admins/{user}/remove', [AdminController::class, 'removeAdmin'])->name('admin.admins.remove');
+    });
+
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+});
+
+// ============================================================
+// AUTH + EMAIL VERIFIED REQUIRED
+// ============================================================
+Route::middleware(['auth', 'verified'])->group(function () {
 
     // --- ORDER ROUTES (buyer) ---
     Route::get('/my-orders',                   [OrderController::class, 'index'])          ->name('orders.index');
@@ -69,10 +147,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/reviews/{review}/edit',             [ReviewController::class, 'edit'])   ->name('reviews.edit');
     Route::put('/reviews/{review}',                  [ReviewController::class, 'update']) ->name('reviews.update');
     Route::delete('/reviews/{review}',               [ReviewController::class, 'destroy'])->name('reviews.destroy');
-
-    // --- FEEDBACK ROUTES ---
-    Route::get('/feedback',  [FeedbackController::class, 'create'])->name('feedback.create');
-    Route::post('/feedback', [FeedbackController::class, 'store']) ->name('feedback.store');
 
     // --- CART ROUTES ---
     Route::prefix('cart')->name('cart.')->group(function () {
@@ -95,16 +169,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/',              [OrderCheckoutController::class, 'show'])   ->name('show');
         Route::post('/process',      [OrderCheckoutController::class, 'process'])->name('process');
         Route::get('/{order}/repay', [OrderCheckoutController::class, 'repay']) ->name('repay');
-    });
-
-    // --- USER PROFILE ROUTES ---
-    Route::prefix('profile')->group(function () {
-        Route::get('/',                [UserProfileController::class, 'show'])                  ->name('user.profile.show');
-        Route::get('/edit',            [UserProfileController::class, 'edit'])                  ->name('user.profile.edit');
-        Route::put('/update',          [UserProfileController::class, 'update'])                ->name('user.profile.update');
-        Route::post('/update-image',   [UserProfileController::class, 'updateProfileImage'])   ->name('user.profile.image.update');
-        Route::get('/change-password', [UserProfileController::class, 'showChangePasswordForm'])->name('user.profile.change-password');
-        Route::put('/change-password', [UserProfileController::class, 'updatePassword'])        ->name('user.profile.update-password');
     });
 
     // --- STUDIO ROUTES ---
@@ -203,36 +267,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/custom-orders/{customOrder}/pay/success',     [CustomOrderController::class, 'paySuccess'])   ->name('custom-orders.pay.success');
     Route::get('/custom-orders/{customOrder}',                 [CustomOrderController::class, 'show'])         ->name('custom-orders.show');
     Route::get('/custom-orders',                               [CustomOrderController::class, 'index'])        ->name('custom-orders.index');
-
-    // --- NOTIFICATION ROUTES ---
-    Route::prefix('notifications')->name('notifications.')->group(function () {
-        Route::get('/',          [App\Http\Controllers\NotificationController::class, 'index'])      ->name('index');
-        Route::get('/dropdown',  [App\Http\Controllers\NotificationController::class, 'dropdown'])   ->name('dropdown');
-        Route::post('/read-all', [App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('read-all');
-        Route::post('/{id}/read',[App\Http\Controllers\NotificationController::class, 'markRead'])  ->name('read');
-    });
-
-    // --- ADMIN ROUTES ---
-    Route::prefix('admin')->group(function () {
-        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-
-        Route::get('/users',                [AdminController::class, 'users'])      ->name('admin.users');
-        Route::post('/users/{user}/ban',    [AdminController::class, 'banUser'])    ->name('admin.users.ban');
-        Route::post('/users/{user}/unban',  [AdminController::class, 'unbanUser'])  ->name('admin.users.unban');
-
-        Route::get('/feedbacks',                  [AdminController::class, 'feedbacks'])       ->name('admin.feedbacks');
-        Route::post('/feedbacks/{feedback}/read', [AdminController::class, 'markFeedbackRead'])->name('admin.feedbacks.read');
-        Route::delete('/feedbacks/{feedback}',    [AdminController::class, 'deleteFeedback'])  ->name('admin.feedbacks.delete');
-
-        Route::get('/reports',                  [AdminController::class, 'reports'])           ->name('admin.reports');
-        Route::post('/reports/{report}/status', [AdminController::class, 'updateReportStatus'])->name('admin.reports.status');
-
-        Route::get('/admins',                [AdminController::class, 'admins'])     ->name('admin.admins');
-        Route::post('/admins/add',           [AdminController::class, 'addAdmin'])   ->name('admin.admins.add');
-        Route::post('/admins/{user}/remove', [AdminController::class, 'removeAdmin'])->name('admin.admins.remove');
-    });
-
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
 // --- STRIPE WEBHOOK (outside auth) ---

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
@@ -19,8 +19,8 @@ class User extends Authenticatable
         'role',
         'is_artist',
         'profile_image',
-        'preferred_artwork_type',  // e.g. 'Drawing', 'Knitting', 'Crochet' …
-        'preference_shown',        // bool — true once modal saved or skipped
+        'preferred_artwork_type',
+        'preference_shown',
         'artist_type',
         'artist_status',
         'address',
@@ -60,10 +60,6 @@ class User extends Authenticatable
         return $this->artist?->seller_review_count ?? 0;
     }
 
-    /**
-     * Whether the preference modal should still be shown.
-     * Returns false once the user has saved OR skipped.
-     */
     public function shouldShowPreferenceModal(): bool
     {
         return !$this->preference_shown;
