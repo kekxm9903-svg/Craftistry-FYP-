@@ -13,315 +13,146 @@
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             padding: 24px;
         }
 
-        .container {
-            width: 100%;
-            max-width: 520px;
-        }
+        .container { width: 100%; max-width: 520px; }
 
         .form-card {
-            background: white;
-            border-radius: 16px;
+            background: white; border-radius: 16px;
             padding: 40px 36px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
 
-        .logo {
-            display: block;
-            height: 36px;
-            margin: 0 auto 24px;
-        }
+        .logo { display: block; height: 36px; margin: 0 auto 24px; }
+        h1 { font-size: 26px; font-weight: 600; color: #1a202c; text-align: center; margin-bottom: 6px; }
+        .subtitle { text-align: center; color: #718096; font-size: 14px; margin-bottom: 28px; }
 
-        h1 {
-            font-size: 26px;
-            font-weight: 600;
-            color: #1a202c;
-            text-align: center;
-            margin-bottom: 6px;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #718096;
-            font-size: 14px;
-            margin-bottom: 28px;
-        }
-
-        /* Steps indicator */
-        .steps {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0;
-            margin-bottom: 32px;
-        }
-
-        .step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
-
+        .steps { display: flex; align-items: center; justify-content: center; margin-bottom: 32px; }
+        .step { display: flex; flex-direction: column; align-items: center; gap: 6px; }
         .step-circle {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: #e2e8f0;
-            color: #a0aec0;
-            font-weight: 600;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all .3s;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: #e2e8f0; color: #a0aec0;
+            font-weight: 600; font-size: 14px;
+            display: flex; align-items: center; justify-content: center; transition: all .3s;
         }
-
-        .step.active .step-circle {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .step.done .step-circle {
-            background: #48bb78;
-            color: white;
-        }
-
-        .step-label {
-            font-size: 11px;
-            color: #a0aec0;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-
+        .step.active .step-circle { background: linear-gradient(135deg,#667eea,#764ba2); color: white; }
+        .step.done   .step-circle { background: #48bb78; color: white; }
+        .step-label { font-size: 11px; color: #a0aec0; font-weight: 500; white-space: nowrap; }
         .step.active .step-label { color: #667eea; }
-        .step.done .step-label   { color: #48bb78; }
+        .step.done   .step-label { color: #48bb78; }
+        .step-line { width: 48px; height: 2px; background: #e2e8f0; margin-bottom: 20px; }
 
-        .step-line {
-            width: 48px;
-            height: 2px;
-            background: #e2e8f0;
-            margin-bottom: 20px;
-        }
-
-        /* Alert */
         .alert {
-            padding: 14px 16px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            font-size: 14px;
+            padding: 14px 16px; border-radius: 10px; margin-bottom: 20px;
+            display: flex; align-items: flex-start; gap: 12px; font-size: 14px;
         }
-
-        .alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
-        .alert-warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
         .alert-error   { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
-        .alert-info    { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+        .alert-warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
 
-        /* Section label */
         .section-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #4a5568;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            font-size: 13px; font-weight: 600; color: #4a5568;
+            margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
         }
 
-        /* IC Upload */
         .upload-zone {
-            border: 2px dashed #e2e8f0;
-            border-radius: 12px;
-            padding: 24px;
-            text-align: center;
-            cursor: pointer;
+            border: 2px dashed #e2e8f0; border-radius: 12px; padding: 24px;
+            text-align: center; cursor: pointer;
             transition: border-color .2s, background .2s;
-            margin-bottom: 24px;
-            position: relative;
+            margin-bottom: 24px; position: relative;
         }
-
         .upload-zone:hover { border-color: #667eea; background: #f8f7ff; }
         .upload-zone.has-file { border-color: #48bb78; background: #f0fff4; }
-
         .upload-zone input[type="file"] {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            cursor: pointer;
-            width: 100%;
-            height: 100%;
+            position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
         }
-
-        .upload-icon {
-            font-size: 2rem;
-            color: #cbd5e0;
-            margin-bottom: 8px;
-        }
-
+        .upload-icon { font-size: 2rem; color: #cbd5e0; margin-bottom: 8px; }
         .upload-zone.has-file .upload-icon { color: #48bb78; }
-
-        .upload-text {
-            font-size: 14px;
-            color: #718096;
-        }
-
+        .upload-text { font-size: 14px; color: #718096; }
         .upload-text strong { color: #4a5568; }
-
         #ic-preview {
-            display: none;
-            width: 100%;
-            max-height: 160px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-top: 12px;
+            display: none; width: 100%; max-height: 160px;
+            object-fit: cover; border-radius: 8px; margin-top: 12px;
         }
 
-        /* Webcam */
         .webcam-wrap {
-            border-radius: 12px;
-            overflow: hidden;
-            background: #1a202c;
-            margin-bottom: 16px;
-            position: relative;
-            aspect-ratio: 4/3;
+            border-radius: 12px; overflow: hidden;
+            background: #1a202c; margin-bottom: 16px;
+            position: relative; aspect-ratio: 4/3;
         }
-
         #webcam {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
+            width: 100%; height: 100%; object-fit: cover;
+            display: block; transform: scaleX(-1);
         }
-
         #selfie-preview {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none;
-            border-radius: 12px;
+            width: 100%; height: 100%; object-fit: cover;
+            display: none; border-radius: 12px;
         }
-
         .webcam-overlay {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
             pointer-events: none;
         }
-
         .face-guide {
-            width: 160px;
-            height: 200px;
-            border: 3px solid rgba(255,255,255,0.6);
+            width: 160px; height: 200px;
+            border: 3px solid rgba(255,255,255,0.7);
             border-radius: 50%;
-            box-shadow: 0 0 0 2000px rgba(0,0,0,0.3);
+            box-shadow: 0 0 0 2000px rgba(0,0,0,0.35);
+        }
+        .cam-hint {
+            position: absolute; bottom: 12px; left: 0; right: 0;
+            text-align: center; font-size: 12px; color: rgba(255,255,255,0.8);
         }
 
-        .webcam-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 24px;
-        }
+        .webcam-controls { display: flex; gap: 10px; margin-bottom: 24px; }
 
-        /* Buttons */
         .btn-primary {
             width: 100%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
+            color: white; border: none; padding: 14px; border-radius: 8px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
             transition: transform .2s, box-shadow .2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
             font-family: 'Inter', sans-serif;
         }
-
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.4); }
-        .btn-primary:active { transform: translateY(0); }
         .btn-primary:disabled { opacity: .6; cursor: not-allowed; transform: none; box-shadow: none; }
 
         .btn-secondary {
-            flex: 1;
-            background: transparent;
-            color: #4a5568;
-            border: 2px solid #e2e8f0;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
+            flex: 1; background: transparent; color: #4a5568;
+            border: 2px solid #e2e8f0; padding: 10px; border-radius: 8px;
+            font-size: 14px; font-weight: 500; cursor: pointer;
             transition: border-color .2s, color .2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
             font-family: 'Inter', sans-serif;
         }
-
         .btn-secondary:hover { border-color: #a0aec0; color: #1a202c; }
 
         .btn-capture {
             flex: 1;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-family: 'Inter', sans-serif;
-            transition: opacity .2s;
+            color: white; border: none; padding: 10px; border-radius: 8px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            font-family: 'Inter', sans-serif; transition: opacity .2s;
         }
-
         .btn-capture:hover { opacity: .9; }
 
-        .divider {
-            height: 1px;
-            background: #e2e8f0;
-            margin: 24px 0;
-        }
+        .divider { height: 1px; background: #e2e8f0; margin: 24px 0; }
 
-        .help-text {
-            text-align: center;
-            font-size: 12px;
-            color: #a0aec0;
-            margin-top: 16px;
-            line-height: 1.6;
-        }
-
-        /* Tips box */
         .tips {
-            background: #f8f7ff;
-            border: 1px solid #e9d5ff;
-            border-radius: 10px;
-            padding: 14px 16px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            color: #5b21b6;
+            background: #f8f7ff; border: 1px solid #e9d5ff;
+            border-radius: 10px; padding: 14px 16px;
+            margin-bottom: 20px; font-size: 13px; color: #5b21b6;
         }
-
         .tips ul { padding-left: 16px; margin-top: 6px; }
         .tips li { margin-bottom: 4px; }
+
+        .help-text {
+            text-align: center; font-size: 12px; color: #a0aec0;
+            margin-top: 16px; line-height: 1.6;
+        }
 
         @media (max-width: 480px) {
             .form-card { padding: 32px 20px; }
@@ -334,11 +165,9 @@
     <div class="form-card">
 
         <img src="{{ asset('images/Logo.png') }}" alt="Craftistry" class="logo">
-
         <h1>Identity Verification</h1>
         <p class="subtitle">We need to verify your identity to keep Craftistry safe</p>
 
-        {{-- Steps --}}
         <div class="steps">
             <div class="step done">
                 <div class="step-circle"><i class="bi bi-check"></i></div>
@@ -361,7 +190,6 @@
             </div>
         </div>
 
-        {{-- KYC Failed — similarity too low --}}
         @if (session('kyc_failed'))
             <div class="alert alert-error">
                 <i class="bi bi-x-circle-fill"></i>
@@ -369,12 +197,11 @@
                     <strong>Verification failed</strong><br>
                     Face similarity: <strong>{{ session('kyc_similarity') }}%</strong>
                     (minimum required: <strong>80%</strong>)<br>
-                    Please ensure your face matches the IC photo clearly and try again.
+                    Please ensure your face is clearly visible and try again.
                 </div>
             </div>
         @endif
 
-        {{-- Validation / API errors --}}
         @if ($errors->any())
             <div class="alert alert-error">
                 <i class="bi bi-x-circle-fill"></i>
@@ -389,7 +216,6 @@
             </div>
         @endif
 
-        {{-- Previous attempt failed --}}
         @if (auth()->user()->kyc_status === 'failed' && !session('kyc_failed') && !$errors->any())
             <div class="alert alert-warning">
                 <i class="bi bi-arrow-repeat"></i>
@@ -404,7 +230,8 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('kyc.submit') }}" enctype="multipart/form-data" id="kycForm">
+        <form method="POST" action="{{ route('kyc.submit') }}"
+              enctype="multipart/form-data" id="kycForm">
             @csrf
 
             {{-- Step 1: IC Upload --}}
@@ -416,9 +243,9 @@
             <div class="tips">
                 <strong>Tips for IC photo:</strong>
                 <ul>
-                    <li>Make sure all text is clearly readable</li>
+                    <li>Make sure the photo on your IC is clearly visible</li>
                     <li>No glare or shadows on the IC</li>
-                    <li>Place IC on a flat, dark surface</li>
+                    <li>Place IC flat on a surface with good lighting</li>
                 </ul>
             </div>
 
@@ -427,36 +254,37 @@
                 <div class="upload-icon"><i class="bi bi-credit-card"></i></div>
                 <div class="upload-text">
                     <strong>Click to upload IC photo</strong><br>
-                    JPG, PNG up to 5MB
+                    JPG, PNG up to 10MB
                 </div>
-                <img id="ic-preview" src="" alt="IC Preview">
+                <img id="ic-preview" alt="IC Preview">
             </div>
 
             <div class="divider"></div>
 
-            {{-- Step 2: Selfie holding IC --}}
+            {{-- Step 2: Selfie --}}
             <div class="section-label">
                 <i class="bi bi-camera" style="color:#667eea"></i>
-                Step 2 — Take a selfie holding your IC next to your face
+                Step 2 — Take a selfie
             </div>
 
             <div class="tips">
                 <strong>Tips for selfie:</strong>
                 <ul>
-                    <li>Hold your IC card beside your face clearly</li>
-                    <li>Both your face and IC must be visible</li>
-                    <li>Good lighting — avoid dark or backlit areas</li>
-                    <li>Look straight into the camera</li>
+                    <li>Face the camera directly — no need to hold your IC</li>
+                    <li>Align your face inside the oval guide</li>
+                    <li>Good lighting, avoid dark or backlit areas</li>
+                    <li>Remove glasses if possible, neutral expression</li>
                 </ul>
             </div>
 
-            <div class="webcam-wrap" id="webcamWrap">
-                <video id="webcam" autoplay playsinline></video>
+            <div class="webcam-wrap">
+                <video id="webcam" autoplay playsinline muted></video>
                 <canvas id="canvas" style="display:none"></canvas>
-                <img id="selfie-preview" src="" alt="Selfie">
+                <img id="selfie-preview" alt="Selfie">
                 <div class="webcam-overlay" id="faceGuideOverlay">
                     <div class="face-guide"></div>
                 </div>
+                <div class="cam-hint" id="camHint">Align your face inside the oval</div>
             </div>
 
             <div class="webcam-controls">
@@ -468,9 +296,9 @@
                 </button>
             </div>
 
-            <input type="hidden" name="selfie_image" id="selfie_image">
+            <input type="file" name="selfie_image" id="selfie_image"
+                   accept="image/jpeg" style="display:none">
 
-            {{-- Submit --}}
             <button type="submit" class="btn-primary" id="submitBtn" disabled>
                 <i class="bi bi-shield-check"></i>
                 Verify My Identity
@@ -489,27 +317,31 @@
 
 <script>
 (function () {
-    const video       = document.getElementById('webcam');
-    const canvas      = document.getElementById('canvas');
+    const video         = document.getElementById('webcam');
+    const canvas        = document.getElementById('canvas');
     const selfiePreview = document.getElementById('selfie-preview');
-    const selfieInput = document.getElementById('selfie_image');
-    const captureBtn  = document.getElementById('captureBtn');
-    const retakeBtn   = document.getElementById('retakeBtn');
-    const submitBtn   = document.getElementById('submitBtn');
-    const uploadZone  = document.getElementById('uploadZone');
-    const icInput     = document.getElementById('ic_image');
-    const icPreview   = document.getElementById('ic-preview');
-    const overlay     = document.getElementById('faceGuideOverlay');
+    const selfieInput   = document.getElementById('selfie_image');
+    const captureBtn    = document.getElementById('captureBtn');
+    const retakeBtn     = document.getElementById('retakeBtn');
+    const submitBtn     = document.getElementById('submitBtn');
+    const uploadZone    = document.getElementById('uploadZone');
+    const icFileInput   = document.getElementById('ic_image');
+    const icPreview     = document.getElementById('ic-preview');
+    const overlay       = document.getElementById('faceGuideOverlay');
+    const camHint       = document.getElementById('camHint');
 
-    let stream        = null;
-    let icDone        = false;
-    let selfieDone    = false;
+    let stream     = null;
+    let icDone     = false;
+    let selfieDone = false;
 
-    // ── Start webcam ──────────────────────────────────────────────────────
     async function startWebcam() {
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false
+            });
             video.srcObject = stream;
+            video.style.display = 'block';
         } catch (e) {
             alert('Could not access camera. Please allow camera permission and reload.');
         }
@@ -517,70 +349,65 @@
 
     startWebcam();
 
-    // ── IC preview ────────────────────────────────────────────────────────
-    icInput.addEventListener('change', function () {
+    icFileInput.addEventListener('change', function () {
         const file = this.files[0];
         if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            icPreview.src = e.target.result;
-            icPreview.style.display = 'block';
-            uploadZone.classList.add('has-file');
-            uploadZone.querySelector('.upload-icon i').className = 'bi bi-check-circle-fill';
-            uploadZone.querySelector('.upload-text').innerHTML = '<strong>' + file.name + '</strong>';
-            icDone = true;
-            checkReady();
-        };
-        reader.readAsDataURL(file);
+        icPreview.src = URL.createObjectURL(file);
+        icPreview.style.display = 'block';
+        uploadZone.classList.add('has-file');
+        uploadZone.querySelector('.upload-icon i').className = 'bi bi-check-circle-fill';
+        uploadZone.querySelector('.upload-text').innerHTML = '<strong>' + file.name + '</strong>';
+        icDone = true;
+        checkReady();
     });
 
-    // ── Capture selfie ────────────────────────────────────────────────────
     captureBtn.addEventListener('click', function () {
         canvas.width  = video.videoWidth;
         canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
+        const ctx = canvas.getContext('2d');
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0);
 
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-        selfieInput.value = dataUrl;
+        canvas.toBlob(function (blob) {
+            const dt   = new DataTransfer();
+            const file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
+            dt.items.add(file);
+            selfieInput.files = dt.files;
 
-        selfiePreview.src = dataUrl;
-        selfiePreview.style.display = 'block';
-        video.style.display = 'none';
-        overlay.style.display = 'none';
+            selfiePreview.src = URL.createObjectURL(blob);
+            selfiePreview.style.display = 'block';
+            video.style.display   = 'none';
+            overlay.style.display = 'none';
+            camHint.style.display = 'none';
 
-        captureBtn.style.display = 'none';
-        retakeBtn.style.display  = 'flex';
+            captureBtn.style.display = 'none';
+            retakeBtn.style.display  = 'flex';
 
-        // Stop camera
-        if (stream) stream.getTracks().forEach(t => t.stop());
+            if (stream) stream.getTracks().forEach(t => t.stop());
 
-        selfieDone = true;
-        checkReady();
+            selfieDone = true;
+            checkReady();
+        }, 'image/jpeg', 0.95);
     });
 
-    // ── Retake selfie ─────────────────────────────────────────────────────
     retakeBtn.addEventListener('click', function () {
         selfiePreview.style.display = 'none';
-        video.style.display = 'block';
+        selfiePreview.src = '';
         overlay.style.display = 'flex';
-
+        camHint.style.display = 'block';
+        selfieInput.value = '';
         captureBtn.style.display = 'flex';
         retakeBtn.style.display  = 'none';
-
-        selfieInput.value = '';
         selfieDone = false;
         checkReady();
-
         startWebcam();
     });
 
-    // ── Enable submit when both done ──────────────────────────────────────
     function checkReady() {
         submitBtn.disabled = !(icDone && selfieDone);
     }
 
-    // ── Loading state on submit ───────────────────────────────────────────
     document.getElementById('kycForm').addEventListener('submit', function () {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Verifying...';

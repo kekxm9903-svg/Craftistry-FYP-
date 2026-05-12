@@ -21,29 +21,28 @@ class KycController extends Controller
     public function submit(Request $request)
     {
         $request->validate([
-            'ic_image'     => 'required|image|mimes:jpg,jpeg,png|max:5120',
-            'selfie_image' => 'required|string',
+            'ic_image'     => 'required|image|mimes:jpg,jpeg,png|max:10240',
+            'selfie_image' => 'required|image|mimes:jpg,jpeg,png|max:10240',
         ]);
 
         $user = Auth::user();
 
-        // ── Save IC image ──────────────────────────────────────────────────
-        $icFile     = $request->file('ic_image');
-        $icPath     = $icFile->store('kyc/ic', 'local');
+        // ── Save IC ────────────────────────────────────────────────────────
+        $icPath     = 'kyc/ic/' . $user->id . '_' . time() . '.jpg';
         $icFullPath = Storage::disk('local')->path($icPath);
+        Storage::disk('local')->makeDirectory('kyc/ic');
+        $this->saveAsHighQualityJpeg($request->file('ic_image')->getRealPath(), $icFullPath);
 
-        // ── Decode and save selfie ─────────────────────────────────────────
-        $selfieData     = $request->input('selfie_image');
-        $selfieData     = preg_replace('/^data:image\/\w+;base64,/', '', $selfieData);
-        $selfieBytes    = base64_decode($selfieData);
+        // ── Save selfie ────────────────────────────────────────────────────
         $selfiePath     = 'kyc/selfie/' . $user->id . '_' . time() . '.jpg';
-        Storage::disk('local')->put($selfiePath, $selfieBytes);
         $selfieFullPath = Storage::disk('local')->path($selfiePath);
+        Storage::disk('local')->makeDirectory('kyc/selfie');
+        $this->saveAsHighQualityJpeg($request->file('selfie_image')->getRealPath(), $selfieFullPath);
 
-        // ── Run DeepFace comparison ────────────────────────────────────────
+        // ── Run Face++ comparison ──────────────────────────────────────────
         $result = $this->compareFaces($icFullPath, $selfieFullPath);
 
-        Log::debug('KYC DeepFace result', $result);
+        Log::debug('KYC Face++ result', $result);
 
         if (!$result['success']) {
             Storage::disk('local')->delete([$icPath, $selfiePath]);
@@ -73,25 +72,52 @@ class KycController extends Controller
             ->with('kyc_similarity', round($similarity, 1));
     }
 
-    // ── Call Python DeepFace script ───────────────────────────────────────────
+    // ── Helpers ───────────────────────────────────────────────────────────
+
+    private function saveAsHighQualityJpeg(string $sourcePath, string $destPath): void
+    {
+        $mime = mime_content_type($sourcePath);
+
+        $src = match ($mime) {
+            'image/png'  => imagecreatefrompng($sourcePath),
+            'image/webp' => imagecreatefromwebp($sourcePath),
+            default      => imagecreatefromjpeg($sourcePath),
+        };
+
+        if (!$src) {
+            copy($sourcePath, $destPath);
+            return;
+        }
+
+        if ($mime === 'image/jpeg' && function_exists('exif_read_data')) {
+            $exif        = @exif_read_data($sourcePath);
+            $orientation = $exif['Orientation'] ?? 1;
+            $src = match ($orientation) {
+                3 => imagerotate($src, 180, 0),
+                6 => imagerotate($src, -90, 0),
+                8 => imagerotate($src, 90, 0),
+                default => $src,
+            };
+        }
+
+        imagejpeg($src, $destPath, 95);
+        imagedestroy($src);
+    }
 
     private function compareFaces(string $icPath, string $selfiePath): array
     {
-        // Path to the Python script — place it in project root
         $scriptPath = base_path('compare_faces.py');
 
         if (!file_exists($scriptPath)) {
             return ['success' => false, 'error' => 'KYC script not found. Please contact support.'];
         }
 
-        // Escape paths for shell
-        $icEscaped      = escapeshellarg($icPath);
-        $selfieEscaped  = escapeshellarg($selfiePath);
-        $scriptEscaped  = escapeshellarg($scriptPath);
+        $command = "\"C:\\laragon\\bin\\python\\python-3.10\\python.exe\" "
+                 . escapeshellarg($scriptPath) . ' '
+                 . escapeshellarg($icPath)     . ' '
+                 . escapeshellarg($selfiePath) . ' 2>&1';
 
-        // Run Python script and capture output
-        $command = "\"C:\\laragon\\bin\\python\\python-3.10\\python.exe\" {$scriptEscaped} {$icEscaped} {$selfieEscaped} 2>&1";
-        $output  = shell_exec($command);
+        $output = shell_exec($command);
 
         Log::debug('KYC Python output', ['output' => $output]);
 
@@ -99,10 +125,8 @@ class KycController extends Controller
             return ['success' => false, 'error' => 'Face verification service unavailable. Please try again.'];
         }
 
-        // Extract JSON from output (ignore any pip/warning lines before it)
-        $lines = explode("\n", trim($output));
-        $json  = null;
-        foreach (array_reverse($lines) as $line) {
+        $json = null;
+        foreach (array_reverse(explode("\n", trim($output))) as $line) {
             $line = trim($line);
             if (str_starts_with($line, '{')) {
                 $json = $line;
