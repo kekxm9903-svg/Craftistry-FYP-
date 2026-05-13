@@ -20,6 +20,11 @@ class ArtistBrowseController extends Controller
             ->whereNotNull('image_path')
             ->whereNotIn('status', ['sold', 'sold_out']);
 
+        // ── Hide the logged-in user's own listings ──
+        if (auth()->check() && auth()->user()->artist) {
+            $query->where('artist_id', '!=', auth()->user()->artist->id);
+        }
+
         // Search by artwork name OR artist name
         if ($request->filled('search')) {
             $search = $request->search;
