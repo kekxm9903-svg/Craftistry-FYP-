@@ -18,7 +18,7 @@ class ArtworkSell extends Model
         'image_path',
         'extra_images',
         'artwork_type',
-        'product_category',      // ← NEW: e.g. 'Drawing', 'Knitting'
+        'product_category',
         'material',
         'height',
         'width',
@@ -57,6 +57,7 @@ class ArtworkSell extends Model
         'is_on_promotion',
         'promotion_price',
         'formatted_promotion_price',
+        'effective_price',              // ← added
     ];
 
     // ── Relationships ──────────────────────────
@@ -137,6 +138,19 @@ class ArtworkSell extends Model
     {
         $price = $this->promotion_price;
         return $price !== null ? 'RM ' . number_format($price, 2) : null;
+    }
+
+    /**
+     * Returns the price the buyer actually pays:
+     * promotion price if active, otherwise the regular product_price.
+     */
+    public function getEffectivePriceAttribute(): float
+    {
+        $promotionPrice = $this->promotion_price; // reuses existing accessor
+        if ($promotionPrice !== null && $promotionPrice > 0) {
+            return (float) $promotionPrice;
+        }
+        return (float) ($this->attributes['product_price'] ?? 0);
     }
 
     // ── Methods ────────────────────────────────

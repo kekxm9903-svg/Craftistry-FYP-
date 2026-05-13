@@ -24,6 +24,19 @@ class ArtworkSellController extends Controller
         return view('sellEditPage', compact('artwork'));
     }
 
+    // ── NEW: Artist preview of their own listing ──────────────────────────────
+    public function preview($id)
+    {
+        $user = Auth::user();
+
+        $artwork = ArtworkSell::with('artist.user')
+                   ->where('artist_id', $user->id)
+                   ->findOrFail($id);
+
+        return view('artistProductPreview', compact('artwork'));
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     public function store(Request $request)
     {
         try {
@@ -44,7 +57,7 @@ class ArtworkSellController extends Controller
                 'images'              => 'required|array|min:1',
                 'images.*'            => 'image|mimes:jpeg,jpg,png,gif,webp|max:5120',
                 'artwork_type'        => 'required|in:physical,digital',
-                'product_category'    => 'required|string|max:100',   // ← NEW
+                'product_category'    => 'required|string|max:100',
                 'material'            => 'required|string|max:255',
                 'height'              => 'required|numeric|min:0',
                 'width'               => 'required|numeric|min:0',
@@ -60,15 +73,14 @@ class ArtworkSellController extends Controller
                 'promotion_starts_at' => 'nullable|date',
                 'promotion_ends_at'   => 'nullable|date|after_or_equal:promotion_starts_at',
             ], [
-                'images.required'     => 'At least one image is required',
-                'images.min'          => 'At least one image is required',
-                'images.*.image'      => 'Each file must be an image',
-                'images.*.mimes'      => 'Images must be jpeg, jpg, png, gif, or webp',
-                'images.*.max'        => 'Each image must be under 5MB',
+                'images.required'           => 'At least one image is required',
+                'images.min'                => 'At least one image is required',
+                'images.*.image'            => 'Each file must be an image',
+                'images.*.mimes'            => 'Images must be jpeg, jpg, png, gif, or webp',
+                'images.*.max'              => 'Each image must be under 5MB',
                 'product_category.required' => 'Please select a product category',
             ]);
 
-            // Upload first image as main cover
             $path       = null;
             $extraPaths = [];
 
@@ -127,7 +139,7 @@ class ArtworkSellController extends Controller
                 'image_path'           => $path,
                 'status'               => $validated['status'],
                 'artwork_type'         => $validated['artwork_type'],
-                'product_category'     => $validated['product_category'],   // ← NEW
+                'product_category'     => $validated['product_category'],
                 'material'             => $validated['material'],
                 'height'               => $validated['height'],
                 'width'                => $validated['width'],
@@ -166,7 +178,7 @@ class ArtworkSellController extends Controller
                         'status'             => $artworkSell->status,
                         'status_label'       => $artworkSell->status_label,
                         'artwork_type'       => $artworkSell->artwork_type,
-                        'product_category'   => $artworkSell->product_category,   // ← NEW
+                        'product_category'   => $artworkSell->product_category,
                         'bulk_sell_enabled'  => $artworkSell->bulk_sell_enabled,
                         'bulk_sell_min_qty'  => $artworkSell->bulk_sell_min_qty,
                         'bulk_sell_discount' => $artworkSell->bulk_sell_discount,
@@ -217,7 +229,7 @@ class ArtworkSellController extends Controller
                 'image_url'           => $artwork->image_url,
                 'image_path'          => $artwork->image_path,
                 'artwork_type'        => $artwork->artwork_type,
-                'product_category'    => $artwork->product_category,   // ← NEW
+                'product_category'    => $artwork->product_category,
                 'material'            => $artwork->material,
                 'height'              => $artwork->height,
                 'width'               => $artwork->width,
@@ -256,7 +268,7 @@ class ArtworkSellController extends Controller
                 'delete_images'       => 'nullable|array',
                 'delete_images.*'     => 'nullable|string',
                 'artwork_type'        => 'required|in:physical,digital',
-                'product_category'    => 'nullable|string|max:100',   // ← NEW
+                'product_category'    => 'nullable|string|max:100',
                 'material'            => 'required|string|max:255',
                 'height'              => 'required|numeric|min:0',
                 'width'               => 'required|numeric|min:0',
@@ -284,7 +296,7 @@ class ArtworkSellController extends Controller
             $artwork->product_price       = $validated['product_price'];
             $artwork->shipping_fee        = $request->input('shipping_fee') ?? 0;
             $artwork->artwork_type        = $validated['artwork_type'];
-            $artwork->product_category    = $validated['product_category'] ?? $artwork->product_category;  // ← NEW
+            $artwork->product_category    = $validated['product_category'] ?? $artwork->product_category;
             $artwork->material            = $validated['material'];
             $artwork->height              = $validated['height'];
             $artwork->width               = $validated['width'];
@@ -362,7 +374,7 @@ class ArtworkSellController extends Controller
                         'shipping_fee'        => $artwork->shipping_fee,
                         'image_url'           => $artwork->image_url,
                         'artwork_type'        => $artwork->artwork_type,
-                        'product_category'    => $artwork->product_category,   // ← NEW
+                        'product_category'    => $artwork->product_category,
                         'status'              => $artwork->status,
                         'status_label'        => $artwork->status_label,
                         'bulk_sell_enabled'   => $artwork->bulk_sell_enabled,

@@ -238,7 +238,9 @@
         @if($artist->artworkSells->count() > 0)
             <div class="artworks-grid" id="sellArtworksGrid">
                 @foreach($artist->artworkSells as $artwork)
-                <div class="artwork-card" data-artwork-id="{{ $artwork->id }}">
+                <div class="artwork-card" data-artwork-id="{{ $artwork->id }}"
+                    style="cursor:pointer;"
+                    onclick="window.location.href='{{ route('artist.artwork.preview', $artwork->id) }}'">
                     <div class="artwork-image">
                         @php
                             $sellImages = array_values(array_filter(array_merge(
@@ -265,10 +267,12 @@
                             <button class="slider-arrow slider-next" onclick="slideCard(this, 1)"><i class="fas fa-chevron-right"></i></button>
                         @endif
                         <div class="artwork-overlay">
-                            <button class="btn-icon" title="Edit" onclick="window.location.href='{{ route('artist.artwork.edit.page', $artwork->id) }}'">
+                            <button class="btn-icon" title="Edit"
+                                onclick="event.stopPropagation(); window.location.href='{{ route('artist.artwork.edit.page', $artwork->id) }}'">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-icon" title="Delete" onclick="deleteArtwork({{ $artwork->id }})">
+                            <button class="btn-icon" title="Delete"
+                                onclick="event.stopPropagation(); deleteArtwork({{ $artwork->id }})">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>

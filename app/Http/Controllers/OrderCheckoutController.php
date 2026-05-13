@@ -25,10 +25,11 @@ class OrderCheckoutController extends Controller
             }
 
             $qty   = max(1, (int) $request->get('qty', 1));
-            $price = $artwork->effective_price; // ← promotion-aware
+            $price = $artwork->effective_price;
 
             $cartItems = [[
                 'artwork'  => $artwork,
+                'price'    => $price,           // ← fixed: was missing, caused RM 0 display
                 'quantity' => $qty,
                 'subtotal' => $price * $qty,
             ]];
@@ -58,10 +59,11 @@ class OrderCheckoutController extends Controller
         foreach ($cart as $id => $item) {
             $artwork = ArtworkSell::find($id);
             if ($artwork) {
-                $price       = $artwork->effective_price; // ← promotion-aware
+                $price       = $artwork->effective_price;
                 $qty         = (int) ($item['quantity'] ?? 1);
                 $cartItems[] = [
                     'artwork'  => $artwork,
+                    'price'    => $price,       // ← consistent: always include price key
                     'quantity' => $qty,
                     'subtotal' => $price * $qty,
                 ];
@@ -94,7 +96,7 @@ class OrderCheckoutController extends Controller
                                  ->with('error', 'Artwork not found.');
             }
 
-            $price    = $artwork->effective_price; // ← promotion-aware
+            $price    = $artwork->effective_price;
             $qty      = (int) ($buyNow['qty'] ?? 1);
             $name     = $artwork->product_name ?? 'Artwork';
             $artistId = $artwork->artist_id;
@@ -132,7 +134,7 @@ class OrderCheckoutController extends Controller
                 $artwork = ArtworkSell::with('artist')->find($id);
                 if (!$artwork) continue;
 
-                $price    = $artwork->effective_price; // ← promotion-aware
+                $price    = $artwork->effective_price;
                 $name     = $artwork->product_name ?? 'Artwork';
                 $qty      = (int) ($item['quantity'] ?? 1);
                 $artistId = $artwork->artist_id;
@@ -191,7 +193,7 @@ class OrderCheckoutController extends Controller
                     'order_id'        => $order->id,
                     'artwork_sell_id' => $item['artwork']->id,
                     'name'            => $item['name'] ?? $item['artwork']->product_name ?? 'Artwork',
-                    'price'           => $item['price'], // ← effective_price already applied
+                    'price'           => $item['price'],
                     'quantity'        => $item['qty'],
                 ]);
             }
@@ -219,7 +221,6 @@ class OrderCheckoutController extends Controller
             }
         }
 
-        // Use the stored price on OrderItem (already the discounted price at time of purchase)
         $lineItems = $order->items->map(fn($item) => [
             'price_data' => [
                 'currency'     => 'myr',

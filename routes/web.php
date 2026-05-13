@@ -193,6 +193,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/artwork/sell',              [ArtworkSellController::class, 'sellPage'])  ->name('artist.artwork.sell.page');
         Route::post('/artwork/sell',             [ArtworkSellController::class, 'store'])     ->name('artist.artwork.sell');
+        Route::get('/artwork/{id}/preview',      [ArtworkSellController::class, 'preview'])   ->name('artist.artwork.preview'); // ← NEW
         Route::get('/artwork/{id}/edit',         [ArtworkSellController::class, 'editPage'])  ->name('artist.artwork.edit.page');
         Route::get('/artwork/{id}/edit-data',    [ArtworkSellController::class, 'edit'])      ->name('artist.artwork.edit');
         Route::post('/artwork/{id}',             [ArtworkSellController::class, 'update'])    ->name('artist.artwork.update');

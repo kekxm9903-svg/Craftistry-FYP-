@@ -214,10 +214,11 @@
     @yield('styles')
 
     <style>
-        .bc-bar { position: sticky !important; top: 64px !important; z-index: 99 !important; }
+        /* ── .preview-bc is excluded so artistProductPreview can control its own positioning ── */
+        .bc-bar:not(.preview-bc) { position: sticky !important; top: 64px !important; z-index: 99 !important; }
         .category-bar { position: sticky !important; top: 95px !important; z-index: 98 !important; }
         @media (max-width: 768px) {
-            .bc-bar { top: 60px !important; }
+            .bc-bar:not(.preview-bc) { top: 60px !important; }
             .category-bar { top: 91px !important; }
         }
     </style>
