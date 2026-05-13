@@ -164,6 +164,10 @@
         .dropdown-item i { width: 20px !important; margin-right: 10px !important; color: #9ca3af !important; }
         .dropdown-item:hover i { color: #667eea !important; }
 
+        /* Logout item — red tint on hover */
+        .dropdown-item.logout-item:hover { background-color: #fff5f5 !important; color: #ef4444 !important; }
+        .dropdown-item.logout-item:hover i { color: #ef4444 !important; }
+
         .auth-buttons { display: flex !important; gap: 12px !important; align-items: center !important; }
 
         .btn-login {
@@ -209,6 +213,68 @@
             .nav-link i { font-size: 18px !important; }
             .dropdown-menu { top: auto !important; bottom: calc(100% + 8px) !important; }
         }
+
+        /* ── LOGOUT CONFIRM MODAL ── */
+        #logoutConfirmModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+        }
+        #logoutConfirmModal.open { display: flex; }
+        #logoutConfirmBackdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,.48);
+            backdrop-filter: blur(3px);
+        }
+        #logoutConfirmBox {
+            position: relative;
+            background: #fff;
+            border-radius: 16px;
+            padding: 36px 32px 28px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 24px 64px rgba(102,126,234,.22), 0 4px 16px rgba(0,0,0,.08);
+            text-align: center;
+            z-index: 1;
+            animation: logoutModalIn .22s cubic-bezier(.34,1.56,.64,1);
+        }
+        @keyframes logoutModalIn {
+            from { opacity: 0; transform: scale(.88) translateY(16px); }
+            to   { opacity: 1; transform: scale(1)  translateY(0); }
+        }
+        .logout-modal-icon {
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 18px;
+            border: 2px solid #c4b5fd;
+            box-shadow: 0 4px 12px rgba(102,126,234,.15);
+        }
+        .logout-modal-icon i { color: #667eea; font-size: 1.45rem; }
+        .logout-modal-title  { font-size: 1.15rem; font-weight: 800; color: #1a202c; margin-bottom: 8px; }
+        .logout-modal-msg    { font-size: 0.84rem; color: #718096; line-height: 1.65; margin-bottom: 28px; }
+        .logout-modal-btns   { display: flex; gap: 10px; }
+        .logout-btn-cancel {
+            flex: 1; padding: 12px; border-radius: 8px;
+            border: 1.5px solid #e2e8f0; background: #fff;
+            color: #4a5568; font-size: 0.88rem; font-weight: 600;
+            cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s;
+        }
+        .logout-btn-cancel:hover { background: #f7fafc; border-color: #cbd5e0; }
+        .logout-btn-confirm {
+            flex: 1; padding: 12px; border-radius: 8px; border: none;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff; font-size: 0.88rem; font-weight: 700;
+            cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s;
+            box-shadow: 0 4px 14px rgba(102,126,234,.35);
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .logout-btn-confirm:hover { opacity: .88; transform: translateY(-1px); }
     </style>
 
     @yield('styles')
@@ -327,8 +393,9 @@
                                 <i class="fas fa-comment-dots"></i> Feedback
                             </a>
                             <div style="border-top:1px solid #e5e7eb;"></div>
-                            <a href="#" class="dropdown-item"
-                               onclick="event.preventDefault();document.getElementById('logoutForm').submit();">
+                            {{-- Logout — opens custom confirm modal ── --}}
+                            <a href="#" class="dropdown-item logout-item"
+                               onclick="event.preventDefault(); openLogoutConfirm();">
                                 <i class="fas fa-sign-out-alt"></i> Logout
                             </a>
                         </div>
@@ -356,11 +423,50 @@
 
     @endif
 
+    {{-- ── LOGOUT CONFIRM MODAL (only rendered when logged in) ── --}}
+    @auth
+    <div id="logoutConfirmModal" role="dialog" aria-modal="true" aria-labelledby="logoutModalTitle">
+        <div id="logoutConfirmBackdrop" onclick="closeLogoutConfirm()"></div>
+        <div id="logoutConfirmBox">
+            <div class="logout-modal-icon">
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+            <div class="logout-modal-title" id="logoutModalTitle">Sign Out?</div>
+            <div class="logout-modal-msg">
+                Are you sure you want to log out of Craftistry?<br>
+                You can always sign back in anytime.
+            </div>
+            <div class="logout-modal-btns">
+                <button class="logout-btn-cancel" onclick="closeLogoutConfirm()">
+                    Stay
+                </button>
+                <button class="logout-btn-confirm"
+                        onclick="document.getElementById('logoutForm').submit()">
+                    <i class="fas fa-sign-out-alt"></i> Yes, Log Out
+                </button>
+            </div>
+        </div>
+    </div>
+    @endauth
+
     @yield('content')
 
     @yield('scripts')
 
     <script>
+        // ── Logout confirm modal ──
+        function openLogoutConfirm() {
+            document.getElementById('logoutConfirmModal')?.classList.add('open');
+            // also close the dropdown
+            document.getElementById('userDropdown')?.classList.remove('open');
+        }
+        function closeLogoutConfirm() {
+            document.getElementById('logoutConfirmModal')?.classList.remove('open');
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeLogoutConfirm();
+        });
+
         // ── User dropdown ──
         const userDropdown     = document.getElementById('userDropdown');
         const profileAvatarBtn = document.getElementById('profileAvatarBtn');

@@ -6,6 +6,57 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ asset('css/classEvent.css') }}">
     <link rel="stylesheet" href="{{ asset('css/classEventParticipants.css') }}">
+    <style>
+        /* ── Craftistry-styled delete confirm modal ── */
+        #deleteModal .modal-content {
+            max-width: 420px !important;
+            border-radius: 16px !important;
+            overflow: hidden;
+        }
+        .delete-confirm-body { padding: 36px 32px 28px; text-align: center; }
+        .delete-modal-icon-wrap {
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, #fff5f5, #fed7d7);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 18px;
+            border: 2px solid #fca5a5;
+            box-shadow: 0 4px 12px rgba(239,68,68,.15);
+        }
+        .delete-modal-icon-wrap i { color: #ef4444; font-size: 1.45rem; }
+        .delete-modal-title  { font-size: 1.15rem; font-weight: 800; color: #1a202c; margin-bottom: 8px; }
+        .delete-modal-name   {
+            font-size: 0.88rem; font-weight: 600; color: #667eea;
+            background: #ede9fe; border-radius: 6px;
+            padding: 6px 14px; display: inline-block;
+            margin-bottom: 10px; max-width: 100%;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .delete-modal-warning { font-size: 0.82rem; color: #718096; line-height: 1.6; margin-bottom: 0; }
+        .delete-modal-btns { display: flex; gap: 10px; margin-top: 24px; }
+        .delete-btn-cancel {
+            flex: 1; padding: 12px; border-radius: 8px;
+            border: 1.5px solid #e2e8f0; background: #fff;
+            color: #4a5568; font-size: 0.88rem; font-weight: 600;
+            cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s;
+        }
+        .delete-btn-cancel:hover { background: #f7fafc; border-color: #cbd5e0; }
+        .delete-btn-confirm {
+            flex: 1; padding: 12px; border-radius: 8px; border: none;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff; font-size: 0.88rem; font-weight: 700;
+            cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s;
+            box-shadow: 0 4px 14px rgba(239,68,68,.35);
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .delete-btn-confirm:hover { opacity: .88; transform: translateY(-1px); }
+
+        @keyframes ceDeleteIn {
+            from { opacity:0; transform:scale(.88) translateY(16px); }
+            to   { opacity:1; transform:scale(1) translateY(0); }
+        }
+        #deleteModal.active .modal-content { animation: ceDeleteIn .22s cubic-bezier(.34,1.56,.64,1); }
+    </style>
 @endsection
 
 @section('content')
@@ -67,7 +118,7 @@
         </div>
 
         <div class="sp-card-body">
-            <div class="class-grid">
+            <div class="class-grid" id="classGrid">
                 @forelse($classEvents as $event)
                 <div class="class-card" data-id="{{ $event->id }}">
 
@@ -170,20 +221,20 @@
 </main>
 
 
-{{-- ══ DELETE MODAL ══ --}}
+{{-- ══ CRAFTISTRY-STYLED DELETE CONFIRM MODAL ══ --}}
 <div class="modal modal-sm" id="deleteModal">
     <div class="modal-overlay" onclick="closeDeleteModal()"></div>
     <div class="modal-content">
-        <div class="modal-body delete-confirm-body">
-            <div class="delete-modal-icon">
-                <i class="bi bi-exclamation-triangle-fill"></i>
+        <div class="delete-confirm-body">
+            <div class="delete-modal-icon-wrap">
+                <i class="bi bi-trash-fill"></i>
             </div>
             <h3 class="delete-modal-title">Delete Class/Event?</h3>
-            <p class="delete-modal-name" id="deleteClassName"></p>
-            <p class="delete-modal-warning">This action cannot be undone.</p>
-            <div class="form-actions" style="margin-top:1.5rem;">
-                <button type="button" class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
-                <button type="button" class="btn-delete-confirm" onclick="deleteClass()">
+            <div class="delete-modal-name" id="deleteClassName"></div>
+            <p class="delete-modal-warning">This action cannot be undone. All enrollments will also be removed.</p>
+            <div class="delete-modal-btns">
+                <button class="delete-btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+                <button class="delete-btn-confirm" onclick="deleteClass()">
                     <i class="bi bi-trash-fill"></i> Delete
                 </button>
             </div>

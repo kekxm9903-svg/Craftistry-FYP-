@@ -1095,6 +1095,121 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('=== Initialization Complete ===');
 });
 
+// ============================================
+// CRAFTISTRY — Class Event Delete (Index Page)
+// Custom styled confirm modal
+// ============================================
+
+let _deleteClassId   = null;
+let _deleteClassName = null;
+
+// Open the custom delete confirm modal
+function confirmDelete(classId, title) {
+    _deleteClassId   = classId;
+    _deleteClassName = title;
+
+    const nameEl = document.getElementById('deleteClassName');
+    if (nameEl) nameEl.textContent = title;
+
+    const modal = document.getElementById('deleteModal');
+    if (modal) modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+// Close the modal without deleting
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    if (modal) modal.classList.remove('active');
+    document.body.style.overflow = '';
+    _deleteClassId   = null;
+    _deleteClassName = null;
+}
+
+// Execute the delete after confirmation
+async function deleteClass() {
+    if (!_deleteClassId) return;
+
+    const id = _deleteClassId;
+    closeDeleteModal();
+
+    try {
+        const response = await fetch(`/class-event/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept':       'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showSuccess('Class/Event deleted successfully!');
+
+            // Animate card out
+            const card = document.querySelector(`.class-card[data-id="${id}"]`);
+            if (card) {
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity    = '0';
+                card.style.transform  = 'scale(0.85)';
+                setTimeout(() => {
+                    card.remove();
+                    const grid = document.getElementById('classGrid');
+                    if (grid && grid.querySelectorAll('.class-card').length === 0) {
+                        window.location.reload();
+                    }
+                }, 300);
+            }
+        } else {
+            showError(data.message || 'Failed to delete');
+        }
+    } catch (error) {
+        console.error('Delete error:', error);
+        showError('Failed to delete class/event');
+    }
+}
+
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDeleteModal();
+});
+
+// ── Notification helpers (in case classEvent.js isn't loaded) ──
+function showSuccess(message) {
+    const popup   = document.getElementById('successPopup');
+    const msgEl   = document.getElementById('successPopupMsg');
+    if (!popup) return;
+    if (msgEl) msgEl.textContent = message;
+    popup.classList.remove('show', 'hide');
+    void popup.offsetWidth;
+    popup.classList.add('show');
+    setTimeout(() => {
+        popup.classList.remove('show');
+        popup.classList.add('hide');
+        setTimeout(() => popup.classList.remove('hide'), 350);
+    }, 3000);
+}
+
+function showError(message) {
+    const popup = document.getElementById('errorNotification');
+    const msgEl = document.getElementById('errorPopupMsg');
+    if (!popup) return;
+    if (msgEl) msgEl.textContent = message;
+    popup.classList.remove('show', 'hide');
+    void popup.offsetWidth;
+    popup.classList.add('show');
+    setTimeout(() => {
+        popup.classList.remove('show');
+        popup.classList.add('hide');
+        setTimeout(() => popup.classList.remove('hide'), 350);
+    }, 3000);
+}
+
+window.confirmDelete   = confirmDelete;
+window.closeDeleteModal = closeDeleteModal;
+window.deleteClass     = deleteClass;
+
 // Export functions
 window.viewClass = viewClass;
 window.saveClass = saveClass;

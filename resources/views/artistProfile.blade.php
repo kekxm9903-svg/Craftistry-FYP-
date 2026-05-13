@@ -104,7 +104,7 @@
                 <a href="{{ route('artist.order.summary') }}" class="card-link">View Orders <i class="fas fa-arrow-right"></i></a>
             </div>
 
-            {{-- Order List — badge when there are new paid orders to process --}}
+            {{-- Order List --}}
             <div class="action-card blue">
                 @if(($pendingOrdersCount ?? 0) > 0)
                     <span class="card-noti-badge">
@@ -119,7 +119,7 @@
                 <a href="{{ route('artist.orders') }}" class="card-link">Manage Orders <i class="fas fa-arrow-right"></i></a>
             </div>
 
-            {{-- Request List — badge when there are pending custom/bulk requests --}}
+            {{-- Request List --}}
             <div class="action-card orange">
                 @if(($pendingRequestsCount ?? 0) > 0)
                     <span class="card-noti-badge">
@@ -238,9 +238,10 @@
         @if($artist->artworkSells->count() > 0)
             <div class="artworks-grid" id="sellArtworksGrid">
                 @foreach($artist->artworkSells as $artwork)
-                <div class="artwork-card" data-artwork-id="{{ $artwork->id }}"
-                    style="cursor:pointer;"
-                    onclick="window.location.href='{{ route('artist.artwork.preview', $artwork->id) }}'">
+                <div class="artwork-card"
+                     data-artwork-id="{{ $artwork->id }}"
+                     style="cursor:pointer;"
+                     onclick="window.location.href='{{ route('artist.artwork.preview', $artwork->id) }}'">
                     <div class="artwork-image">
                         @php
                             $sellImages = array_values(array_filter(array_merge(
@@ -263,8 +264,8 @@
                             @endif
                         </div>
                         @if(count($sellImages) > 1)
-                            <button class="slider-arrow slider-prev" onclick="slideCard(this,-1)"><i class="fas fa-chevron-left"></i></button>
-                            <button class="slider-arrow slider-next" onclick="slideCard(this, 1)"><i class="fas fa-chevron-right"></i></button>
+                            <button class="slider-arrow slider-prev" onclick="event.stopPropagation(); slideCard(this,-1)"><i class="fas fa-chevron-left"></i></button>
+                            <button class="slider-arrow slider-next" onclick="event.stopPropagation(); slideCard(this, 1)"><i class="fas fa-chevron-right"></i></button>
                         @endif
                         <div class="artwork-overlay">
                             <button class="btn-icon" title="Edit"
@@ -349,19 +350,16 @@
             <h2><i class="fas fa-edit"></i> Edit Demo Artwork</h2>
             <button class="modal-close" onclick="closeEditDemoModal()"><i class="fas fa-times"></i></button>
         </div>
-
         <form id="editDemoForm" method="POST" enctype="multipart/form-data">
             @csrf
             <input type="hidden" id="editDemoId" name="demo_id">
-
             <div class="modal-body">
                 <div class="form-group">
                     <label>Current Image</label>
                     <div class="current-image-preview">
-                        <img src="" alt="Current" id="editDemoCurrentImage" style="max-width: 100%; max-height: 300px; border-radius: 8px;">
+                        <img src="" alt="Current" id="editDemoCurrentImage" style="max-width:100%;max-height:300px;border-radius:8px;">
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label for="editDemoImage">Change Image (Optional)</label>
                     <div class="image-upload-area" id="editImageUploadArea">
@@ -370,27 +368,22 @@
                             <i class="fas fa-cloud-upload-alt"></i>
                             <p>Click to upload new image</p>
                         </div>
-                        <div class="image-preview" id="editImagePreview" style="display: none;">
+                        <div class="image-preview" id="editImagePreview" style="display:none;">
                             <img src="" alt="Preview" id="editPreviewImage">
-                            <button type="button" class="remove-image" onclick="removeEditImage()">
-                                <i class="fas fa-times"></i>
-                            </button>
+                            <button type="button" class="remove-image" onclick="removeEditImage()"><i class="fas fa-times"></i></button>
                         </div>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label for="editDemoTitle">Title <span class="required">*</span></label>
                     <input type="text" id="editDemoTitle" name="title" required maxlength="255">
                 </div>
-
                 <div class="form-group">
                     <label for="editDemoDescription">Description (Optional)</label>
                     <textarea id="editDemoDescription" name="description" rows="4" maxlength="1000"></textarea>
                     <span class="char-count" id="editDescCount">0 / 1000 characters</span>
                 </div>
             </div>
-
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" onclick="closeEditDemoModal()">Cancel</button>
                 <button type="submit" class="btn-primary" id="updateDemoBtn"><i class="fas fa-save"></i> Update Demo</button>
@@ -407,19 +400,16 @@
             <h2><i class="fas fa-edit"></i> Edit Artwork for Sale</h2>
             <button class="modal-close" onclick="closeEditSellModal()"><i class="fas fa-times"></i></button>
         </div>
-
         <form id="editSellForm" method="POST" enctype="multipart/form-data">
             @csrf
             <input type="hidden" id="editArtworkId" name="artwork_id">
-
             <div class="modal-body">
                 <div class="form-group">
                     <label>Current Image</label>
                     <div class="current-image-preview">
-                        <img src="" alt="Current" id="editSellCurrentImage" style="max-width: 100%; max-height: 300px; border-radius: 8px;">
+                        <img src="" alt="Current" id="editSellCurrentImage" style="max-width:100%;max-height:300px;border-radius:8px;">
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label for="editProductImage">Change Image (Optional)</label>
                     <div class="image-upload-area" id="editSellImageUploadArea">
@@ -428,47 +418,35 @@
                             <i class="fas fa-cloud-upload-alt"></i>
                             <p>Click to upload new image</p>
                         </div>
-                        <div class="image-preview" id="editSellImagePreview" style="display: none;">
+                        <div class="image-preview" id="editSellImagePreview" style="display:none;">
                             <img src="" alt="Preview" id="editSellPreviewImage">
-                            <button type="button" class="remove-image" onclick="removeEditSellImage()">
-                                <i class="fas fa-times"></i>
-                            </button>
+                            <button type="button" class="remove-image" onclick="removeEditSellImage()"><i class="fas fa-times"></i></button>
                         </div>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label for="editProductName">Product Name <span class="required">*</span></label>
                     <input type="text" id="editProductName" name="product_name" required maxlength="255">
                 </div>
-
                 <div class="form-group">
                     <label>Artwork Type <span class="required">*</span></label>
                     <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" id="editTypePhysical" name="artwork_type" value="physical"> <span>Physical</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" id="editTypeDigital" name="artwork_type" value="digital"> <span>Digital</span>
-                        </label>
+                        <label class="radio-label"><input type="radio" id="editTypePhysical" name="artwork_type" value="physical"> <span>Physical</span></label>
+                        <label class="radio-label"><input type="radio" id="editTypeDigital" name="artwork_type" value="digital"> <span>Digital</span></label>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label for="editProductPrice">Price (RM) <span class="required">*</span></label>
                     <input type="number" id="editProductPrice" name="product_price" step="0.01" min="0.01" required>
                 </div>
-
                 <div class="form-group">
                     <label for="editProductShipping">
                         Shipping Fee (RM)
-                        <span style="font-size:0.78rem; font-weight:400; color:#718096; margin-left:6px;">Enter 0 for free shipping</span>
+                        <span style="font-size:0.78rem;font-weight:400;color:#718096;margin-left:6px;">Enter 0 for free shipping</span>
                     </label>
                     <div style="position:relative;">
                         <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#718096;font-weight:600;font-size:0.9rem;pointer-events:none;">RM</span>
-                        <input type="number" id="editProductShipping" name="shipping_fee"
-                               placeholder="0.00" step="0.01" min="0" max="9999.99"
-                               style="padding-left:40px;">
+                        <input type="number" id="editProductShipping" name="shipping_fee" placeholder="0.00" step="0.01" min="0" max="9999.99" style="padding-left:40px;">
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
                         <input type="checkbox" id="editFreeShippingCheck" onchange="toggleFreeShipping('editProductShipping', this)">
@@ -477,12 +455,10 @@
                         </label>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label for="editProductMaterial">Material / Medium <span class="required">*</span></label>
                     <input type="text" id="editProductMaterial" name="material" required maxlength="255">
                 </div>
-
                 <div class="form-group">
                     <label>Dimensions <span class="required">*</span></label>
                     <div class="dimensions-row">
@@ -501,25 +477,18 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label>Status <span class="required">*</span></label>
                     <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" id="editStatusAvailable" name="status" value="available"> <span>Available</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" id="editStatusSoldOut" name="status" value="sold_out"> <span>Sold Out</span>
-                        </label>
+                        <label class="radio-label"><input type="radio" id="editStatusAvailable" name="status" value="available"> <span>Available</span></label>
+                        <label class="radio-label"><input type="radio" id="editStatusSoldOut" name="status" value="sold_out"> <span>Sold Out</span></label>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label for="editProductDescription">Product Description (Optional)</label>
                     <textarea id="editProductDescription" name="product_description" rows="4" maxlength="2000"></textarea>
                     <span class="char-count" id="editSellDescCount">0 / 2000 characters</span>
                 </div>
-
                 {{-- BULK SELL --}}
                 <div class="form-group bulk-sell-box">
                     <label class="radio-label" style="margin-bottom:0;">
@@ -531,37 +500,27 @@
                         Offer a discount when buyers purchase above a certain quantity
                     </small>
                 </div>
-
-                <div id="editBulkSellFields" style="display:none; border:1px solid #ddd6fe; border-radius:8px; padding:16px; margin-top:-8px; background:#faf9ff;">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div id="editBulkSellFields" style="display:none;border:1px solid #ddd6fe;border-radius:8px;padding:16px;margin-top:-8px;background:#faf9ff;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label for="editBulkMinQty">Minimum Quantity <span class="required">*</span></label>
-                            <input type="number" id="editBulkMinQty" name="bulk_sell_min_qty"
-                                   placeholder="e.g. 50" min="2" step="1">
-                            <small style="color:#718096;font-size:0.78rem;margin-top:4px;display:block;">
-                                Discount applies when buyer orders this many or more
-                            </small>
+                            <input type="number" id="editBulkMinQty" name="bulk_sell_min_qty" placeholder="e.g. 50" min="2" step="1">
+                            <small style="color:#718096;font-size:0.78rem;margin-top:4px;display:block;">Discount applies when buyer orders this many or more</small>
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label for="editBulkDiscount">Discount (%) <span class="required">*</span></label>
                             <div style="position:relative;">
-                                <input type="number" id="editBulkDiscount" name="bulk_sell_discount"
-                                       placeholder="e.g. 10" min="1" max="99" step="0.1"
-                                       style="padding-right:36px;">
+                                <input type="number" id="editBulkDiscount" name="bulk_sell_discount" placeholder="e.g. 10" min="1" max="99" step="0.1" style="padding-right:36px;">
                                 <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#718096;font-weight:600;font-size:0.9rem;">%</span>
                             </div>
-                            <small style="color:#718096;font-size:0.78rem;margin-top:4px;display:block;">
-                                Percentage off the unit price
-                            </small>
+                            <small style="color:#718096;font-size:0.78rem;margin-top:4px;display:block;">Percentage off the unit price</small>
                         </div>
                     </div>
-                    <div id="editBulkSellPreview" style="display:none; margin-top:12px; padding:10px 14px; background:#ede9fe; border-radius:6px; font-size:0.82rem; color:#5b21b6;">
+                    <div id="editBulkSellPreview" style="display:none;margin-top:12px;padding:10px 14px;background:#ede9fe;border-radius:6px;font-size:0.82rem;color:#5b21b6;">
                         <i class="fas fa-tag"></i> <span id="editBulkSellPreviewText"></span>
                     </div>
                 </div>
-
             </div>
-
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" onclick="closeEditSellModal()">Cancel</button>
                 <button type="submit" class="btn-primary" id="updateArtworkBtn"><i class="fas fa-save"></i> Update Artwork</button>
@@ -578,7 +537,7 @@
     </div>
 </div>
 
-{{-- DELETE POPUP --}}
+{{-- DELETE TOAST --}}
 <div class="delete-popup" id="deletePopup">
     <div class="delete-content">
         <div class="delete-icon"><i class="fas fa-trash-alt"></i></div>
@@ -586,60 +545,73 @@
     </div>
 </div>
 
+{{-- CUSTOM DELETE CONFIRM MODAL --}}
+<div id="deleteConfirmModal"
+     style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center;">
+    <div style="position:absolute; inset:0; background:rgba(0,0,0,.48); backdrop-filter:blur(3px);"
+         onclick="closeDeleteConfirm()"></div>
+    <div style="position:relative; background:#fff; border-radius:16px; padding:36px 32px 28px;
+                max-width:420px; width:90%;
+                box-shadow:0 24px 64px rgba(102,126,234,.22), 0 4px 16px rgba(0,0,0,.08);
+                text-align:center; z-index:1; animation:dcmIn .22s cubic-bezier(.34,1.56,.64,1);">
+        <div style="width:60px; height:60px; background:linear-gradient(135deg,#fff5f5,#fed7d7);
+                    border-radius:50%; display:flex; align-items:center; justify-content:center;
+                    margin:0 auto 18px; border:2px solid #fca5a5; box-shadow:0 4px 12px rgba(239,68,68,.15);">
+            <i class="fas fa-trash-alt" style="color:#ef4444; font-size:1.45rem;"></i>
+        </div>
+        <h3 style="font-size:1.15rem; font-weight:800; color:#1a202c; margin-bottom:8px;"
+            id="deleteConfirmTitle">Delete?</h3>
+        <p style="font-size:0.84rem; color:#718096; line-height:1.65; margin-bottom:28px;"
+           id="deleteConfirmMessage">This action cannot be undone.</p>
+        <div style="display:flex; gap:10px;">
+            <button onclick="closeDeleteConfirm()"
+                style="flex:1; padding:12px; border-radius:8px; border:1.5px solid #e2e8f0;
+                       background:#fff; color:#4a5568; font-size:0.88rem; font-weight:600;
+                       cursor:pointer; font-family:inherit; transition:all .15s;"
+                onmouseover="this.style.background='#f7fafc'; this.style.borderColor='#cbd5e0';"
+                onmouseout="this.style.background='#fff'; this.style.borderColor='#e2e8f0';">
+                Cancel
+            </button>
+            <button onclick="executeDelete()"
+                style="flex:1; padding:12px; border-radius:8px; border:none;
+                       background:linear-gradient(135deg,#ef4444,#dc2626);
+                       color:#fff; font-size:0.88rem; font-weight:700;
+                       cursor:pointer; font-family:inherit; transition:all .15s;
+                       box-shadow:0 4px 14px rgba(239,68,68,.35);"
+                onmouseover="this.style.opacity='.88'; this.style.transform='translateY(-1px)';"
+                onmouseout="this.style.opacity='1'; this.style.transform='translateY(0)';">
+                <i class="fas fa-trash-alt" style="margin-right:6px;"></i>Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes dcmIn {
+    from { opacity:0; transform:scale(.88) translateY(16px); }
+    to   { opacity:1; transform:scale(1) translateY(0); }
+}
+</style>
+
 @endsection
 
 @section('scripts')
 <script>
-function showSuccessPopup(message = 'Success!') {
-    const popup = document.getElementById('successPopup');
-    const messageEl = document.getElementById('successMessage');
-    if (popup && messageEl) {
-        messageEl.textContent = message;
-        popup.classList.add('show');
-        setTimeout(() => {
-            popup.classList.add('hide');
-            setTimeout(() => popup.classList.remove('show', 'hide'), 300);
-        }, 3000);
-    }
-}
-
-function showDeletePopup(message = 'Deleted successfully!') {
-    const popup = document.getElementById('deletePopup');
-    const messageEl = document.getElementById('deleteMessage');
-    if (popup && messageEl) {
-        messageEl.textContent = message;
-        popup.classList.add('show');
-        setTimeout(() => {
-            popup.classList.add('hide');
-            setTimeout(() => popup.classList.remove('show', 'hide'), 300);
-        }, 3000);
-    }
-}
-
 function toggleFreeShipping(inputId, checkbox) {
     const input = document.getElementById(inputId);
     if (checkbox.checked) {
-        input.value = '0';
-        input.disabled = true;
-        input.style.background = '#f0fdf4';
-        input.style.color = '#48bb78';
+        input.value = '0'; input.disabled = true;
+        input.style.background = '#f0fdf4'; input.style.color = '#48bb78';
     } else {
-        input.disabled = false;
-        input.style.background = '';
-        input.style.color = '';
+        input.disabled = false; input.style.background = ''; input.style.color = '';
     }
 }
 
 function syncFreeShippingCheckbox() {
     const val = parseFloat(document.getElementById('editProductShipping').value) || 0;
     const cb  = document.getElementById('editFreeShippingCheck');
-    if (val === 0) {
-        cb.checked = true;
-        toggleFreeShipping('editProductShipping', cb);
-    } else {
-        cb.checked = false;
-        toggleFreeShipping('editProductShipping', cb);
-    }
+    cb.checked = (val === 0);
+    toggleFreeShipping('editProductShipping', cb);
 }
 
 function toggleBulkSellFields(fieldsId) {
@@ -676,11 +648,9 @@ document.addEventListener('DOMContentLoaded', function () {
     @if(session('success'))
         showSuccessPopup('{{ session('success') }}');
     @endif
-
     @if(session('deleted'))
         showDeletePopup('{{ session('deleted') }}');
     @endif
-
     @if(session('error'))
         showDeletePopup('{{ session('error') }}');
     @endif

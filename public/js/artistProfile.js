@@ -36,6 +36,33 @@ function getCSRFToken() {
 }
 
 // ============================================
+// CUSTOM DELETE CONFIRM MODAL
+// ============================================
+
+let _deleteAction = null;
+
+function showDeleteConfirm(title, message, action) {
+    _deleteAction = action;
+    document.getElementById('deleteConfirmTitle').textContent   = title;
+    document.getElementById('deleteConfirmMessage').textContent = message;
+    document.getElementById('deleteConfirmModal').style.display = 'flex';
+}
+
+function closeDeleteConfirm() {
+    document.getElementById('deleteConfirmModal').style.display = 'none';
+    _deleteAction = null;
+}
+
+function executeDelete() {
+    if (_deleteAction) _deleteAction();
+    closeDeleteConfirm();
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDeleteConfirm();
+});
+
+// ============================================
 // ACTION CARDS
 // ============================================
 
@@ -81,7 +108,7 @@ function openEditDemoModal(id) {
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error loading demo artwork.');
+            showDeletePopup('Error loading demo artwork.');
         });
 }
 
@@ -101,13 +128,13 @@ if (editDemoImage) {
         const file = e.target.files[0];
         if (!file) return;
         if (file.size > 5 * 1024 * 1024) {
-            alert('File size must be less than 5MB');
+            showDeletePopup('File size must be less than 5MB');
             this.value = '';
             return;
         }
         const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
         if (!validTypes.includes(file.type)) {
-            alert('Please upload a valid image file (JPEG, JPG, PNG, GIF, WEBP)');
+            showDeletePopup('Please upload a valid image file (JPEG, JPG, PNG, GIF, WEBP)');
             this.value = '';
             return;
         }
@@ -148,16 +175,21 @@ if (editDescTextarea && editDescCount) {
 // ============================================
 
 function deleteDemo(id) {
-    if (!confirm('Are you sure you want to delete this demo artwork?')) return;
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `/artist/demo/${id}`;
-    form.innerHTML = `
-        <input type="hidden" name="_token" value="${getCSRFToken()}">
-        <input type="hidden" name="_method" value="DELETE">
-    `;
-    document.body.appendChild(form);
-    form.submit();
+    showDeleteConfirm(
+        'Delete Demo?',
+        'This demo artwork will be permanently deleted and cannot be recovered.',
+        () => {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/artist/demo/${id}`;
+            form.innerHTML = `
+                <input type="hidden" name="_token" value="${getCSRFToken()}">
+                <input type="hidden" name="_method" value="DELETE">
+            `;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    );
 }
 
 // ============================================
@@ -168,7 +200,7 @@ function openEditArtworkModal(id) {
     fetch(`/artist/artwork/${id}/edit`)
         .then(response => response.json())
         .then(data => {
-            if (!data.success) { alert('Error fetching data'); return; }
+            if (!data.success) { showDeletePopup('Error fetching data'); return; }
 
             document.getElementById('editArtworkId').value          = data.id;
             document.getElementById('editProductName').value        = data.product_name;
@@ -220,7 +252,7 @@ function openEditArtworkModal(id) {
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error loading artwork info.');
+            showDeletePopup('Error loading artwork info.');
         });
 }
 
@@ -240,13 +272,13 @@ if (editProductImage) {
         const file = e.target.files[0];
         if (!file) return;
         if (file.size > 5 * 1024 * 1024) {
-            alert('File size must be less than 5MB');
+            showDeletePopup('File size must be less than 5MB');
             this.value = '';
             return;
         }
         const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
         if (!validTypes.includes(file.type)) {
-            alert('Please upload a valid image file (JPEG, JPG, PNG, GIF, WEBP)');
+            showDeletePopup('Please upload a valid image file (JPEG, JPG, PNG, GIF, WEBP)');
             this.value = '';
             return;
         }
@@ -287,18 +319,22 @@ if (editSellDescTextarea && editSellDescCount) {
 // ============================================
 
 function deleteArtwork(id) {
-    if (!confirm('Are you sure you want to delete this artwork?')) return;
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `/artist/artwork/${id}`;
-    form.innerHTML = `
-        <input type="hidden" name="_token" value="${getCSRFToken()}">
-        <input type="hidden" name="_method" value="DELETE">
-    `;
-    document.body.appendChild(form);
-    form.submit();
+    showDeleteConfirm(
+        'Delete Artwork?',
+        'This artwork listing will be permanently deleted and cannot be recovered.',
+        () => {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/artist/artwork/${id}`;
+            form.innerHTML = `
+                <input type="hidden" name="_token" value="${getCSRFToken()}">
+                <input type="hidden" name="_method" value="DELETE">
+            `;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    );
 }
-
 
 // ============================================
 // CARD IMAGE SLIDER
@@ -307,7 +343,6 @@ function deleteArtwork(id) {
 function slideCard(btn, direction) {
     if (event) event.stopPropagation();
 
-    // Arrows are siblings of .card-slider inside .artwork-image
     const artworkImage = btn.closest('.artwork-image');
     if (!artworkImage) return;
 
