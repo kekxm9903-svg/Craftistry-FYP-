@@ -234,7 +234,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{id}/enroll',                     [ClassEventController::class, 'enroll'])         ->name('class.event.enroll');
         Route::delete('/{id}/enroll',                   [ClassEventController::class, 'unenroll'])       ->name('class.event.unenroll');
         Route::get('/{id}',                             [ClassEventController::class, 'show'])           ->name('class.event.show');
-        Route::post('/{id}',                            [ClassEventController::class, 'update'])         ->name('class.event.update');
+        Route::put('/{id}',                             [ClassEventController::class, 'update'])         ->name('class.event.update');
         Route::delete('/{id}',                          [ClassEventController::class, 'destroy'])        ->name('class.event.destroy');
     });
 

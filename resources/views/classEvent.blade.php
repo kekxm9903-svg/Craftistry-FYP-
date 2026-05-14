@@ -4,14 +4,13 @@
 
 @section('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/classEvent.css') }}">
     <link rel="stylesheet" href="{{ asset('css/classEventParticipants.css') }}">
     <style>
         /* ── Craftistry-styled delete confirm modal ── */
         #deleteModal .modal-content {
             max-width: 420px !important;
-            border-radius: 16px !important;
-            overflow: hidden;
         }
         .delete-confirm-body { padding: 36px 32px 28px; text-align: center; }
         .delete-modal-icon-wrap {
@@ -50,7 +49,6 @@
             display: flex; align-items: center; justify-content: center; gap: 6px;
         }
         .delete-btn-confirm:hover { opacity: .88; transform: translateY(-1px); }
-
         @keyframes ceDeleteIn {
             from { opacity:0; transform:scale(.88) translateY(16px); }
             to   { opacity:1; transform:scale(1) translateY(0); }
@@ -80,20 +78,6 @@
         </svg>
         Back
     </a>
-
-    @if(session('success'))
-    <div class="alert alert-success">
-        <i class="bi bi-check-circle-fill"></i>
-        {{ session('success') }}
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="alert alert-danger">
-        <i class="bi bi-exclamation-circle-fill"></i>
-        {{ session('error') }}
-    </div>
-    @endif
 
     <div class="page-header-card">
         <div class="page-header-left">
@@ -247,14 +231,14 @@
 <div class="modal" id="participantsModal">
     <div class="modal-overlay" onclick="closeParticipantsModal()"></div>
     <div class="modal-content participants-modal-content">
-        <div class="modal-header">
+        <div class="modal-header" style="align-items:flex-start;">
             <div class="participants-modal-title-group">
                 <h2 class="modal-title">
                     <i class="bi bi-people-fill"></i> Participants
                 </h2>
                 <p class="participants-modal-subtitle" id="participantsEventTitle"></p>
             </div>
-            <button class="modal-close" onclick="closeParticipantsModal()">
+            <button class="modal-close" onclick="closeParticipantsModal()" style="margin-top:2px; flex-shrink:0;">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
@@ -270,7 +254,9 @@
                 <p>Loading participants...</p>
             </div>
             <div class="participants-empty" id="participantsEmpty" style="display:none;">
-                <div class="participants-empty-icon"><i class="bi bi-person-slash"></i></div>
+                <div class="participants-empty-icon">
+                    <i class="bi bi-people-fill"></i>
+                </div>
                 <h3>No Participants Yet</h3>
                 <p id="participantsEmptyMsg">No one has booked this class/event yet.</p>
             </div>
@@ -293,27 +279,92 @@
 </div>
 
 
-{{-- ══ SUCCESS / ERROR POPUPS ══ --}}
+{{-- ══ SUCCESS / DELETE POPUPS — exact artistProfile style ══ --}}
 <div class="success-popup" id="successPopup">
     <div class="success-content">
-        <div class="success-icon"><i class="bi bi-check-lg"></i></div>
-        <p id="successPopupMsg">Done!</p>
+        <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+        <div><p id="successMessage">Success!</p></div>
     </div>
 </div>
-<div class="error-popup" id="errorNotification">
-    <div class="error-content">
-        <div class="error-icon"><i class="bi bi-exclamation-circle-fill"></i></div>
-        <p id="errorPopupMsg">Something went wrong.</p>
+
+<div class="delete-popup" id="deletePopup">
+    <div class="delete-content">
+        <div class="delete-icon"><i class="fas fa-times-circle"></i></div>
+        <div><p id="deleteMessage">Something went wrong.</p></div>
     </div>
+</div>
+
 </div>
 
 @endsection
 
 @section('scripts')
     <script>
+    // ── Popup helpers — exact same pattern as artistProfile.js ──
+    function showSuccessPopup(message) {
+        const popup     = document.getElementById('successPopup');
+        const messageEl = document.getElementById('successMessage');
+        if (popup && messageEl) {
+            messageEl.textContent = message;
+            popup.classList.add('show');
+            setTimeout(() => {
+                popup.classList.add('hide');
+                setTimeout(() => popup.classList.remove('show', 'hide'), 300);
+            }, 3000);
+        }
+    }
+
+    function showDeletePopup(message) {
+        const popup     = document.getElementById('deletePopup');
+        const messageEl = document.getElementById('deleteMessage');
+        if (popup && messageEl) {
+            messageEl.textContent = message;
+            popup.classList.add('show');
+            setTimeout(() => {
+                popup.classList.add('hide');
+                setTimeout(() => popup.classList.remove('show', 'hide'), 300);
+            }, 3000);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        @if(session('success'))
+            showSuccessPopup(@json(session('success')));
+        @endif
+        @if(session('error'))
+            showDeletePopup(@json(session('error')));
+        @endif
+    });
+    </script>
+    <script>
         const csrfToken             = "{{ csrf_token() }}";
         const participantsBaseRoute = "{{ url('class-event') }}";
         const indexRoute            = "{{ route('class.event.index') }}";
+    </script>
+    <script>
+    // Bootstrap.Modal shim — this page doesn't load Bootstrap JS.
+    // classEventParticipants.js calls bootstrap.Modal.getOrCreateInstance().show()
+    // and bootstrap.Modal.getInstance().hide() — we override both with .active class toggle.
+    window.bootstrap = {
+        Modal: {
+            getOrCreateInstance: function(el) {
+                return {
+                    show: function() {
+                        el.classList.add('active');
+                        document.body.style.overflow = 'hidden';
+                    }
+                };
+            },
+            getInstance: function(el) {
+                return {
+                    hide: function() {
+                        el.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                };
+            }
+        }
+    };
     </script>
     <script src="{{ asset('js/classEventDeleteIndex.js') }}"></script>
     <script src="{{ asset('js/classEventParticipants.js') }}"></script>
