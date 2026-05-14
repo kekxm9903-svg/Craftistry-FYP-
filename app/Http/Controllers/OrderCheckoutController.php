@@ -29,7 +29,7 @@ class OrderCheckoutController extends Controller
 
             $cartItems = [[
                 'artwork'  => $artwork,
-                'price'    => $price,           // ← fixed: was missing, caused RM 0 display
+                'price'    => $price,
                 'quantity' => $qty,
                 'subtotal' => $price * $qty,
             ]];
@@ -63,7 +63,7 @@ class OrderCheckoutController extends Controller
                 $qty         = (int) ($item['quantity'] ?? 1);
                 $cartItems[] = [
                     'artwork'  => $artwork,
-                    'price'    => $price,       // ← consistent: always include price key
+                    'price'    => $price,
                     'quantity' => $qty,
                     'subtotal' => $price * $qty,
                 ];
@@ -245,6 +245,63 @@ class OrderCheckoutController extends Controller
         $order->update(['stripe_session_id' => $stripeSession->id]);
 
         return redirect($stripeSession->url);
+    }
+
+    // Cancel order — only when status is 'processing' (paid, seller not yet accepted)
+    public function cancelOrder(Order $order)
+    {
+        abort_if($order->user_id !== auth()->id(), 403);
+
+        if ($order->status !== 'processing') {
+            return back()->with('error', 'This order can no longer be cancelled.');
+        }
+
+        // Stripe refund
+        if ($order->stripe_session_id) {
+            Stripe::setApiKey(config('services.stripe.secret'));
+
+            try {
+                $session = Session::retrieve($order->stripe_session_id);
+
+                if ($session->payment_intent) {
+                    \Stripe\Refund::create([
+                        'payment_intent' => $session->payment_intent,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                return back()->with('error', 'Refund failed: ' . $e->getMessage());
+            }
+        }
+
+        // Restore stock
+        foreach ($order->items as $item) {
+            if ($item->artworkSell) {
+                $item->artworkSell->increment('stock', $item->quantity);
+            }
+        }
+
+        $order->update([
+            'status'         => 'cancelled',
+            'payment_status' => 'refunded',
+        ]);
+
+        // Notify seller
+        $sellerUserId = $order->artist->user_id ?? null;
+        if ($sellerUserId) {
+            $buyer       = auth()->user();
+            $firstItem   = $order->items->first();
+            $productName = $firstItem->name ?? 'Artwork';
+            $buyerName   = $buyer->fullname ?? $buyer->name ?? 'A buyer';
+
+            NotificationService::newOrder(
+                $sellerUserId,
+                $order->id,
+                $buyerName . ' cancelled their order for',
+                $productName
+            );
+        }
+
+        return back()->with('success', 'Order cancelled. Your refund has been initiated and will appear within 5–10 business days.');
     }
 
     // Payment success

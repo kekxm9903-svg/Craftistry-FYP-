@@ -1,15 +1,97 @@
-{{-- resources/views/orders/index.blade.php --}}
-
 @extends('layouts.app')
 
 @section('title', 'My Orders')
 
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('css/myOrders.css') }}">
+<link rel="stylesheet" href="{{ asset('css/myOrders.css') }}">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style>
+/* ── Success / Error Popups — exact artistProfile.css styles ── */
+.success-popup,
+.delete-popup {
+    display: none;
+    position: fixed;
+    top: 80px;
+    right: var(--sp-lg, 20px);
+    z-index: 999;
+}
+
+.success-popup.show,
+.delete-popup.show { display: block; animation: slideInRight .3s ease-out; }
+
+.success-popup.hide,
+.delete-popup.hide { animation: slideOutRight .3s ease-out forwards; }
+
+.success-content {
+    background: #d1fae5;
+    border: 1px solid #6ee7b7;
+    border-radius: 10px;
+    padding: 16px 20px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, .15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 280px;
+}
+
+.delete-content {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-radius: 10px;
+    padding: 16px 20px;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, .15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 280px;
+}
+
+.success-icon { font-size: 15px; color: #065f46; flex-shrink: 0; }
+.delete-icon  { font-size: 15px; color: #991b1b; flex-shrink: 0; }
+.success-content p { font-size: 13px; font-weight: 600; color: #065f46; margin: 0; }
+.delete-content  p { font-size: 13px; font-weight: 600; color: #991b1b; margin: 0; }
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(360px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideOutRight {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(360px); }
+}
+
+@media (max-width: 768px) {
+    .success-popup, .delete-popup { top: 10px; right: 10px; left: 10px; }
+    .success-content, .delete-content { min-width: auto; }
+}
+</style>
+
 @endsection
 
 @section('content')
-
 {{-- Breadcrumb --}}
 <div class="bc-bar">
     <div class="bc-inner">
@@ -104,6 +186,8 @@
             @endforeach
         </div>
     </div>
+
+    {{-- Flash messages handled by popup toast (see bottom of page) --}}
 
     {{-- ── Empty State ── --}}
     @if($orders->isEmpty())
@@ -355,6 +439,15 @@
                             </a>
                         @endif
 
+                        {{-- Cancel Order — only when paid but seller hasn't accepted yet --}}
+                        @if($order->status === 'processing')
+                            <button type="button"
+                                class="btn-craft btn-craft-cancel"
+                                onclick="openCancelConfirm({{ $order->id }}, '{{ addslashes($order->items->first()?->name ?? 'this order') }}')">
+                                <i class="fas fa-times-circle"></i> Cancel
+                            </button>
+                        @endif
+
                     </div>
                 </div>
 
@@ -371,5 +464,153 @@
 
 </div>
 </main>
+
+{{-- SUCCESS POPUP — exact artistProfile.blade.php markup --}}
+<div class="success-popup" id="successPopup">
+    <div class="success-content">
+        <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+        <div><p id="successMessage">Success!</p></div>
+    </div>
+</div>
+
+{{-- ERROR POPUP — uses delete-popup class (red, same as artistProfile) --}}
+<div class="delete-popup" id="errorPopup">
+    <div class="delete-content">
+        <div class="delete-icon"><i class="fas fa-exclamation-circle"></i></div>
+        <div><p id="errorMessage">Something went wrong.</p></div>
+    </div>
+</div>
+
+
+{{-- ── Cancel Order Confirm Modal ── --}}
+<div id="cancelConfirmModal"
+     style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center;">
+    <div style="position:absolute; inset:0; background:rgba(0,0,0,.48); backdrop-filter:blur(3px);"
+         onclick="closeCancelConfirm()"></div>
+    <div id="cancelConfirmInner"
+         style="position:relative; background:#fff; border-radius:16px; padding:36px 32px 28px;
+                max-width:440px; width:90%;
+                box-shadow:0 24px 64px rgba(102,126,234,.22), 0 4px 16px rgba(0,0,0,.08);
+                text-align:center; z-index:1;">
+        <div style="width:64px; height:64px; background:linear-gradient(135deg,#fff5f5,#fed7d7);
+                    border-radius:50%; display:flex; align-items:center; justify-content:center;
+                    margin:0 auto 18px; border:2px solid #fca5a5;
+                    box-shadow:0 4px 12px rgba(239,68,68,.15);">
+            <i class="fas fa-ban" style="color:#ef4444; font-size:1.55rem;"></i>
+        </div>
+        <h3 style="font-size:1.18rem; font-weight:800; color:#1a202c; margin-bottom:8px;">
+            Cancel Order?
+        </h3>
+        <p style="font-size:0.84rem; color:#718096; line-height:1.7; margin-bottom:6px;">
+            You are about to cancel
+            <strong id="cancelOrderName" style="color:#4a5568;"></strong>.
+        </p>
+        <p style="font-size:0.82rem; color:#718096; line-height:1.65; margin-bottom:28px;">
+            A <strong style="color:#48bb78;">full refund</strong> will be initiated to your original
+            payment method and may take <strong>5–10 business days</strong> to appear.
+            This action cannot be undone.
+        </p>
+        <div style="display:flex; gap:10px;">
+            <button onclick="closeCancelConfirm()"
+                style="flex:1; padding:12px; border-radius:8px; border:1.5px solid #e2e8f0;
+                       background:#fff; color:#4a5568; font-size:0.88rem; font-weight:600;
+                       cursor:pointer; font-family:inherit; transition:all .15s;"
+                onmouseover="this.style.background='#f7fafc'; this.style.borderColor='#cbd5e0';"
+                onmouseout="this.style.background='#fff'; this.style.borderColor='#e2e8f0';">
+                Keep Order
+            </button>
+            <button onclick="executeCancelOrder()"
+                style="flex:1; padding:12px; border-radius:8px; border:none;
+                       background:linear-gradient(135deg,#ef4444,#dc2626);
+                       color:#fff; font-size:0.88rem; font-weight:700;
+                       cursor:pointer; font-family:inherit; transition:all .15s;
+                       box-shadow:0 4px 14px rgba(239,68,68,.35);"
+                onmouseover="this.style.opacity='.88'; this.style.transform='translateY(-1px)';"
+                onmouseout="this.style.opacity='1'; this.style.transform='translateY(0)';">
+                <i class="fas fa-ban" style="margin-right:6px;"></i>Yes, Cancel Order
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- Hidden cancel form — submitted programmatically --}}
+<form id="cancelOrderForm" method="POST" style="display:none;">
+    @csrf
+</form>
+
+<style>
+@keyframes cancelModalIn {
+    from { opacity:0; transform:scale(.88) translateY(16px); }
+    to   { opacity:1; transform:scale(1) translateY(0); }
+}
+</style>
+
+<script>
+// ── Cancel Order Modal ──
+window.openCancelConfirm = function (orderId, orderName) {
+    var modal = document.getElementById('cancelConfirmModal');
+    var form  = document.getElementById('cancelOrderForm');
+    var inner = document.getElementById('cancelConfirmInner');
+    form.action = '/my-orders/' + orderId + '/cancel';
+    document.getElementById('cancelOrderName').textContent = '\u201c' + orderName + '\u201d';
+    modal.style.display = 'flex';
+    if (inner) {
+        inner.style.animation = 'none';
+        void inner.offsetWidth;
+        inner.style.animation = 'cancelModalIn .22s cubic-bezier(.34,1.56,.64,1)';
+    }
+};
+
+window.closeCancelConfirm = function () {
+    document.getElementById('cancelConfirmModal').style.display = 'none';
+};
+
+window.executeCancelOrder = function () {
+    document.getElementById('cancelOrderForm').submit();
+};
+
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') window.closeCancelConfirm();
+});
+</script>
+
+<script>
+(function () {
+    function showSuccessPopup(message) {
+        const popup     = document.getElementById('successPopup');
+        const messageEl = document.getElementById('successMessage');
+        if (popup && messageEl) {
+            messageEl.textContent = message;
+            popup.classList.add('show');
+            setTimeout(() => {
+                popup.classList.add('hide');
+                setTimeout(() => popup.classList.remove('show', 'hide'), 300);
+            }, 3000);
+        }
+    }
+
+    function showErrorPopup(message) {
+        const popup     = document.getElementById('errorPopup');
+        const messageEl = document.getElementById('errorMessage');
+        if (popup && messageEl) {
+            messageEl.textContent = message;
+            popup.classList.add('show');
+            setTimeout(() => {
+                popup.classList.add('hide');
+                setTimeout(() => popup.classList.remove('show', 'hide'), 300);
+            }, 3000);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        @if(session('success'))
+            showSuccessPopup(@json(session('success')));
+        @endif
+        @if(session('error'))
+            showErrorPopup(@json(session('error')));
+        @endif
+    });
+})();
+</script>
 
 @endsection

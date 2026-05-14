@@ -135,10 +135,11 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // --- ORDER ROUTES (buyer) ---
-    Route::get('/my-orders',                   [OrderController::class, 'index'])          ->name('orders.index');
-    Route::get('/my-orders/{order}',           [OrderController::class, 'show'])           ->name('orders.show');
-    Route::post('/my-orders/{order}/complete', [OrderController::class, 'complete'])       ->name('orders.complete');
-    Route::get('/my-orders/{order}/receipt',   [OrderController::class, 'downloadReceipt'])->name('orders.receipt');
+    Route::get('/my-orders',                    [OrderController::class,         'index'])          ->name('orders.index');
+    Route::get('/my-orders/{order}',            [OrderController::class,         'show'])           ->name('orders.show');
+    Route::post('/my-orders/{order}/complete',  [OrderController::class,         'complete'])       ->name('orders.complete');
+    Route::get('/my-orders/{order}/receipt',    [OrderController::class,         'downloadReceipt'])->name('orders.receipt');
+    Route::post('/my-orders/{order}/cancel',    [OrderCheckoutController::class, 'cancelOrder'])    ->name('orders.cancel');
 
     // --- REVIEW ROUTES ---
     Route::get('/my-orders/{order}/review',          [ReviewController::class, 'create']) ->name('reviews.create');
@@ -193,7 +194,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/artwork/sell',              [ArtworkSellController::class, 'sellPage'])  ->name('artist.artwork.sell.page');
         Route::post('/artwork/sell',             [ArtworkSellController::class, 'store'])     ->name('artist.artwork.sell');
-        Route::get('/artwork/{id}/preview',      [ArtworkSellController::class, 'preview'])   ->name('artist.artwork.preview'); // ← NEW
+        Route::get('/artwork/{id}/preview',      [ArtworkSellController::class, 'preview'])   ->name('artist.artwork.preview');
         Route::get('/artwork/{id}/edit',         [ArtworkSellController::class, 'editPage'])  ->name('artist.artwork.edit.page');
         Route::get('/artwork/{id}/edit-data',    [ArtworkSellController::class, 'edit'])      ->name('artist.artwork.edit');
         Route::post('/artwork/{id}',             [ArtworkSellController::class, 'update'])    ->name('artist.artwork.update');
