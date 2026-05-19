@@ -28,6 +28,7 @@ use App\Http\Controllers\BulkOrderController;
 use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\KycController;
+use App\Http\Controllers\RefundController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -44,9 +45,9 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/forgot-password',       [AuthController::class, 'showForgotPassword'])->name('password.request');
-Route::post('/forgot-password',      [AuthController::class, 'sendResetLink'])     ->name('password.email');
-Route::get('/reset-password/{token}',[AuthController::class, 'showResetPassword']) ->name('password.reset');
-Route::post('/reset-password',       [AuthController::class, 'resetPassword'])     ->name('password.update');
+    Route::post('/forgot-password',      [AuthController::class, 'sendResetLink'])     ->name('password.email');
+    Route::get('/reset-password/{token}',[AuthController::class, 'showResetPassword']) ->name('password.reset');
+    Route::post('/reset-password',       [AuthController::class, 'resetPassword'])     ->name('password.update');
 });
 
 // --- EMAIL VERIFICATION ROUTES ---
@@ -144,6 +145,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/my-orders/{order}/complete',  [OrderController::class,         'complete'])       ->name('orders.complete');
     Route::get('/my-orders/{order}/receipt',    [OrderController::class,         'downloadReceipt'])->name('orders.receipt');
     Route::post('/my-orders/{order}/cancel',    [OrderCheckoutController::class, 'cancelOrder'])    ->name('orders.cancel');
+
+    // --- REFUND ROUTES ---
+    Route::prefix('refund')->name('refund.')->group(function () {
+        // Buyer: submit request
+        Route::post('/order/{order}',        [RefundController::class, 'storeForOrder'])  ->name('store.order');
+        Route::post('/bulk/{bulkOrder}',     [RefundController::class, 'storeForBulk'])   ->name('store.bulk');
+        Route::post('/custom/{customOrder}', [RefundController::class, 'storeForCustom']) ->name('store.custom');
+
+        // Seller: approve
+        Route::post('/order/{order}/approve',        [RefundController::class, 'approveOrder'])  ->name('approve.order');
+        Route::post('/bulk/{bulkOrder}/approve',     [RefundController::class, 'approveBulk'])   ->name('approve.bulk');
+        Route::post('/custom/{customOrder}/approve', [RefundController::class, 'approveCustom']) ->name('approve.custom');
+
+        // Seller: reject
+        Route::post('/order/{order}/reject',        [RefundController::class, 'rejectOrder'])  ->name('reject.order');
+        Route::post('/bulk/{bulkOrder}/reject',     [RefundController::class, 'rejectBulk'])   ->name('reject.bulk');
+        Route::post('/custom/{customOrder}/reject', [RefundController::class, 'rejectCustom']) ->name('reject.custom');
+    });
 
     // --- REVIEW ROUTES ---
     Route::get('/my-orders/{order}/review',          [ReviewController::class, 'create']) ->name('reviews.create');

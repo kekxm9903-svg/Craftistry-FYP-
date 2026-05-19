@@ -10,62 +10,37 @@ class BulkOrder extends Model
     use HasFactory;
 
     protected $fillable = [
-        'artwork_sell_id',
-        'buyer_id',
-        'quantity',
-        'last_ship_date',
-        'description',
-        'unit_price',
-        'discounted_price',
-        'status',
-        'seller_reason',
-        'order_id',
-        'stripe_session_id',
+        'artwork_sell_id', 'buyer_id', 'quantity', 'last_ship_date',
+        'description', 'unit_price', 'discounted_price', 'status',
+        'seller_reason', 'order_id', 'stripe_session_id',
+        'refund_status', 'refund_reason', 'refund_reject_reason',
+        'stripe_refund_id', 'refund_amount', 'refund_requested_at', 'refunded_at',
     ];
 
     protected $casts = [
-        'last_ship_date'   => 'date',
-        'unit_price'       => 'decimal:2',
-        'discounted_price' => 'decimal:2',
+        'last_ship_date'      => 'date',
+        'unit_price'          => 'decimal:2',
+        'discounted_price'    => 'decimal:2',
+        'refund_requested_at' => 'datetime',
+        'refunded_at'         => 'datetime',
     ];
 
     // ── Relationships ────────────────────────────────────────────────────────
 
-    public function artworkSell()
-    {
-        return $this->belongsTo(ArtworkSell::class, 'artwork_sell_id');
-    }
-
-    public function buyer()
-    {
-        return $this->belongsTo(User::class, 'buyer_id');
-    }
-
-    public function order()
-    {
-        return $this->belongsTo(Order::class, 'order_id');
-    }
+    public function artworkSell() { return $this->belongsTo(ArtworkSell::class, 'artwork_sell_id'); }
+    public function buyer()       { return $this->belongsTo(User::class, 'buyer_id'); }
+    public function order()       { return $this->belongsTo(Order::class, 'order_id'); }
 
     // ── Status Helpers ───────────────────────────────────────────────────────
 
-    public function isPending(): bool
-    {
-        return $this->status === 'pending';
-    }
+    public function isPending(): bool  { return $this->status === 'pending'; }
+    public function isAccepted(): bool { return $this->status === 'accepted'; }
+    public function isRefused(): bool  { return $this->status === 'refused'; }
+    public function isPaid(): bool     { return $this->status === 'paid'; }
 
-    public function isAccepted(): bool
+    public function isRefundable(): bool
     {
-        return $this->status === 'accepted';
-    }
-
-    public function isRefused(): bool
-    {
-        return $this->status === 'refused';
-    }
-
-    public function isPaid(): bool
-    {
-        return $this->status === 'paid';
+        return $this->status === 'paid' && ($this->refund_status ?? 'none') === 'none';
     }
 
     public function statusLabel(): string

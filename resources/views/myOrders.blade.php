@@ -64,6 +64,55 @@
     .success-popup, .delete-popup { top: 10px; right: 10px; left: 10px; }
     .success-content, .delete-content { min-width: auto; }
 }
+
+/* ── ADDITION 1: Refund button style ── */
+.btn-craft-refund {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #fff8f0;
+    color: #92400e;
+    border: 1.5px solid #fcd34d;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .15s;
+}
+.btn-craft-refund:hover { background: #fef3c7; }
+
+/* ── ADDITION 2: Refund status badge ── */
+.refund-inline-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.refund-inline-badge.pending  { background: #fff3cd; color: #92400e; }
+.refund-inline-badge.refunded { background: #dcfce7; color: #166534; }
+.refund-inline-badge.rejected { background: #fee2e2; color: #991b1b; }
+
+/* ── ADDITION 3: Chips inside modal ── */
+.refund-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.refund-chip {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: #ede9fe;
+    color: #5b21b6;
+    border: 1px solid #c4b5fd;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .15s;
+}
+.refund-chip:hover { background: #667eea; color: #fff; border-color: #667eea; }
 </style>
 
 @endsection
@@ -227,6 +276,13 @@
                 $canEditReview = $orderReview
                     && $orderReview->created_at->diffInDays(now()) <= 30;
                 $canDownloadReceipt = $order->status === 'completed';
+
+                {{-- ADDITION: refund eligibility --}}
+                $refundStatus = $order->refund_status ?? 'none';
+                $canRefund    = $refundStatus === 'none'
+                             && $order->payment_status === 'paid'
+                             && in_array($order->status, ['completed', 'shipped', 'preparing', 'processing'])
+                             && ($order->status !== 'completed' || now()->diffInDays($order->updated_at) <= 7);
             @endphp
 
             <div class="order-card">
@@ -246,6 +302,20 @@
                             <span class="dot"></span>
                             {{ $statusLabel }}
                         </span>
+                        {{-- ADDITION: refund status badge --}}
+                        @if($refundStatus === 'requested')
+                            <span class="refund-inline-badge pending">
+                                <i class="fas fa-clock"></i> Refund Pending
+                            </span>
+                        @elseif($refundStatus === 'refunded')
+                            <span class="refund-inline-badge refunded">
+                                <i class="fas fa-check-circle"></i> Refunded
+                            </span>
+                        @elseif($refundStatus === 'rejected')
+                            <span class="refund-inline-badge rejected">
+                                <i class="fas fa-times-circle"></i> Refund Rejected
+                            </span>
+                        @endif
                     </div>
                 </div>
 
@@ -410,6 +480,19 @@
                             </button>
                         @endif
 
+                        {{-- ADDITION: Refund button --}}
+                        @if($canRefund)
+                            <button type="button"
+                                class="btn-craft btn-craft-refund"
+                                onclick="openRefundModal(
+                                    {{ $order->id }},
+                                    '{{ addslashes($order->items->first()?->name ?? 'this order') }}',
+                                    'RM {{ number_format($order->total ?? 0, 2) }}'
+                                )">
+                                <i class="fas fa-undo-alt"></i> Refund
+                            </button>
+                        @endif
+
                     </div>
                 </div>
 
@@ -498,6 +581,94 @@
 
 <form id="cancelOrderForm" method="POST" style="display:none;">@csrf</form>
 
+{{-- ADDITION: Refund Request Modal --}}
+<div id="refundModal"
+     style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center;">
+    <div style="position:absolute; inset:0; background:rgba(0,0,0,.48); backdrop-filter:blur(3px);"
+         onclick="closeRefundModal()"></div>
+    <div id="refundModalInner"
+         style="position:relative; background:#fff; border-radius:16px; padding:32px 28px 26px;
+                max-width:480px; width:92%;
+                box-shadow:0 24px 64px rgba(102,126,234,.22), 0 4px 16px rgba(0,0,0,.08);
+                z-index:1;">
+
+        <div style="text-align:center; margin-bottom:20px;">
+            <div style="width:56px; height:56px; background:linear-gradient(135deg,#fff8f0,#fef3c7);
+                        border-radius:50%; display:flex; align-items:center; justify-content:center;
+                        margin:0 auto 14px; border:2px solid #fcd34d;
+                        box-shadow:0 4px 12px rgba(252,211,77,.25);">
+                <i class="fas fa-undo-alt" style="color:#d97706; font-size:1.3rem;"></i>
+            </div>
+            <h3 style="font-size:1.08rem; font-weight:800; color:#1a202c; margin:0 0 4px;">Request Refund</h3>
+            <p id="refundModalSubtitle" style="font-size:0.8rem; color:#718096; margin:0;"></p>
+        </div>
+
+        <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:9px;
+                    padding:11px 14px; margin-bottom:16px;
+                    display:flex; align-items:flex-start; gap:9px;">
+            <i class="fas fa-info-circle" style="color:#2563eb; font-size:14px; margin-top:1px; flex-shrink:0;"></i>
+            <span style="font-size:12px; color:#1d4ed8; line-height:1.55;">
+                The seller will review your request. If approved, the refund returns to your original
+                payment method within <strong>3–5 business days</strong>.
+            </span>
+        </div>
+
+        <div class="refund-chips">
+            <button type="button" class="refund-chip" onclick="pickReason('Item not as described')">Item not as described</button>
+            <button type="button" class="refund-chip" onclick="pickReason('Item damaged or defective')">Item damaged or defective</button>
+            <button type="button" class="refund-chip" onclick="pickReason('Wrong item received')">Wrong item received</button>
+            <button type="button" class="refund-chip" onclick="pickReason('Item not received')">Item not received</button>
+            <button type="button" class="refund-chip" onclick="pickReason('Changed my mind')">Changed my mind</button>
+        </div>
+
+        <form id="refundModalForm" method="POST">
+            @csrf
+            <label style="font-size:13px; font-weight:600; color:#1a1a2e; display:block; margin-bottom:7px;">
+                Reason <span style="color:#ef4444;">*</span>
+            </label>
+            <textarea
+                id="refundReasonInput"
+                name="reason"
+                rows="4"
+                placeholder="Describe why you are requesting a refund..."
+                minlength="10"
+                maxlength="1000"
+                required
+                style="width:100%; border:1.5px solid #e5e7eb; border-radius:10px;
+                       padding:11px 13px; font-size:13px; font-family:inherit;
+                       color:#1a1a2e; resize:vertical; outline:none;
+                       transition:border-color .2s; box-sizing:border-box;"
+                onfocus="this.style.borderColor='#667eea'"
+                onblur="this.style.borderColor='#e5e7eb'"
+            ></textarea>
+            <p style="font-size:11px; color:#9ca3af; margin:5px 0 18px;">Minimum 10 characters.</p>
+
+            <div style="display:flex; gap:10px;">
+                <button type="button" onclick="closeRefundModal()"
+                    style="flex:1; padding:11px; border-radius:8px; border:1.5px solid #e2e8f0;
+                           background:#fff; color:#6b7280; font-size:0.88rem; font-weight:600;
+                           cursor:pointer; font-family:inherit;"
+                    onmouseover="this.style.background='#f9fafb';"
+                    onmouseout="this.style.background='#fff';">
+                    Cancel
+                </button>
+                <button type="submit"
+                    style="flex:2; padding:11px; border-radius:8px; border:none;
+                           background:linear-gradient(135deg,#667eea,#764ba2);
+                           color:#fff; font-size:0.88rem; font-weight:700;
+                           cursor:pointer; font-family:inherit;
+                           display:flex; align-items:center; justify-content:center; gap:7px;
+                           box-shadow:0 4px 14px rgba(102,126,234,.35);"
+                    onmouseover="this.style.opacity='.88';"
+                    onmouseout="this.style.opacity='1';">
+                    <i class="fas fa-paper-plane"></i> Submit Request
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
 <style>
 @keyframes cancelModalIn {
     from { opacity:0; transform:scale(.88) translateY(16px); }
@@ -525,8 +696,36 @@ window.closeCancelConfirm = function () {
 window.executeCancelOrder = function () {
     document.getElementById('cancelOrderForm').submit();
 };
+
+{{-- ADDITION: refund modal JS --}}
+window.openRefundModal = function (orderId, orderName, orderAmount) {
+    var modal    = document.getElementById('refundModal');
+    var inner    = document.getElementById('refundModalInner');
+    var form     = document.getElementById('refundModalForm');
+    var subtitle = document.getElementById('refundModalSubtitle');
+    var textarea = document.getElementById('refundReasonInput');
+
+    form.action       = '/refund/order/' + orderId;
+    subtitle.textContent = '\u201c' + orderName + '\u201d \u2022 ' + orderAmount;
+    textarea.value    = '';
+
+    modal.style.display = 'flex';
+    inner.style.animation = 'none';
+    void inner.offsetWidth;
+    inner.style.animation = 'cancelModalIn .22s cubic-bezier(.34,1.56,.64,1)';
+};
+window.closeRefundModal = function () {
+    document.getElementById('refundModal').style.display = 'none';
+};
+window.pickReason = function (text) {
+    document.getElementById('refundReasonInput').value = text;
+};
+
 document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') window.closeCancelConfirm();
+    if (e.key === 'Escape') {
+        window.closeCancelConfirm();
+        window.closeRefundModal();
+    }
 });
 </script>
 
