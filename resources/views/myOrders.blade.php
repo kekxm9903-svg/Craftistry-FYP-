@@ -5,30 +5,7 @@
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/myOrders.css') }}">
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <style>
-/* ── Success / Error Popups — exact artistProfile.css styles ── */
 .success-popup,
 .delete-popup {
     display: none;
@@ -92,6 +69,7 @@
 @endsection
 
 @section('content')
+
 {{-- Breadcrumb --}}
 <div class="bc-bar">
     <div class="bc-inner">
@@ -104,10 +82,9 @@
 <main class="orders-main">
 <div class="orders-inner">
 
-    {{-- Back button --}}
     <a href="{{ route('dashboard') }}" class="back-btn">← Back</a>
 
-    {{-- ── Page Header Card ── --}}
+    {{-- Page Header --}}
     <div class="page-header">
         <div class="page-header-left">
             <div class="page-title">My Orders</div>
@@ -120,7 +97,7 @@
         </a>
     </div>
 
-    {{-- ── Quick Tabs Card ── --}}
+    {{-- Quick Tabs --}}
     @php
         $currentStatus  = request('status', '');
         $currentCat     = request('cat', '');
@@ -159,7 +136,7 @@
         </div>
     </div>
 
-    {{-- ── Status Pills Card ── --}}
+    {{-- Status Pills --}}
     @php
         $statusPills = [
             ''                => 'All',
@@ -187,9 +164,7 @@
         </div>
     </div>
 
-    {{-- Flash messages handled by popup toast (see bottom of page) --}}
-
-    {{-- ── Empty State ── --}}
+    {{-- Empty State --}}
     @if($orders->isEmpty())
         <div class="empty-state">
             <div class="empty-icon"><i class="fas fa-shopping-bag"></i></div>
@@ -211,7 +186,7 @@
 
     @else
 
-        {{-- ── Orders List ── --}}
+        {{-- Orders List --}}
         <div class="orders-list">
             @foreach($orders as $order)
             @php
@@ -256,7 +231,7 @@
 
             <div class="order-card">
 
-                {{-- Card Header --}}
+                {{-- Header --}}
                 <div class="oc-header">
                     <div class="oc-shop">
                         <div class="oc-shop-icon">{{ $shopInitial }}</div>
@@ -274,32 +249,29 @@
                     </div>
                 </div>
 
-                {{-- Card Body --}}
+                {{-- Body --}}
                 <div class="oc-body">
                     <div class="oc-item-row">
+                        <div class="oc-thumb">
+                            @php
+                                $firstItem = $order->items->first();
+                                $thumb     = $firstItem?->artwork;
+                                $isCustom  = $firstItem?->artwork_sell_id === null;
+                                $imgSrc    = $thumb?->image_path
+                                            ? asset('storage/' . $thumb->image_path)
+                                            : ($isCustom && $firstItem?->image_path
+                                                ? asset('storage/' . $firstItem->image_path)
+                                                : null);
+                            @endphp
+                            @if($imgSrc)
+                                <img src="{{ $imgSrc }}" alt="{{ $firstItem->name ?? 'Artwork' }}">
+                            @elseif($isCustom)
+                                <i class="fas fa-paint-brush" style="font-size:22px;color:#b0a8e0;"></i>
+                            @else
+                                <i class="fas fa-palette" style="font-size:22px;color:#b0a8e0;"></i>
+                            @endif
+                        </div>
 
-                    {{-- Thumbnail --}}
-                    <div class="oc-thumb">
-                        @php
-                            $firstItem = $order->items->first();
-                            $thumb     = $firstItem?->artwork;
-                            $isCustom  = $firstItem?->artwork_sell_id === null;
-                            $imgSrc    = $thumb?->image_path
-                                        ? asset('storage/' . $thumb->image_path)
-                                        : ($isCustom && $firstItem?->image_path
-                                            ? asset('storage/' . $firstItem->image_path)
-                                            : null);
-                        @endphp
-                        @if($imgSrc)
-                            <img src="{{ $imgSrc }}" alt="{{ $firstItem->name ?? 'Artwork' }}">
-                        @elseif($isCustom)
-                            <i class="fas fa-paint-brush" style="font-size:22px;color:#b0a8e0;"></i>
-                        @else
-                            <i class="fas fa-palette" style="font-size:22px;color:#b0a8e0;"></i>
-                        @endif
-                    </div>
-
-                        {{-- Info --}}
                         <div class="oc-item-info">
                             <p class="oc-item-title">
                                 {{ $order->items->first()?->name ?? $order->notes ?? 'Artwork Order' }}
@@ -318,14 +290,11 @@
                             @endif
                         </div>
 
-                        {{-- Price --}}
                         <div class="oc-item-price">
                             RM {{ number_format($order->items->first()?->price ?? $order->price ?? 0, 2) }}
                         </div>
-
                     </div>
 
-                    {{-- Extra items --}}
                     @if($extraCount > 0)
                         <div class="oc-more-items">
                             + {{ $extraCount }} more item{{ $extraCount > 1 ? 's' : '' }}
@@ -334,7 +303,7 @@
                     @endif
                 </div>
 
-                {{-- Tracking bar --}}
+                {{-- Tracking --}}
                 @if(in_array($order->status, ['shipped', 'completed']) && $order->tracking_number)
                 <div class="tracking-section">
                     <div class="tracking-courier">
@@ -364,7 +333,7 @@
                 </div>
                 @endif
 
-                {{-- Card Footer --}}
+                {{-- Footer --}}
                 <div class="oc-footer">
                     <div class="oc-total">
                         Order Total:
@@ -378,21 +347,17 @@
 
                     <div class="oc-actions">
 
-                        {{-- View Details --}}
                         <a href="{{ route('orders.show', $order->id) }}" class="btn-craft btn-craft-outline">
                             <i class="fas fa-eye"></i> View Details
                         </a>
 
-                        {{-- Download Receipt --}}
                         @if($canDownloadReceipt)
                             <a href="{{ route('orders.receipt', $order->id) }}"
-                               class="btn-craft btn-craft-receipt"
-                               title="Download PDF Receipt">
+                               class="btn-craft btn-craft-receipt">
                                 <i class="fas fa-file-download"></i> Receipt
                             </a>
                         @endif
 
-                        {{-- Rate / Rated / Track --}}
                         @if($order->status === 'completed')
                             @if($order->has_review)
                                 <button class="btn-craft btn-craft-rated" disabled>
@@ -418,7 +383,6 @@
                             </a>
                         @endif
 
-                        {{-- Order Received --}}
                         @if($order->status === 'shipped')
                             <form action="{{ route('orders.complete', $order->id) }}"
                                   method="POST"
@@ -431,7 +395,6 @@
                             </form>
                         @endif
 
-                        {{-- Pay Now --}}
                         @if($order->status === 'pending_payment')
                             <a href="{{ route('order.checkout.repay', $order->id) }}"
                                class="btn-craft btn-craft-primary">
@@ -439,7 +402,6 @@
                             </a>
                         @endif
 
-                        {{-- Cancel Order — only when paid but seller hasn't accepted yet --}}
                         @if($order->status === 'processing')
                             <button type="button"
                                 class="btn-craft btn-craft-cancel"
@@ -451,21 +413,26 @@
                     </div>
                 </div>
 
-            </div>{{-- /order-card --}}
+            </div>
             @endforeach
         </div>
 
-        {{-- Pagination --}}
+        {{-- Pagination — single clean block --}}
+        @if($orders->lastPage() > 1)
         <div class="pagination-wrapper">
-            {{ $orders->appends(request()->query())->links() }}
+            <div class="pagination-info">
+                Showing {{ $orders->firstItem() }}–{{ $orders->lastItem() }} of {{ $orders->total() }} results
+            </div>
+            {{ $orders->appends(request()->query())->links('pagination.craftistry') }}
         </div>
+        @endif
 
     @endif
 
 </div>
 </main>
 
-{{-- SUCCESS POPUP — exact artistProfile.blade.php markup --}}
+{{-- Success Popup --}}
 <div class="success-popup" id="successPopup">
     <div class="success-content">
         <div class="success-icon"><i class="fas fa-check-circle"></i></div>
@@ -473,7 +440,7 @@
     </div>
 </div>
 
-{{-- ERROR POPUP — uses delete-popup class (red, same as artistProfile) --}}
+{{-- Error Popup --}}
 <div class="delete-popup" id="errorPopup">
     <div class="delete-content">
         <div class="delete-icon"><i class="fas fa-exclamation-circle"></i></div>
@@ -481,8 +448,7 @@
     </div>
 </div>
 
-
-{{-- ── Cancel Order Confirm Modal ── --}}
+{{-- Cancel Order Modal --}}
 <div id="cancelConfirmModal"
      style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center;">
     <div style="position:absolute; inset:0; background:rgba(0,0,0,.48); backdrop-filter:blur(3px);"
@@ -498,12 +464,9 @@
                     box-shadow:0 4px 12px rgba(239,68,68,.15);">
             <i class="fas fa-ban" style="color:#ef4444; font-size:1.55rem;"></i>
         </div>
-        <h3 style="font-size:1.18rem; font-weight:800; color:#1a202c; margin-bottom:8px;">
-            Cancel Order?
-        </h3>
+        <h3 style="font-size:1.18rem; font-weight:800; color:#1a202c; margin-bottom:8px;">Cancel Order?</h3>
         <p style="font-size:0.84rem; color:#718096; line-height:1.7; margin-bottom:6px;">
-            You are about to cancel
-            <strong id="cancelOrderName" style="color:#4a5568;"></strong>.
+            You are about to cancel <strong id="cancelOrderName" style="color:#4a5568;"></strong>.
         </p>
         <p style="font-size:0.82rem; color:#718096; line-height:1.65; margin-bottom:28px;">
             A <strong style="color:#48bb78;">full refund</strong> will be initiated to your original
@@ -514,29 +477,26 @@
             <button onclick="closeCancelConfirm()"
                 style="flex:1; padding:12px; border-radius:8px; border:1.5px solid #e2e8f0;
                        background:#fff; color:#4a5568; font-size:0.88rem; font-weight:600;
-                       cursor:pointer; font-family:inherit; transition:all .15s;"
-                onmouseover="this.style.background='#f7fafc'; this.style.borderColor='#cbd5e0';"
-                onmouseout="this.style.background='#fff'; this.style.borderColor='#e2e8f0';">
+                       cursor:pointer; font-family:inherit;"
+                onmouseover="this.style.background='#f7fafc';"
+                onmouseout="this.style.background='#fff';">
                 Keep Order
             </button>
             <button onclick="executeCancelOrder()"
                 style="flex:1; padding:12px; border-radius:8px; border:none;
                        background:linear-gradient(135deg,#ef4444,#dc2626);
                        color:#fff; font-size:0.88rem; font-weight:700;
-                       cursor:pointer; font-family:inherit; transition:all .15s;
+                       cursor:pointer; font-family:inherit;
                        box-shadow:0 4px 14px rgba(239,68,68,.35);"
-                onmouseover="this.style.opacity='.88'; this.style.transform='translateY(-1px)';"
-                onmouseout="this.style.opacity='1'; this.style.transform='translateY(0)';">
+                onmouseover="this.style.opacity='.88';"
+                onmouseout="this.style.opacity='1';">
                 <i class="fas fa-ban" style="margin-right:6px;"></i>Yes, Cancel Order
             </button>
         </div>
     </div>
 </div>
 
-{{-- Hidden cancel form — submitted programmatically --}}
-<form id="cancelOrderForm" method="POST" style="display:none;">
-    @csrf
-</form>
+<form id="cancelOrderForm" method="POST" style="display:none;">@csrf</form>
 
 <style>
 @keyframes cancelModalIn {
@@ -546,7 +506,6 @@
 </style>
 
 <script>
-// ── Cancel Order Modal ──
 window.openCancelConfirm = function (orderId, orderName) {
     var modal = document.getElementById('cancelConfirmModal');
     var form  = document.getElementById('cancelOrderForm');
@@ -560,15 +519,12 @@ window.openCancelConfirm = function (orderId, orderName) {
         inner.style.animation = 'cancelModalIn .22s cubic-bezier(.34,1.56,.64,1)';
     }
 };
-
 window.closeCancelConfirm = function () {
     document.getElementById('cancelConfirmModal').style.display = 'none';
 };
-
 window.executeCancelOrder = function () {
     document.getElementById('cancelOrderForm').submit();
 };
-
 document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') window.closeCancelConfirm();
 });
@@ -576,32 +532,28 @@ document.addEventListener('keydown', function (e) {
 
 <script>
 (function () {
-    function showSuccessPopup(message) {
-        const popup     = document.getElementById('successPopup');
-        const messageEl = document.getElementById('successMessage');
-        if (popup && messageEl) {
-            messageEl.textContent = message;
-            popup.classList.add('show');
-            setTimeout(() => {
-                popup.classList.add('hide');
-                setTimeout(() => popup.classList.remove('show', 'hide'), 300);
-            }, 3000);
-        }
+    function showSuccessPopup(msg) {
+        var p = document.getElementById('successPopup');
+        var m = document.getElementById('successMessage');
+        if (!p || !m) return;
+        m.textContent = msg;
+        p.classList.add('show');
+        setTimeout(function () {
+            p.classList.add('hide');
+            setTimeout(function () { p.classList.remove('show','hide'); }, 300);
+        }, 3000);
     }
-
-    function showErrorPopup(message) {
-        const popup     = document.getElementById('errorPopup');
-        const messageEl = document.getElementById('errorMessage');
-        if (popup && messageEl) {
-            messageEl.textContent = message;
-            popup.classList.add('show');
-            setTimeout(() => {
-                popup.classList.add('hide');
-                setTimeout(() => popup.classList.remove('show', 'hide'), 300);
-            }, 3000);
-        }
+    function showErrorPopup(msg) {
+        var p = document.getElementById('errorPopup');
+        var m = document.getElementById('errorMessage');
+        if (!p || !m) return;
+        m.textContent = msg;
+        p.classList.add('show');
+        setTimeout(function () {
+            p.classList.add('hide');
+            setTimeout(function () { p.classList.remove('show','hide'); }, 300);
+        }, 3000);
     }
-
     document.addEventListener('DOMContentLoaded', function () {
         @if(session('success'))
             showSuccessPopup(@json(session('success')));

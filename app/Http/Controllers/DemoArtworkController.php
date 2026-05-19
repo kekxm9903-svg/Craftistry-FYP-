@@ -98,23 +98,25 @@ class DemoArtworkController extends Controller
 
             $validated = $request->validate($rules, $messages);
 
-            // Upload first image as main (index 0)
-            $path = null;
+            // Upload images to demo-artworks folder
+            $path       = null;
+            $extraPaths = [];
+
             Log::info('FILES RECEIVED: ' . json_encode(array_keys($request->allFiles())));
             Log::info('IMAGES COUNT: ' . count($request->file('images', [])));
+
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 Log::info('IMAGES ARRAY COUNT: ' . count($images));
-                $main   = $images[0]; // first image = main cover
+
+                $main     = $images[0];
                 $filename = time() . '_' . uniqid() . '.' . $main->getClientOriginalExtension();
-                $path = $main->storeAs('demo-artworks', $filename, 'public');
+                $path     = $main->storeAs('demo-artworks', $filename, 'public');
 
                 if (!$path) {
                     throw new \Exception('File upload failed. Please try again.');
                 }
 
-                // Store additional images (index 1+)
-                $extraPaths = [];
                 foreach (array_slice($images, 1) as $extra) {
                     $extraFilename = time() . '_' . uniqid() . '.' . $extra->getClientOriginalExtension();
                     $extraPath     = $extra->storeAs('demo-artworks', $extraFilename, 'public');
@@ -150,6 +152,24 @@ class DemoArtworkController extends Controller
             $newSell = null;
             if ($alsoSell) {
                 Log::info('Creating cross-post artwork sell for Demo ID: ' . $demoArtwork->id);
+
+                // Copy main image to artwork-sells folder (own separate copy)
+                $sellPath = null;
+                if ($path) {
+                    $sellFilename = time() . '_' . uniqid() . '_sell.' . pathinfo($path, PATHINFO_EXTENSION);
+                    $sellPath     = 'artwork-sells/' . $sellFilename;
+                    Storage::disk('public')->copy($path, $sellPath);
+                }
+
+                // Copy extra images to artwork-sells folder (own separate copies)
+                $sellExtraPaths = [];
+                foreach ($extraPaths as $ep) {
+                    $sellExtraFilename = time() . '_' . uniqid() . '_sell.' . pathinfo($ep, PATHINFO_EXTENSION);
+                    $sellExtraDest     = 'artwork-sells/' . $sellExtraFilename;
+                    Storage::disk('public')->copy($ep, $sellExtraDest);
+                    $sellExtraPaths[] = $sellExtraDest;
+                }
+
                 $bulkEnabled = $request->boolean('bulk_sell_enabled');
                 $newSell = ArtworkSell::create([
                     'artist_id'            => $user->id,
@@ -157,8 +177,8 @@ class DemoArtworkController extends Controller
                     'product_description'  => $request->input('product_description') ?? $request->input('description'),
                     'product_price'        => $request->input('price'),
                     'shipping_fee'         => $request->input('shipping_fee') ?? 0,
-                    'image_path'           => $path,
-                    'extra_images'         => !empty($extraPaths) ? $extraPaths : null,
+                    'image_path'           => $sellPath,
+                    'extra_images'         => !empty($sellExtraPaths) ? $sellExtraPaths : null,
                     'status'               => $request->input('status', 'available'),
                     'artwork_type'         => $validated['artwork_type'],
                     'material'             => $validated['material'],
@@ -172,6 +192,7 @@ class DemoArtworkController extends Controller
                     'bulk_sell_min_qty'    => $bulkEnabled ? $request->input('bulk_sell_min_qty') : null,
                     'bulk_sell_discount'   => $bulkEnabled ? $request->input('bulk_sell_discount') : null,
                 ]);
+
                 $demoArtwork->is_cross_posted    = true;
                 $demoArtwork->cross_posted_to_id = $newSell->id;
                 $demoArtwork->save();
@@ -185,17 +206,17 @@ class DemoArtworkController extends Controller
                     'success' => true,
                     'message' => 'Demo artwork added successfully!',
                     'demo'    => [
-                        'id'             => $demoArtwork->id,
-                        'title'          => $demoArtwork->title,
-                        'description'    => $demoArtwork->description,
-                        'image_url'      => $demoArtwork->image_url,
-                        'artwork_type'   => $demoArtwork->artwork_type,
-                        'is_cross_listed'=> $demoArtwork->is_cross_posted,
+                        'id'              => $demoArtwork->id,
+                        'title'           => $demoArtwork->title,
+                        'description'     => $demoArtwork->description,
+                        'image_url'       => $demoArtwork->image_url,
+                        'artwork_type'    => $demoArtwork->artwork_type,
+                        'is_cross_listed' => $demoArtwork->is_cross_posted,
                     ],
                     'sell' => $newSell ? [
-                        'id'            => $newSell->id,
-                        'product_name'  => $newSell->product_name,
-                        'product_price' => $newSell->product_price,
+                        'id'              => $newSell->id,
+                        'product_name'    => $newSell->product_name,
+                        'product_price'   => $newSell->product_price,
                         'formatted_price' => $newSell->formatted_price ?? number_format($newSell->product_price, 2),
                     ] : null
                 ]);
@@ -240,20 +261,20 @@ class DemoArtworkController extends Controller
                 return response()->json(['success' => false, 'message' => 'Demo artwork not found'], 404);
             }
             return response()->json([
-                'success'        => true,
-                'id'             => $demo->id,
-                'title'          => $demo->title,
-                'description'    => $demo->description,
-                'image_url'      => $demo->image_url,
-                'image_path'     => $demo->image_path,
-                'artwork_type'   => $demo->artwork_type,
-                'material'       => $demo->material,
-                'height'         => $demo->height,
-                'width'          => $demo->width,
-                'depth'          => $demo->depth,
-                'unit'           => $demo->unit,
-                'price'          => $demo->price,
-                'is_cross_posted'=> $demo->is_cross_posted,
+                'success'         => true,
+                'id'              => $demo->id,
+                'title'           => $demo->title,
+                'description'     => $demo->description,
+                'image_url'       => $demo->image_url,
+                'image_path'      => $demo->image_path,
+                'artwork_type'    => $demo->artwork_type,
+                'material'        => $demo->material,
+                'height'          => $demo->height,
+                'width'           => $demo->width,
+                'depth'           => $demo->depth,
+                'unit'            => $demo->unit,
+                'price'           => $demo->price,
+                'is_cross_posted' => $demo->is_cross_posted,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to load demo: ' . $e->getMessage());
@@ -281,19 +302,19 @@ class DemoArtworkController extends Controller
             }
 
             $validated = $request->validate([
-                'title'        => 'required|string|max:255',
-                'description'  => 'nullable|string|max:2000',
+                'title'           => 'required|string|max:255',
+                'description'     => 'nullable|string|max:2000',
                 'new_images'      => 'nullable|array',
                 'new_images.*'    => 'image|mimes:jpeg,jpg,png,gif,webp|max:5120',
                 'delete_images'   => 'nullable|array',
                 'delete_images.*' => 'nullable|string',
-                'artwork_type' => 'nullable|in:physical,digital',
-                'material'     => 'nullable|string|max:255',
-                'height'       => 'nullable|numeric|min:0',
-                'width'        => 'nullable|numeric|min:0',
-                'depth'        => 'nullable|numeric|min:0',
-                'unit'         => 'nullable|in:cm,inch,px',
-                'price'        => 'nullable|numeric|min:0|max:999999.99',
+                'artwork_type'    => 'nullable|in:physical,digital',
+                'material'        => 'nullable|string|max:255',
+                'height'          => 'nullable|numeric|min:0',
+                'width'           => 'nullable|numeric|min:0',
+                'depth'           => 'nullable|numeric|min:0',
+                'unit'            => 'nullable|in:cm,inch,px',
+                'price'           => 'nullable|numeric|min:0|max:999999.99',
             ], [
                 'title.required' => 'Title is required',
                 'image.image'    => 'File must be an image',
@@ -314,17 +335,16 @@ class DemoArtworkController extends Controller
             if ($request->filled('unit'))         $demo->unit         = $validated['unit'];
             if ($request->filled('price'))        $demo->price        = $request->input('price');
 
-            // Handle image deletions
-            $deleteImages = $request->input('delete_images', []);
+            // Handle image deletions (only delete from demo-artworks, never touch artwork-sells files)
+            $deleteImages   = $request->input('delete_images', []);
             $existingExtras = $demo->extra_images ?? [];
 
             foreach ($deleteImages as $deletePath) {
-                if (Storage::disk('public')->exists($deletePath)) {
+                // Only delete if path belongs to demo-artworks folder
+                if (str_starts_with($deletePath, 'demo-artworks/') && Storage::disk('public')->exists($deletePath)) {
                     Storage::disk('public')->delete($deletePath);
                 }
-                // Remove from extra_images array
                 $existingExtras = array_values(array_filter($existingExtras, fn($p) => $p !== $deletePath));
-                // If main image deleted, promote first extra to main
                 if ($deletePath === $demo->image_path) {
                     if (!empty($existingExtras)) {
                         $demo->image_path = array_shift($existingExtras);
@@ -335,7 +355,7 @@ class DemoArtworkController extends Controller
             }
             $demo->extra_images = !empty($existingExtras) ? array_values($existingExtras) : null;
 
-            // Handle new image uploads
+            // Handle new image uploads — always go to demo-artworks
             $imageUpdated = false;
             if ($request->hasFile('new_images')) {
                 $newImages = $request->file('new_images');
@@ -346,7 +366,6 @@ class DemoArtworkController extends Controller
                     $stored   = $img->storeAs('demo-artworks', $filename, 'public');
                     if ($stored) {
                         if (!$demo->image_path) {
-                            // No main image — make this the main
                             $demo->image_path = $stored;
                         } else {
                             $newPaths[] = $stored;
@@ -357,12 +376,13 @@ class DemoArtworkController extends Controller
                 $demo->extra_images = !empty($newPaths) ? array_values($newPaths) : null;
             }
 
+            // Sync cross-posted sell — only update text fields, NOT image_path
+            // Each record owns its own image file now
             if ($demo->is_cross_posted && $demo->cross_posted_to_id) {
                 $sell = ArtworkSell::find($demo->cross_posted_to_id);
                 if ($sell) {
                     $sell->product_name        = $validated['title'];
                     $sell->product_description = $request->input('description');
-                    if ($imageUpdated) $sell->image_path = $demo->image_path;
                     $sell->save();
                 }
             }
@@ -426,9 +446,9 @@ class DemoArtworkController extends Controller
 
             DB::beginTransaction();
 
-            $imagePath = $demo->image_path;
+            $wasCrossListed = $demo->is_cross_posted;
 
-            // Unlink from sell — keep sell record intact
+            // Unlink from sell — keep sell record and its own image intact
             if ($demo->is_cross_posted && $demo->cross_posted_to_id) {
                 $linkedSell = ArtworkSell::find($demo->cross_posted_to_id);
                 if ($linkedSell) {
@@ -438,8 +458,16 @@ class DemoArtworkController extends Controller
                 }
             }
 
-            if ($imagePath && Storage::disk('public')->exists($imagePath)) {
-                Storage::disk('public')->delete($imagePath);
+            // Only delete files in demo-artworks folder
+            if ($demo->image_path && str_starts_with($demo->image_path, 'demo-artworks/') && Storage::disk('public')->exists($demo->image_path)) {
+                Storage::disk('public')->delete($demo->image_path);
+            }
+
+            // Delete extra images in demo-artworks folder
+            foreach ($demo->extra_images ?? [] as $ep) {
+                if (str_starts_with($ep, 'demo-artworks/') && Storage::disk('public')->exists($ep)) {
+                    Storage::disk('public')->delete($ep);
+                }
             }
 
             $demo->delete();

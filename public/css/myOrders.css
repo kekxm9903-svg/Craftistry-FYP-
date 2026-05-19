@@ -123,8 +123,6 @@ body {
     flex-wrap: wrap;
 }
 
-.page-header-left {}
-
 .page-title {
     font-size: var(--fs-lg);
     font-weight: 800;
@@ -177,7 +175,7 @@ body {
     overflow-x: auto;
     overflow-y: visible;
     padding-bottom: 2px;
-    padding-top: 4px;   /* room for badge */
+    padding-top: 4px;
     scrollbar-width: none;
 }
 
@@ -189,8 +187,10 @@ body {
     background: var(--divider);
     border: 1.5px solid transparent;
     border-radius: var(--radius-md);
-    padding: var(--sp-md) var(--sp-xs) var(--sp-sm);
-    padding-top: 20px;    /* extra top so badge doesn't cover icon */
+    padding-top: 20px;
+    padding-bottom: var(--sp-sm);
+    padding-left: var(--sp-xs);
+    padding-right: var(--sp-xs);
     text-align: center;
     cursor: pointer;
     transition: border-color .15s, background .15s, box-shadow .15s;
@@ -319,9 +319,6 @@ body {
     border-color: #c4b5fd;
 }
 
-
-/* Card header */
-
 .oc-header {
     display: flex;
     align-items: center;
@@ -369,9 +366,6 @@ body {
     color: var(--muted);
 }
 
-
-/* Status badges */
-
 .oc-status-badge {
     display: inline-flex;
     align-items: center;
@@ -397,9 +391,6 @@ body {
 .status-shipped         { background: var(--lavender); color: #4527a0; }
 .status-completed       { background: #e8f5e9; color: #2e7d32; }
 .status-cancelled       { background: #ffebee; color: #c62828; }
-
-
-/* Card body */
 
 .oc-body { padding: var(--sp-md) var(--sp-lg); }
 
@@ -704,6 +695,14 @@ body {
 
 .btn-craft-edit:hover { background: #dbeafe; }
 
+.btn-craft-cancel {
+    background: #fff5f5;
+    color: #c62828;
+    border: 1.5px solid #fca5a5;
+}
+
+.btn-craft-cancel:hover { background: #ffebee; }
+
 
 /* ── Empty state ── */
 
@@ -750,40 +749,66 @@ body {
 
 .pagination-wrapper {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: var(--sp-sm) 0 var(--sp-lg);
 }
 
-.pagination-wrapper nav { display: flex; justify-content: center; }
+.pagination-info {
+    font-size: var(--fs-sm);
+    color: var(--muted);
+}
 
-.pagination-wrapper a,
-.pagination-wrapper span {
+.pag-btn {
     min-width: 36px;
     height: 36px;
-    padding: 0 var(--sp-sm);
+    padding: 0 12px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1.5px solid var(--border);
+    gap: 5px;
+    border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     background: var(--white);
     color: var(--ink);
     font-family: 'Inter', sans-serif;
     font-size: var(--fs-base);
-    font-weight: 600;
+    font-weight: 500;
     text-decoration: none;
     transition: all .15s;
+    white-space: nowrap;
+    cursor: pointer;
 }
 
-.pagination-wrapper a:hover {
+a.pag-btn:hover {
     border-color: var(--primary);
     color: var(--primary);
     background: var(--lavender);
 }
 
-.pagination-wrapper span[aria-current="page"] {
+.pag-active {
     background: linear-gradient(135deg, var(--primary), var(--primary-2));
     border-color: transparent;
     color: #fff;
+    font-weight: 700;
+}
+
+.pag-nav { color: var(--muted); }
+
+.pag-disabled {
+    opacity: .38;
+    cursor: default;
+    pointer-events: none;
+}
+
+.pag-ellipsis {
+    border-color: transparent;
+    background: transparent;
+    color: var(--muted);
+    cursor: default;
+    pointer-events: none;
+    min-width: 24px;
 }
 
 
@@ -804,7 +829,7 @@ body {
     .quick-tabs-card,
     .status-pills-card { padding: var(--sp-sm) var(--sp-md); }
 
-    .quick-tab { min-width: 80px; padding: var(--sp-sm) var(--sp-xs) var(--sp-xs); }
+    .quick-tab { min-width: 80px; }
     .qt-icon   { font-size: 16px; }
 
     .oc-header { flex-direction: column; align-items: flex-start; padding: var(--sp-sm) var(--sp-md); }
@@ -816,4 +841,6 @@ body {
     .oc-footer { flex-direction: column; align-items: flex-start; padding: var(--sp-sm) var(--sp-md); }
     .oc-actions { width: 100%; }
     .btn-craft  { flex: 1; justify-content: center; }
+
+    .pag-btn { min-width: 32px; height: 32px; font-size: var(--fs-sm); padding: 0 8px; }
 }

@@ -134,8 +134,8 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
 
-            // Block unverified users — send them to the verify notice page
-            if (!Auth::user()->hasVerifiedEmail()) {
+            // Block unverified users — admins are exempt from email verification
+            if (!Auth::user()->hasVerifiedEmail() && Auth::user()->role !== 'admin') {
                 return redirect()->route('verification.notice')
                     ->with('warning', 'Please verify your email address before logging in.');
             }

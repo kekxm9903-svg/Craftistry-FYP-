@@ -24,7 +24,6 @@ class ArtworkSellController extends Controller
         return view('sellEditPage', compact('artwork'));
     }
 
-    // ── NEW: Artist preview of their own listing ──────────────────────────────
     public function preview($id)
     {
         $user = Auth::user();
@@ -35,7 +34,6 @@ class ArtworkSellController extends Controller
 
         return view('artistProductPreview', compact('artwork'));
     }
-    // ─────────────────────────────────────────────────────────────────────────
 
     public function store(Request $request)
     {
@@ -109,6 +107,23 @@ class ArtworkSellController extends Controller
 
             $newDemo = null;
             if ($request->has('also_demo')) {
+                // Copy main image to demo-artworks folder (own separate copy)
+                $demoPath = null;
+                if ($path) {
+                    $demoFilename = time() . '_' . uniqid() . '_demo.' . pathinfo($path, PATHINFO_EXTENSION);
+                    $demoPath     = 'demo-artworks/' . $demoFilename;
+                    Storage::disk('public')->copy($path, $demoPath);
+                }
+
+                // Copy extra images to demo-artworks folder (own separate copies)
+                $demoExtraPaths = [];
+                foreach ($extraPaths as $ep) {
+                    $demoExtraFilename = time() . '_' . uniqid() . '_demo.' . pathinfo($ep, PATHINFO_EXTENSION);
+                    $demoExtraDest     = 'demo-artworks/' . $demoExtraFilename;
+                    Storage::disk('public')->copy($ep, $demoExtraDest);
+                    $demoExtraPaths[] = $demoExtraDest;
+                }
+
                 $maxOrder = DemoArtwork::where('artist_id', $user->id)->max('order');
                 $order    = $maxOrder !== null ? $maxOrder + 1 : 0;
 
@@ -116,8 +131,8 @@ class ArtworkSellController extends Controller
                     'artist_id'       => $user->id,
                     'title'           => $validated['product_name'],
                     'description'     => $validated['product_description'] ?? null,
-                    'image_path'      => $path,
-                    'extra_images'    => !empty($extraPaths) ? $extraPaths : null,
+                    'image_path'      => $demoPath,
+                    'extra_images'    => !empty($demoExtraPaths) ? $demoExtraPaths : null,
                     'order'           => $order,
                     'artwork_type'    => $validated['artwork_type'],
                     'material'        => $validated['material'],
@@ -311,12 +326,13 @@ class ArtworkSellController extends Controller
             $artwork->promotion_starts_at = $promoEnabled ? $request->input('promotion_starts_at') : null;
             $artwork->promotion_ends_at   = $promoEnabled ? $request->input('promotion_ends_at') : null;
 
-            // Handle image deletions
+            // Handle image deletions (only delete from artwork-sells, never touch demo-artworks files)
             $deleteImages   = $request->input('delete_images', []);
             $existingExtras = $artwork->extra_images ?? [];
 
             foreach ($deleteImages as $deletePath) {
-                if (Storage::disk('public')->exists($deletePath)) {
+                // Only delete if path belongs to artwork-sells folder
+                if (str_starts_with($deletePath, 'artwork-sells/') && Storage::disk('public')->exists($deletePath)) {
                     Storage::disk('public')->delete($deletePath);
                 }
                 $existingExtras = array_values(array_filter($existingExtras, fn($p) => $p !== $deletePath));
@@ -330,7 +346,7 @@ class ArtworkSellController extends Controller
             }
             $artwork->extra_images = !empty($existingExtras) ? array_values($existingExtras) : null;
 
-            // Handle new image uploads
+            // Handle new image uploads — always go to artwork-sells
             $imageUpdated = false;
             if ($request->hasFile('new_images')) {
                 $newImages = $request->file('new_images');
@@ -351,11 +367,12 @@ class ArtworkSellController extends Controller
                 $artwork->extra_images = !empty($newPaths) ? array_values($newPaths) : null;
             }
 
+            // Sync cross-posted demo — only update text fields, NOT image_path
+            // Each record owns its own image file now
             if ($artwork->is_cross_posted && $artwork->crossPostedFrom) {
                 $demo              = $artwork->crossPostedFrom;
                 $demo->title       = $validated['product_name'];
                 $demo->description = $validated['product_description'];
-                if ($imageUpdated) $demo->image_path = $artwork->image_path;
                 $demo->save();
             }
 
@@ -424,7 +441,7 @@ class ArtworkSellController extends Controller
 
             DB::beginTransaction();
 
-            // Unlink from demo — keep demo record intact
+            // Unlink from demo — keep demo record and its own image intact
             if ($artworkSell->is_cross_posted && $artworkSell->crossPostedFrom) {
                 $demo                     = $artworkSell->crossPostedFrom;
                 $demo->is_cross_posted    = false;
@@ -432,8 +449,16 @@ class ArtworkSellController extends Controller
                 $demo->save();
             }
 
-            if ($artworkSell->image_path && Storage::disk('public')->exists($artworkSell->image_path)) {
+            // Only delete files in artwork-sells folder, never touch demo-artworks files
+            if ($artworkSell->image_path && str_starts_with($artworkSell->image_path, 'artwork-sells/') && Storage::disk('public')->exists($artworkSell->image_path)) {
                 Storage::disk('public')->delete($artworkSell->image_path);
+            }
+
+            // Delete extra images in artwork-sells folder
+            foreach ($artworkSell->extra_images ?? [] as $ep) {
+                if (str_starts_with($ep, 'artwork-sells/') && Storage::disk('public')->exists($ep)) {
+                    Storage::disk('public')->delete($ep);
+                }
             }
 
             $artworkSell->delete();
