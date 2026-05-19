@@ -290,7 +290,12 @@
     </style>
 </head>
 <body>
-    @if (!request()->routeIs('login') && !request()->routeIs('register'))
+    @if (
+        !request()->routeIs('login') &&
+        !request()->routeIs('register') &&
+        !request()->routeIs('password.request') &&
+        !request()->routeIs('password.reset')
+    )
 
         <header class="header">
             <div class="header-left">

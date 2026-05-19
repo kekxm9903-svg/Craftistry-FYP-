@@ -10,28 +10,39 @@
 <div class="container">
     <div class="form-card">
         <img src="{{ asset('images/Logo.png') }}" alt="Craftistry" class="logo">
-        
+
         <h1>Welcome Back!</h1>
         <p class="subtitle">Login to continue</p>
 
+        {{-- Success message after password reset --}}
+        @if (session('status'))
+            <div class="alert alert-success">
+                <div class="alert-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <div class="alert-content">{{ session('status') }}</div>
+            </div>
+        @endif
+
         @if(session('error'))
             <div class="alert alert-error">
-                <i class="fas fa-exclamation-circle"></i>
-                {{ session('error') }}
+                <div class="alert-icon"><i class="bi bi-exclamation-circle-fill"></i></div>
+                <div class="alert-content">{{ session('error') }}</div>
             </div>
         @endif
 
         @if ($errors->any())
-        <div class="alert alert-error">
-            @foreach ($errors->all() as $error)
-                <p>{{ $error }}</p>
-            @endforeach
-        </div>
+            <div class="alert alert-error">
+                <div class="alert-icon"><i class="bi bi-exclamation-circle-fill"></i></div>
+                <div class="alert-content">
+                    @foreach ($errors->all() as $error)
+                        <p>{{ $error }}</p>
+                    @endforeach
+                </div>
+            </div>
         @endif
 
         <form id="loginForm" method="POST" action="{{ route('login') }}">
             @csrf
-            
+
             <div class="form-group">
                 <label>Email</label>
                 <input type="email" name="email" value="{{ old('email') }}" placeholder="Enter your email" required>
@@ -42,7 +53,7 @@
                 <div class="password-input">
                     <input type="password" name="password" id="password" placeholder="Enter your password" required>
                     <button type="button" class="toggle-btn" id="togglePassword">
-                        <i class="fas fa-eye"></i>
+                        <i class="bi bi-eye"></i>
                     </button>
                 </div>
             </div>
@@ -52,7 +63,7 @@
                     <input type="checkbox" name="remember">
                     <span>Remember me</span>
                 </label>
-                <a href="#" class="link">Forgot Password?</a>
+                <a href="{{ route('password.request') }}" class="link">Forgot Password?</a>
             </div>
 
             <button type="submit" class="btn-primary">Login</button>
