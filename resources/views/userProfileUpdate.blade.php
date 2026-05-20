@@ -19,7 +19,7 @@
     </div>
 </div>
 
-{{-- Back button — identical placement to orderSummary --}}
+{{-- Back button --}}
 <div style="max-width:1100px;margin:0 auto;padding:var(--sp-sm) var(--sp-lg) 0;">
     <a href="{{ route('user.profile.show') }}" class="back-btn">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -122,13 +122,15 @@
                         @error('fullname')<p class="error-msg">{{ $message }}</p>@enderror
                     </div>
 
+                    {{-- Email: read-only, no input element --}}
                     <div class="info-item">
-                        <label class="info-label">Email Address <span class="req">*</span></label>
-                        <input type="email" name="email"
-                               value="{{ old('email', $user->email) }}"
-                               required class="form-input"
-                               placeholder="you@email.com">
-                        @error('email')<p class="error-msg">{{ $message }}</p>@enderror
+                        <label class="info-label">Email Address</label>
+                        <p class="form-input" style="margin:0;background:#f3f4f6;color:#6b7280;cursor:default;user-select:none;">
+                            {{ $user->email }}
+                        </p>
+                        <p style="font-size:11.5px;color:#9ca3af;margin-top:5px;">
+                            Email address cannot be changed.
+                        </p>
                     </div>
 
                     <div class="info-item">
@@ -176,7 +178,7 @@
                 </div>
             </div>
 
-            {{-- ══ FORM ACTIONS FOOTER (inside card, below sp-card-body) ══ --}}
+            {{-- ══ FORM ACTIONS FOOTER ══ --}}
             <div class="form-actions">
                 <a href="{{ route('user.profile.show') }}" class="btn-cancel">Cancel</a>
                 <button type="submit" class="btn-save">

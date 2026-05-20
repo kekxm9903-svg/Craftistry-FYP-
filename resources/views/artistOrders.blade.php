@@ -5,6 +5,97 @@
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/artistOrders.css') }}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+/* ── Refund banner (replaces the old small panel) ───────────────── */
+.refund-banner {
+    margin: 0 var(--sp-md) var(--sp-sm);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1.5px solid #fed7aa;
+}
+.refund-banner-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px var(--sp-md);
+    background: linear-gradient(135deg, #fff8f0, #fef3c7);
+}
+.refund-banner.refunded { border-color: #bbf7d0; }
+.refund-banner.refunded .refund-banner-header { background: linear-gradient(135deg, #f0fdf4, #dcfce7); }
+.refund-banner.rejected  { border-color: #fecaca; }
+.refund-banner.rejected  .refund-banner-header { background: linear-gradient(135deg, #fef2f2, #fee2e2); }
+
+.refund-banner-left { display: flex; align-items: center; gap: 10px; }
+.refund-banner-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: #d97706; flex-shrink: 0;
+    border: 1.5px solid #fcd34d;
+    box-shadow: 0 2px 6px rgba(252,211,77,.25);
+}
+.refund-banner.refunded .refund-banner-icon { color: #166534; border-color: #bbf7d0; }
+.refund-banner.rejected  .refund-banner-icon { color: #991b1b; border-color: #fecaca; }
+
+.refund-banner-title { font-size: 13px; font-weight: 800; color: #92400e; }
+.refund-banner.refunded .refund-banner-title { color: #166534; }
+.refund-banner.rejected  .refund-banner-title { color: #991b1b; }
+.refund-banner-sub   { font-size: 11px; color: #b45309; margin-top: 1px; }
+.refund-banner.refunded .refund-banner-sub { color: #15803d; }
+.refund-banner.rejected  .refund-banner-sub { color: #dc2626; }
+
+.refund-banner-body {
+    padding: var(--sp-sm) var(--sp-md);
+    background: #fff;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-md);
+    flex-wrap: wrap;
+}
+.refund-reason-box {
+    flex: 1;
+    min-width: 180px;
+    background: #fff8f0;
+    border: 1px solid #fed7aa;
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+}
+.refund-reason-label { font-size: 11px; color: #b45309; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
+.refund-reason-text  { font-size: 13px; color: #374151; font-style: italic; line-height: 1.5; }
+.refund-banner-actions { display: flex; flex-direction: column; gap: 7px; flex-shrink: 0; }
+.refund-action-row { display: flex; gap: 7px; }
+
+.rp-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    padding: 8px 16px; border-radius: 7px; font-size: 12px; font-weight: 700;
+    border: none; cursor: pointer; font-family: inherit; transition: opacity .15s;
+    white-space: nowrap;
+}
+.rp-btn:hover { opacity: .85; }
+.rp-btn.approve { background: #22c55e; color: #fff; box-shadow: 0 2px 8px rgba(34,197,94,.3); }
+.rp-btn.reject  { background: #ef4444; color: #fff; box-shadow: 0 2px 8px rgba(239,68,68,.25); }
+.rp-btn.cancel  { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+.rp-btn.confirm { background: #ef4444; color: #fff; }
+
+.rp-reject-form { display: none; width: 100%; }
+.rp-reject-textarea {
+    width: 100%; border: 1.5px solid #fca5a5; border-radius: 7px;
+    padding: 8px 10px; font-size: 12px; font-family: inherit;
+    resize: vertical; outline: none; box-sizing: border-box;
+}
+.rp-reject-textarea:focus { border-color: #ef4444; }
+.rp-reject-actions { display: flex; gap: 7px; margin-top: 7px; justify-content: flex-end; }
+
+/* Badge in header */
+.refund-header-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+}
+.refund-header-badge.requested { background: #fff3cd; color: #92400e; }
+.refund-header-badge.refunded  { background: #dcfce7; color: #166534; }
+.refund-header-badge.rejected  { background: #fee2e2; color: #991b1b; }
+</style>
 @endsection
 
 @section('content')
@@ -33,17 +124,27 @@
                 'pending_payment' => 'Unpaid',
                 'cancelled'       => 'Cancelled',
             ];
-            $newCount = $orders->whereIn('status', ['processing'])->count();
+            $newCount    = $orders->whereIn('status', ['processing'])->count();
+            $refundCount = $orders->whereIn('refund_status', ['requested'])->count();
         @endphp
         @foreach($tabs as $val => $label)
             <a href="{{ route('artist.orders', $val ? ['status' => $val] : []) }}"
-               class="tab {{ request('status', '') === $val ? 'active' : '' }}">
+               class="tab {{ request('status', '') === $val && request('refund') !== '1' ? 'active' : '' }}">
                 {{ $label }}
                 @if($val === 'processing' && $newCount > 0)
                     <span class="tab-dot"></span>
                 @endif
             </a>
         @endforeach
+        {{-- Refund tab --}}
+        <a href="{{ route('artist.orders', ['refund' => '1']) }}"
+           class="tab {{ request('refund') === '1' ? 'active' : '' }}"
+           style="color: {{ request('refund') === '1' ? 'var(--primary)' : '#d97706' }};">
+            Refunds
+            @if($refundCount > 0)
+                <span class="tab-dot" style="background:#d97706;"></span>
+            @endif
+        </a>
     </div>
 </div>
 
@@ -67,6 +168,14 @@
                     <i class="bi bi-bell-fill"></i> {{ $newCount }} new
                 </span>
             @endif
+            @if($refundCount > 0)
+                <a href="{{ route('artist.orders', ['refund' => '1']) }}"
+                   style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;
+                          font-size:12px;font-weight:700;background:#fff3cd;color:#92400e;
+                          text-decoration:none;border:1px solid #fcd34d;">
+                    </i> {{ $refundCount }} refund request{{ $refundCount > 1 ? 's' : '' }}
+                </a>
+            @endif
             <span class="header-badge">{{ $orders->count() }} total</span>
         </div>
     </div>
@@ -88,7 +197,7 @@
                         'cancelled'       => 'Cancelled',
                     ];
                 @endphp
-                {{ $tabTitles[$activeTab] ?? 'Orders' }}
+                {{ request('refund') === '1' ? 'Refund Requests' : ($tabTitles[$activeTab] ?? 'Orders') }}
             </div>
             @if($filteredOrders->isNotEmpty())
                 <span class="section-count">{{ $filteredOrders->total() }} order{{ $filteredOrders->total() !== 1 ? 's' : '' }}</span>
@@ -101,7 +210,7 @@
                 <div class="empty-state">
                     <div class="empty-icon"><i class="bi bi-clipboard-check"></i></div>
                     <h3>No orders found</h3>
-                    <p>{{ request('status') ? 'No ' . request('status') . ' orders at the moment.' : 'You have no orders yet.' }}</p>
+                    <p>{{ request('refund') === '1' ? 'No refund requests at the moment.' : (request('status') ? 'No ' . request('status') . ' orders at the moment.' : 'You have no orders yet.') }}</p>
                 </div>
 
             @else
@@ -127,14 +236,16 @@
                             default           => 'gray',
                         };
 
-                        // Check if ALL items are digital — skip courier modal if so
                         $isAllDigital = $order->items && $order->items->count() > 0
                             && $order->items->every(
                                 fn($i) => $i->artwork?->artwork_type === 'digital'
                             );
+
+                        $refundStatus = $order->refund_status ?? 'none';
                     @endphp
 
-                    <div class="order-card {{ $order->status === 'processing' ? 'order-card--new' : '' }}">
+                    <div class="order-card {{ $order->status === 'processing' ? 'order-card--new' : '' }}"
+                         style="{{ $refundStatus === 'requested' ? 'border-color:#fed7aa;' : '' }}">
 
                         {{-- ── Card Header ── --}}
                         <div class="order-header">
@@ -150,18 +261,33 @@
                                     {{ $order->created_at->format('d M Y, h:i A') }}
                                 </span>
                             </div>
-                            <span class="status-badge status-{{ $sellerClass }}">
-                                @switch($order->status)
-                                    @case('pending_payment') <i class="bi bi-clock"></i>             @break
-                                    @case('processing')      <i class="bi bi-bell-fill"></i>         @break
-                                    @case('preparing')       <i class="bi bi-box-seam"></i>          @break
-                                    @case('shipped')         <i class="bi bi-truck"></i>             @break
-                                    @case('completed')       <i class="bi bi-check-circle-fill"></i> @break
-                                    @case('cancelled')       <i class="bi bi-x-circle-fill"></i>     @break
-                                    @default                 <i class="bi bi-circle"></i>
-                                @endswitch
-                                {{ $sellerLabel }}
-                            </span>
+                            <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+                                <span class="status-badge status-{{ $sellerClass }}">
+                                    @switch($order->status)
+                                        @case('pending_payment') <i class="bi bi-clock"></i>             @break
+                                        @case('processing')      <i class="bi bi-bell-fill"></i>         @break
+                                        @case('preparing')       <i class="bi bi-box-seam"></i>          @break
+                                        @case('shipped')         <i class="bi bi-truck"></i>             @break
+                                        @case('completed')       <i class="bi bi-check-circle-fill"></i> @break
+                                        @case('cancelled')       <i class="bi bi-x-circle-fill"></i>     @break
+                                        @default                 <i class="bi bi-circle"></i>
+                                    @endswitch
+                                    {{ $sellerLabel }}
+                                </span>
+                                @if($refundStatus === 'requested')
+                                    <span class="refund-header-badge requested">
+                                        <i class="bi bi-arrow-return-left"></i> Refund Requested
+                                    </span>
+                                @elseif($refundStatus === 'refunded')
+                                    <span class="refund-header-badge refunded">
+                                        <i class="bi bi-check-circle-fill"></i> Refunded
+                                    </span>
+                                @elseif($refundStatus === 'rejected')
+                                    <span class="refund-header-badge rejected">
+                                        <i class="bi bi-x-circle-fill"></i> Refund Rejected
+                                    </span>
+                                @endif
+                            </div>
                         </div>
 
                         {{-- ── Buyer Row ── --}}
@@ -194,7 +320,7 @@
                             </div>
                         </div>
 
-                        {{-- ── Products to Prepare (Shopee-style) ── --}}
+                        {{-- ── Products ── --}}
                         <div class="products-section">
                             <div class="products-section-label">
                                 <i class="bi bi-bag-check-fill"></i> Items to Prepare
@@ -204,13 +330,12 @@
                             @if($order->items && $order->items->count() > 0)
                                 @foreach($order->items as $item)
                                 @php
-                                    $artwork  = $item->artwork;
-                                    $imgPath  = $artwork?->image_path ?? $item->image_path ?? null;
-                                    $isCustom = is_null($item->artwork_sell_id);
+                                    $artwork       = $item->artwork;
+                                    $imgPath       = $artwork?->image_path ?? $item->image_path ?? null;
+                                    $isCustom      = is_null($item->artwork_sell_id);
                                     $isDigitalItem = $artwork?->artwork_type === 'digital';
                                 @endphp
                                 <div class="product-row">
-                                    {{-- Thumbnail --}}
                                     <div class="product-thumb">
                                         @if($imgPath)
                                             <img src="{{ asset('storage/' . $imgPath) }}" alt="{{ $item->name }}">
@@ -220,14 +345,10 @@
                                             <i class="bi bi-image"></i>
                                         @endif
                                     </div>
-
-                                    {{-- Info --}}
                                     <div class="product-info">
                                         <div class="product-name">{{ $item->name ?? 'Artwork' }}</div>
                                         @if($isCustom)
-                                        <div class="product-tag custom-tag">
-                                            <i class="bi bi-brush"></i> Custom Order
-                                        </div>
+                                        <div class="product-tag custom-tag"><i class="bi bi-brush"></i> Custom Order</div>
                                         @elseif($artwork)
                                         <div class="product-tag">
                                             @if($isDigitalItem)
@@ -235,9 +356,7 @@
                                             @elseif($artwork->artwork_type)
                                                 <i class="bi bi-tag"></i> {{ ucfirst($artwork->artwork_type) }}
                                             @endif
-                                            @if($artwork->material)
-                                                &middot; {{ $artwork->material }}
-                                            @endif
+                                            @if($artwork->material) &middot; {{ $artwork->material }} @endif
                                         </div>
                                         @endif
                                         @if($order->notes && $isCustom)
@@ -246,33 +365,22 @@
                                         </div>
                                         @endif
                                     </div>
-
-                                    {{-- Qty & Price --}}
                                     <div class="product-price-col">
-                                        <div class="product-qty">
-                                            <i class="bi bi-layers"></i> × {{ $item->quantity ?? 1 }}
-                                        </div>
+                                        <div class="product-qty"><i class="bi bi-layers"></i> × {{ $item->quantity ?? 1 }}</div>
                                         <div class="product-unit-price">
                                             RM {{ number_format($item->price, 2) }}
-                                            @if(($item->quantity ?? 1) > 1)
-                                            <span class="per-unit">/ unit</span>
-                                            @endif
+                                            @if(($item->quantity ?? 1) > 1)<span class="per-unit">/ unit</span>@endif
                                         </div>
                                         @if(($item->quantity ?? 1) > 1)
-                                        <div class="product-subtotal">
-                                            = RM {{ number_format($item->price * $item->quantity, 2) }}
-                                        </div>
+                                        <div class="product-subtotal">= RM {{ number_format($item->price * $item->quantity, 2) }}</div>
                                         @endif
                                     </div>
                                 </div>
                                 @endforeach
                             @else
-                                {{-- Fallback for orders without items --}}
                                 <div class="product-row">
                                     <div class="product-thumb"><i class="bi bi-image"></i></div>
-                                    <div class="product-info">
-                                        <div class="product-name">{{ $order->title ?? 'Artwork Order' }}</div>
-                                    </div>
+                                    <div class="product-info"><div class="product-name">{{ $order->title ?? 'Artwork Order' }}</div></div>
                                     <div class="product-price-col">
                                         <div class="product-qty"><i class="bi bi-layers"></i> × 1</div>
                                         <div class="product-unit-price">RM {{ number_format($order->total ?? $order->price ?? 0, 2) }}</div>
@@ -281,20 +389,12 @@
                             @endif
                         </div>
 
-                        {{-- ── Order Info Summary ── --}}
+                        {{-- ── Order Info Strip ── --}}
                         <div class="order-info-strip">
-                            <div class="info-chip">
-                                <i class="bi bi-receipt"></i>
-                                Order #{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}
-                            </div>
-                            <div class="info-chip">
-                                <i class="bi bi-credit-card"></i>
-                                {{ $order->payment_status === 'paid' ? 'Paid' : 'Unpaid' }}
-                            </div>
+                            <div class="info-chip"><i class="bi bi-receipt"></i> Order #{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</div>
+                            <div class="info-chip"><i class="bi bi-credit-card"></i> {{ $order->payment_status === 'paid' ? 'Paid' : 'Unpaid' }}</div>
                             @if($isAllDigital)
-                            <div class="info-chip digital-chip">
-                                <i class="bi bi-cloud-download"></i> Digital Delivery
-                            </div>
+                            <div class="info-chip digital-chip"><i class="bi bi-cloud-download"></i> Digital Delivery</div>
                             @endif
                             @if($order->tracking_number)
                             <div class="info-chip tracking-chip">
@@ -304,6 +404,90 @@
                             </div>
                             @endif
                         </div>
+
+                        {{-- ── Refund Banner (prominent, full-width, above footer) ── --}}
+                        @if($refundStatus === 'requested')
+                        <div class="refund-banner">
+                            <div class="refund-banner-header">
+                                <div class="refund-banner-left">
+                                    <div class="refund-banner-icon"><i class="bi bi-arrow-return-left"></i></div>
+                                    <div>
+                                        <div class="refund-banner-title">Buyer Requested a Refund</div>
+                                        <div class="refund-banner-sub">
+                                            <i class="bi bi-clock"></i>
+                                            {{ \Carbon\Carbon::parse($order->refund_requested_at)->format('d M Y, h:i A') }}
+                                            &nbsp;·&nbsp; RM {{ number_format($order->total ?? 0, 2) }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="refund-banner-body">
+                                <div class="refund-reason-box">
+                                    <div class="refund-reason-label"><i class="bi bi-chat-quote"></i> Reason</div>
+                                    <div class="refund-reason-text">"{{ $order->refund_reason }}"</div>
+                                </div>
+                                <div class="refund-banner-actions">
+                                    <div class="refund-action-row">
+                                        <form method="POST" action="{{ route('refund.approve.order', $order->id) }}"
+                                              onsubmit="return confirm('Approve refund? Stripe will process immediately.')">
+                                            @csrf
+                                            <button type="submit" class="rp-btn approve">
+                                                <i class="bi bi-check-circle-fill"></i> Approve Refund
+                                            </button>
+                                        </form>
+                                        <button type="button" class="rp-btn reject"
+                                                onclick="toggleRejectForm({{ $order->id }})">
+                                            <i class="bi bi-x-circle"></i> Reject
+                                        </button>
+                                    </div>
+                                    <div class="rp-reject-form" id="rejectForm-{{ $order->id }}">
+                                        <form method="POST" action="{{ route('refund.reject.order', $order->id) }}">
+                                            @csrf
+                                            <textarea name="reject_reason" class="rp-reject-textarea" rows="2"
+                                                placeholder="Reason for rejection (required)..."
+                                                required minlength="5" maxlength="500"></textarea>
+                                            <div class="rp-reject-actions">
+                                                <button type="button" class="rp-btn cancel"
+                                                        onclick="toggleRejectForm({{ $order->id }})">Cancel</button>
+                                                <button type="submit" class="rp-btn confirm">Confirm Rejection</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @elseif($refundStatus === 'refunded')
+                        <div class="refund-banner refunded">
+                            <div class="refund-banner-header">
+                                <div class="refund-banner-left">
+                                    <div class="refund-banner-icon"><i class="bi bi-check-circle-fill"></i></div>
+                                    <div>
+                                        <div class="refund-banner-title">Refund Processed</div>
+                                        <div class="refund-banner-sub">
+                                            RM {{ number_format($order->refund_amount, 2) }} returned to buyer
+                                            · {{ \Carbon\Carbon::parse($order->refunded_at)->format('d M Y') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @elseif($refundStatus === 'rejected')
+                        <div class="refund-banner rejected">
+                            <div class="refund-banner-header">
+                                <div class="refund-banner-left">
+                                    <div class="refund-banner-icon"><i class="bi bi-x-circle-fill"></i></div>
+                                    <div>
+                                        <div class="refund-banner-title">Refund Request Rejected</div>
+                                        @if($order->refund_reject_reason)
+                                        <div class="refund-banner-sub">{{ $order->refund_reject_reason }}</div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
 
                         {{-- ── Card Footer (Actions) ── --}}
                         <div class="order-footer">
@@ -323,7 +507,6 @@
 
                             @elseif($order->status === 'preparing')
                                 @if($isAllDigital)
-                                    {{-- Digital: direct submit, no courier/tracking needed --}}
                                     <form action="{{ route('artist.orders.ship', $order->id) }}" method="POST"
                                           onsubmit="return confirm('Mark this digital order as delivered to buyer?')">
                                         @csrf
@@ -334,7 +517,6 @@
                                         </button>
                                     </form>
                                 @else
-                                    {{-- Physical: open courier/tracking modal --}}
                                     <button class="btn-ship" onclick="openShipModal({{ $order->id }})">
                                         <i class="bi bi-truck"></i> Mark as Shipped
                                     </button>
@@ -376,7 +558,7 @@
 
 </main>
 
-{{-- Ship Modal (physical orders only) --}}
+{{-- Ship Modal --}}
 <div class="modal-backdrop" id="shipBackdrop" onclick="closeShipModal()"></div>
 <div class="ship-modal" id="shipModal">
     <div class="ship-modal-header">
@@ -421,15 +603,12 @@
 <script>
 function openShipModal(orderId) {
     document.getElementById('shipForm').action = `/artist/orders/${orderId}/ship`;
-
-    // Always show courier + tracking fields (physical orders only reach here)
     document.getElementById('courierGroup').style.display  = '';
     document.getElementById('trackingGroup').style.display = '';
     document.querySelector('[name="courier"]').required    = true;
     document.querySelector('[name="tracking_number"]').required = true;
     document.querySelector('[name="courier"]').value       = '';
     document.querySelector('[name="tracking_number"]').value = '';
-
     document.getElementById('shipBackdrop').classList.add('show');
     document.getElementById('shipModal').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -439,6 +618,11 @@ function closeShipModal() {
     document.getElementById('shipBackdrop').classList.remove('show');
     document.getElementById('shipModal').classList.remove('open');
     document.body.style.overflow = '';
+}
+
+function toggleRejectForm(orderId) {
+    var f = document.getElementById('rejectForm-' + orderId);
+    f.style.display = f.style.display === 'none' || f.style.display === '' ? 'block' : 'none';
 }
 </script>
 @endsection

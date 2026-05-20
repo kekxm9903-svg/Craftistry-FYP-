@@ -15,6 +15,7 @@ class OrderController extends Controller
         $userId = Auth::id();
         $cat    = $request->input('cat', '');
         $status = $request->input('status', '');
+        $refund = $request->input('refund', ''); // '1' when Refunds pill is active
 
         // ── Badge counts for quick-tabs ──────────────────────────────────────
         $base = fn() => Order::where('user_id', $userId);
@@ -31,23 +32,28 @@ class OrderController extends Controller
 
         // ── Main query ───────────────────────────────────────────────────────
         $query = Order::where('user_id', $userId)
-            ->with(['artist.user', 'items.artwork.artist.user'])  // deeper load for image + artist name
+            ->with(['artist.user', 'items.artwork.artist.user'])
             ->latest();
 
-        // Category tab filter
-        if ($cat) {
-            match ($cat) {
-                'to-pay'     => $query->where('status', 'pending_payment'),
-                'to-ship'    => $query->whereIn('status', ['processing', 'preparing']),
-                'to-receive' => $query->where('status', 'shipped'),
-                'completed'  => $query->whereIn('status', ['completed', 'cancelled']),
-                default      => null,
-            };
-        }
+        // Refund pill filter — takes priority over cat/status
+        if ($refund === '1') {
+            $query->whereIn('refund_status', ['requested', 'refunded', 'rejected']);
+        } else {
+            // Category tab filter
+            if ($cat) {
+                match ($cat) {
+                    'to-pay'     => $query->where('status', 'pending_payment'),
+                    'to-ship'    => $query->whereIn('status', ['processing', 'preparing']),
+                    'to-receive' => $query->where('status', 'shipped'),
+                    'completed'  => $query->whereIn('status', ['completed', 'cancelled']),
+                    default      => null,
+                };
+            }
 
-        // Status pill filter
-        if ($status) {
-            $query->where('status', $status);
+            // Status pill filter
+            if ($status) {
+                $query->where('status', $status);
+            }
         }
 
         $orders = $query->paginate(10)->withQueryString();
@@ -58,7 +64,7 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         abort_if($order->user_id !== Auth::id(), 403);
-        $order->load(['artist.user', 'items.artwork.artist.user']);  // deeper load
+        $order->load(['artist.user', 'items.artwork.artist.user']);
         return view('myOrderDetail', compact('order'));
     }
 

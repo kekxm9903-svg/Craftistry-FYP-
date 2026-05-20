@@ -27,6 +27,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'city',
         'state',
         'postcode',
+        'admin_permissions',
     ];
 
     protected $hidden = [
@@ -35,9 +36,10 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'is_artist'         => 'boolean',
-        'preference_shown'  => 'boolean',
+        'email_verified_at'  => 'datetime',
+        'is_artist'          => 'boolean',
+        'preference_shown'   => 'boolean',
+        'admin_permissions'  => 'array',
     ];
 
     // ── Computed Attributes ──────────────────────────────────────────────────
@@ -63,6 +65,45 @@ class User extends Authenticatable implements MustVerifyEmail
     public function shouldShowPreferenceModal(): bool
     {
         return !$this->preference_shown;
+    }
+
+    // ── Role Helpers ─────────────────────────────────────────────────────────
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, ['admin', 'super_admin']);
+    }
+
+    /**
+     * Check if this admin can access a given panel module.
+     *
+     * Super admins pass everything.
+     * Regular admins must have the module in their admin_permissions array.
+     * The 'admins' module is super_admin-only regardless.
+     *
+     * @param string $module  'users' | 'feedbacks' | 'reports' | 'admins'
+     */
+    public function canAccessAdminModule(string $module): bool
+    {
+        if (! $this->isAdmin()) {
+            return false;
+        }
+
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        // Regular admins can never access the admins module
+        if ($module === 'admins') {
+            return false;
+        }
+
+        return in_array($module, $this->admin_permissions ?? []);
     }
 
     // ── Relationships ────────────────────────────────────────────────────────

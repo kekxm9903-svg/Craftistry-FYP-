@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class UserProfileController extends Controller
@@ -48,6 +47,7 @@ class UserProfileController extends Controller
 
     /**
      * Update the user's profile information.
+     * Email is intentionally excluded — users cannot change their email.
      */
     public function update(Request $request)
     {
@@ -66,7 +66,6 @@ class UserProfileController extends Controller
 
         $validated = $request->validate([
             'fullname'               => 'required|string|max:255',
-            'email'                  => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'phone'                  => 'nullable|string|max:20',
             'address'                => 'nullable|string|max:255',
             'city'                   => 'nullable|string|max:100',
@@ -74,7 +73,7 @@ class UserProfileController extends Controller
             'postcode'               => 'nullable|string|max:10',
             'profile_picture'        => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'remove_profile_picture' => 'nullable|in:0,1',
-            'preferred_artwork_type' => 'nullable|in:digital,physical,both',  // ← NEW
+            'preferred_artwork_type' => 'nullable|in:digital,physical,both',
         ]);
 
         // 1. HANDLE PROFILE PICTURE REMOVAL
@@ -156,11 +155,10 @@ class UserProfileController extends Controller
             $validated['location'] = implode(', ', $locationParts);
         }
 
-        // Clean up
+        // Remove fields that should not be updated
         unset($validated['profile_picture']);
         unset($validated['remove_profile_picture']);
 
-        // Update all other fields including preferred_artwork_type
         $user->update($validated);
 
         return redirect()->route('user.profile.show')

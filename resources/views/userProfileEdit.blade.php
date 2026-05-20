@@ -46,13 +46,13 @@
 </header>
 
 <main class="main" style="max-width: 1000px; margin: 0 auto; padding: 20px; padding-top: 100px;">
-    
+
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
         <div>
             <h1 style="font-size: 28px; font-weight: 700; color: #1a202c; margin-bottom: 4px;">Edit Profile</h1>
             <p style="color: #6b7280; font-size: 14px;">Update your personal information</p>
         </div>
-        
+
         <a href="{{ route('user.profile.show') }}" class="btn-secondary" style="text-decoration: none; padding: 10px 24px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; background-color: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; cursor: pointer;">
             <i class="fas fa-arrow-left"></i> Back to Profile
         </a>
@@ -83,12 +83,11 @@
     <form action="{{ route('user.profile.update') }}" method="POST" enctype="multipart/form-data" class="profile-header-card">
         @csrf
         @method('PUT')
-        
-        <!-- Hidden input for removal flag -->
+
         <input type="hidden" name="remove_profile_picture" id="remove_profile_picture" value="0">
 
         <h2 class="section-header"><i class="fas fa-camera"></i> Profile Picture</h2>
-        
+
         <div class="avatar-upload-row">
             <div id="image-preview-container">
                 @if($user->profile_image)
@@ -97,7 +96,7 @@
                     <div class="avatar-placeholder" id="preview-placeholder">
                         {{ strtoupper(substr($user->fullname, 0, 1)) }}
                     </div>
-                    <img src="" class="avatar-preview" id="preview-img-tag" style="display: none;"> 
+                    <img src="" class="avatar-preview" id="preview-img-tag" style="display: none;">
                 @endif
             </div>
 
@@ -106,7 +105,7 @@
                     <i class="fas fa-upload"></i> Change Photo
                 </label>
                 <input type="file" id="profile_picture" name="profile_picture" accept="image/*" style="display: none;">
-                
+
                 <p style="font-size: 13px; color: #6b7280; margin: 0;">JPG, PNG or GIF (Max 2MB)</p>
                 @error('profile_picture')
                     <p class="error-msg">{{ $message }}</p>
@@ -123,10 +122,21 @@
                 @error('fullname') <p class="error-msg">{{ $message }}</p> @enderror
             </div>
 
+            {{-- Email: read-only display, no input element --}}
             <div class="form-group">
-                <label class="form-label">Email Address <span style="color: #ef4444;">*</span></label>
-                <input type="email" name="email" value="{{ old('email', $user->email) }}" required class="form-input">
-                @error('email') <p class="error-msg">{{ $message }}</p> @enderror
+                <label class="form-label">Email Address</label>
+                <p style="
+                    padding: 10px 13px;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 8px;
+                    background: #f3f4f6;
+                    color: #6b7280;
+                    font-size: 14px;
+                    margin: 0;
+                ">{{ $user->email }}</p>
+                <p style="font-size: 11.5px; color: #9ca3af; margin-top: 5px;">
+                    Email address cannot be changed.
+                </p>
             </div>
 
             <div class="form-group">
@@ -177,7 +187,6 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Image preview functionality
     const profilePictureInput = document.getElementById('profile_picture');
     if (profilePictureInput) {
         profilePictureInput.addEventListener('change', function(event) {
@@ -186,16 +195,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const placeholder = document.getElementById('preview-placeholder');
-                    if (placeholder) {
-                        placeholder.style.display = 'none';
-                    }
-                    
+                    if (placeholder) placeholder.style.display = 'none';
+
                     const img = document.getElementById('preview-img-tag');
                     if (img) {
                         img.src = e.target.result;
                         img.style.display = 'block';
                     }
-                }
+                };
                 reader.readAsDataURL(file);
             }
         });

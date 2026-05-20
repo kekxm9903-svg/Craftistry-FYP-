@@ -65,52 +65,28 @@
     .success-content, .delete-content { min-width: auto; }
 }
 
-/* ── ADDITION 1: Refund button style ── */
+/* ── Refund additions ── */
 .btn-craft-refund {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    padding: 7px 14px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    background: #fff8f0;
-    color: #92400e;
-    border: 1.5px solid #fcd34d;
-    cursor: pointer;
-    font-family: inherit;
-    transition: background .15s;
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    background: #fff8f0; color: #92400e; border: 1.5px solid #fcd34d;
+    cursor: pointer; font-family: inherit; transition: background .15s;
 }
 .btn-craft-refund:hover { background: #fef3c7; }
 
-/* ── ADDITION 2: Refund status badge ── */
 .refund-inline-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
 }
 .refund-inline-badge.pending  { background: #fff3cd; color: #92400e; }
 .refund-inline-badge.refunded { background: #dcfce7; color: #166534; }
 .refund-inline-badge.rejected { background: #fee2e2; color: #991b1b; }
 
-/* ── ADDITION 3: Chips inside modal ── */
 .refund-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
 .refund-chip {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    background: #ede9fe;
-    color: #5b21b6;
-    border: 1px solid #c4b5fd;
-    cursor: pointer;
-    font-family: inherit;
-    transition: background .15s;
+    padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd;
+    cursor: pointer; font-family: inherit; transition: background .15s;
 }
 .refund-chip:hover { background: #667eea; color: #fff; border-color: #667eea; }
 </style>
@@ -150,6 +126,7 @@
     @php
         $currentStatus  = request('status', '');
         $currentCat     = request('cat', '');
+        $currentRefund  = request('refund', '');
 
         $payCount       = $totalCounts['pending_payment']  ?? 0;
         $shipCount      = ($totalCounts['processing'] ?? 0) + ($totalCounts['preparing'] ?? 0);
@@ -172,7 +149,7 @@
                 @php
                     $params   = array_filter(['cat' => $tab['cat'] ?: null, 'status' => $tab['status'] ?: null]);
                     $href     = route('orders.index', $params);
-                    $isActive = $currentCat === $tab['cat'];
+                    $isActive = $currentCat === $tab['cat'] && !$currentRefund;
                 @endphp
                 <a href="{{ $href }}" class="quick-tab {{ $isActive ? 'active' : '' }}">
                     <i class="fas {{ $tab['icon'] }} qt-icon"></i>
@@ -202,7 +179,7 @@
         <div class="status-row">
             @foreach($statusPills as $val => $label)
                 @php
-                    $pillActive = $currentStatus === $val;
+                    $pillActive = $currentStatus === $val && !$currentRefund;
                     $params     = array_filter(['status' => $val ?: null, 'cat' => $currentCat ?: null]);
                     $pillHref   = route('orders.index', $params);
                 @endphp
@@ -210,6 +187,11 @@
                     {{ $label }}
                 </a>
             @endforeach
+            {{-- Refund filter pill --}}
+            <a href="{{ route('orders.index', ['refund' => '1']) }}"
+               class="status-pill {{ $currentRefund === '1' ? 'active' : '' }}">
+                Refunds
+            </a>
         </div>
     </div>
 
@@ -217,9 +199,11 @@
     @if($orders->isEmpty())
         <div class="empty-state">
             <div class="empty-icon"><i class="fas fa-shopping-bag"></i></div>
-            <h3>No Orders Yet</h3>
+            <h3>{{ $currentRefund === '1' ? 'No Refund Requests' : 'No Orders Yet' }}</h3>
             <p>
-                @if($currentStatus || $currentCat)
+                @if($currentRefund === '1')
+                    You have no refund requests at the moment.
+                @elseif($currentStatus || $currentCat)
                     You have no
                     <strong>{{ str_replace(['_', '-'], ' ', $currentStatus ?: $currentCat) }}</strong>
                     orders at the moment.
@@ -277,11 +261,11 @@
                     && $orderReview->created_at->diffInDays(now()) <= 30;
                 $canDownloadReceipt = $order->status === 'completed';
 
-                {{-- ADDITION: refund eligibility --}}
+                // Refund eligibility
                 $refundStatus = $order->refund_status ?? 'none';
                 $canRefund    = $refundStatus === 'none'
                              && $order->payment_status === 'paid'
-                             && in_array($order->status, ['completed', 'shipped', 'preparing', 'processing'])
+                             && in_array($order->status, ['completed','shipped','preparing','processing'])
                              && ($order->status !== 'completed' || now()->diffInDays($order->updated_at) <= 7);
             @endphp
 
@@ -302,7 +286,7 @@
                             <span class="dot"></span>
                             {{ $statusLabel }}
                         </span>
-                        {{-- ADDITION: refund status badge --}}
+                        {{-- Refund status badge --}}
                         @if($refundStatus === 'requested')
                             <span class="refund-inline-badge pending">
                                 <i class="fas fa-clock"></i> Refund Pending
@@ -480,7 +464,7 @@
                             </button>
                         @endif
 
-                        {{-- ADDITION: Refund button --}}
+                        {{-- Refund button --}}
                         @if($canRefund)
                             <button type="button"
                                 class="btn-craft btn-craft-refund"
@@ -500,7 +484,7 @@
             @endforeach
         </div>
 
-        {{-- Pagination — single clean block --}}
+        {{-- Pagination --}}
         @if($orders->lastPage() > 1)
         <div class="pagination-wrapper">
             <div class="pagination-info">
@@ -581,7 +565,7 @@
 
 <form id="cancelOrderForm" method="POST" style="display:none;">@csrf</form>
 
-{{-- ADDITION: Refund Request Modal --}}
+{{-- Refund Request Modal --}}
 <div id="refundModal"
      style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center;">
     <div style="position:absolute; inset:0; background:rgba(0,0,0,.48); backdrop-filter:blur(3px);"
@@ -589,8 +573,7 @@
     <div id="refundModalInner"
          style="position:relative; background:#fff; border-radius:16px; padding:32px 28px 26px;
                 max-width:480px; width:92%;
-                box-shadow:0 24px 64px rgba(102,126,234,.22), 0 4px 16px rgba(0,0,0,.08);
-                z-index:1;">
+                box-shadow:0 24px 64px rgba(102,126,234,.22), 0 4px 16px rgba(0,0,0,.08); z-index:1;">
 
         <div style="text-align:center; margin-bottom:20px;">
             <div style="width:56px; height:56px; background:linear-gradient(135deg,#fff8f0,#fef3c7);
@@ -626,21 +609,14 @@
             <label style="font-size:13px; font-weight:600; color:#1a1a2e; display:block; margin-bottom:7px;">
                 Reason <span style="color:#ef4444;">*</span>
             </label>
-            <textarea
-                id="refundReasonInput"
-                name="reason"
-                rows="4"
+            <textarea id="refundReasonInput" name="reason" rows="4"
                 placeholder="Describe why you are requesting a refund..."
-                minlength="10"
-                maxlength="1000"
-                required
+                minlength="10" maxlength="1000" required
                 style="width:100%; border:1.5px solid #e5e7eb; border-radius:10px;
                        padding:11px 13px; font-size:13px; font-family:inherit;
-                       color:#1a1a2e; resize:vertical; outline:none;
-                       transition:border-color .2s; box-sizing:border-box;"
+                       color:#1a1a2e; resize:vertical; outline:none; box-sizing:border-box;"
                 onfocus="this.style.borderColor='#667eea'"
-                onblur="this.style.borderColor='#e5e7eb'"
-            ></textarea>
+                onblur="this.style.borderColor='#e5e7eb'"></textarea>
             <p style="font-size:11px; color:#9ca3af; margin:5px 0 18px;">Minimum 10 characters.</p>
 
             <div style="display:flex; gap:10px;">
@@ -697,19 +673,16 @@ window.executeCancelOrder = function () {
     document.getElementById('cancelOrderForm').submit();
 };
 
-{{-- ADDITION: refund modal JS --}}
 window.openRefundModal = function (orderId, orderName, orderAmount) {
     var modal    = document.getElementById('refundModal');
     var inner    = document.getElementById('refundModalInner');
     var form     = document.getElementById('refundModalForm');
     var subtitle = document.getElementById('refundModalSubtitle');
     var textarea = document.getElementById('refundReasonInput');
-
-    form.action       = '/refund/order/' + orderId;
+    form.action          = '/refund/order/' + orderId;
     subtitle.textContent = '\u201c' + orderName + '\u201d \u2022 ' + orderAmount;
-    textarea.value    = '';
-
-    modal.style.display = 'flex';
+    textarea.value       = '';
+    modal.style.display  = 'flex';
     inner.style.animation = 'none';
     void inner.offsetWidth;
     inner.style.animation = 'cancelModalIn .22s cubic-bezier(.34,1.56,.64,1)';

@@ -20,7 +20,7 @@ class DemoArtworkController extends Controller
     public function editPage($id)
     {
         $user = Auth::user();
-        $demo = DemoArtwork::where('id', $id)->where('artist_id', $user->id)->firstOrFail();
+        $demo = DemoArtwork::where('id', $id)->where('artist_id', $user->artist->id)->firstOrFail();
         return view('demoEditPage', compact('demo'));
     }
 
@@ -126,11 +126,11 @@ class DemoArtworkController extends Controller
 
             DB::beginTransaction();
 
-            $maxOrder = DemoArtwork::where('artist_id', $user->id)->max('order');
+            $maxOrder = DemoArtwork::where('artist_id', $user->artist->id)->max('order');
             $order    = $maxOrder !== null ? $maxOrder + 1 : 0;
 
             $demoData = [
-                'artist_id'       => $user->id,
+                'artist_id'       => $user->artist->id,
                 'title'           => $validated['title'],
                 'description'     => $request->input('description'),
                 'image_path'      => $path,
@@ -172,7 +172,7 @@ class DemoArtworkController extends Controller
 
                 $bulkEnabled = $request->boolean('bulk_sell_enabled');
                 $newSell = ArtworkSell::create([
-                    'artist_id'            => $user->id,
+                    'artist_id'            => $user->artist->id,
                     'product_name'         => $validated['title'],
                     'product_description'  => $request->input('product_description') ?? $request->input('description'),
                     'product_price'        => $request->input('price'),
@@ -256,7 +256,7 @@ class DemoArtworkController extends Controller
             if (!$user->artist) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
-            $demo = DemoArtwork::where('id', $id)->where('artist_id', $user->id)->first();
+            $demo = DemoArtwork::where('id', $id)->where('artist_id', $user->artist->id)->first();
             if (!$demo) {
                 return response()->json(['success' => false, 'message' => 'Demo artwork not found'], 404);
             }
@@ -293,7 +293,7 @@ class DemoArtworkController extends Controller
                 return redirect()->back()->with('error', 'Unauthorized');
             }
 
-            $demo = DemoArtwork::where('id', $id)->where('artist_id', $user->id)->first();
+            $demo = DemoArtwork::where('id', $id)->where('artist_id', $user->artist->id)->first();
             if (!$demo) {
                 if ($request->expectsJson()) {
                     return response()->json(['success' => false, 'message' => 'Demo artwork not found'], 404);
@@ -340,7 +340,6 @@ class DemoArtworkController extends Controller
             $existingExtras = $demo->extra_images ?? [];
 
             foreach ($deleteImages as $deletePath) {
-                // Only delete if path belongs to demo-artworks folder
                 if (str_starts_with($deletePath, 'demo-artworks/') && Storage::disk('public')->exists($deletePath)) {
                     Storage::disk('public')->delete($deletePath);
                 }
@@ -377,7 +376,6 @@ class DemoArtworkController extends Controller
             }
 
             // Sync cross-posted sell — only update text fields, NOT image_path
-            // Each record owns its own image file now
             if ($demo->is_cross_posted && $demo->cross_posted_to_id) {
                 $sell = ArtworkSell::find($demo->cross_posted_to_id);
                 if ($sell) {
@@ -436,7 +434,7 @@ class DemoArtworkController extends Controller
                 return redirect()->back()->with('error', 'Unauthorized');
             }
 
-            $demo = DemoArtwork::where('id', $id)->where('artist_id', $user->id)->first();
+            $demo = DemoArtwork::where('id', $id)->where('artist_id', $user->artist->id)->first();
             if (!$demo) {
                 if (request()->expectsJson()) {
                     return response()->json(['success' => false, 'message' => 'Demo artwork not found'], 404);
@@ -448,7 +446,6 @@ class DemoArtworkController extends Controller
 
             $wasCrossListed = $demo->is_cross_posted;
 
-            // Unlink from sell — keep sell record and its own image intact
             if ($demo->is_cross_posted && $demo->cross_posted_to_id) {
                 $linkedSell = ArtworkSell::find($demo->cross_posted_to_id);
                 if ($linkedSell) {
@@ -458,12 +455,10 @@ class DemoArtworkController extends Controller
                 }
             }
 
-            // Only delete files in demo-artworks folder
             if ($demo->image_path && str_starts_with($demo->image_path, 'demo-artworks/') && Storage::disk('public')->exists($demo->image_path)) {
                 Storage::disk('public')->delete($demo->image_path);
             }
 
-            // Delete extra images in demo-artworks folder
             foreach ($demo->extra_images ?? [] as $ep) {
                 if (str_starts_with($ep, 'demo-artworks/') && Storage::disk('public')->exists($ep)) {
                     Storage::disk('public')->delete($ep);
@@ -501,7 +496,7 @@ class DemoArtworkController extends Controller
             ]);
             DB::beginTransaction();
             foreach ($validated['order'] as $index => $demoId) {
-                DemoArtwork::where('id', $demoId)->where('artist_id', $user->id)->update(['order' => $index]);
+                DemoArtwork::where('id', $demoId)->where('artist_id', $user->artist->id)->update(['order' => $index]);
             }
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Order updated successfully!']);
@@ -519,7 +514,7 @@ class DemoArtworkController extends Controller
             if (!$user->artist) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
-            $demo = DemoArtwork::where('id', $id)->where('artist_id', $user->id)->first();
+            $demo = DemoArtwork::where('id', $id)->where('artist_id', $user->artist->id)->first();
             if (!$demo) {
                 return response()->json(['success' => false, 'message' => 'Demo artwork not found'], 404);
             }

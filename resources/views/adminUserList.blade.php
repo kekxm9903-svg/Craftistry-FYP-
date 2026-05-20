@@ -18,6 +18,7 @@
         <div class="sidebar-logo">
             <img src="{{ asset('images/Logo.png') }}" alt="Craftistry" class="sidebar-logo-img">
             <div class="logo-text">
+                Craftistry
                 <em>Admin Panel</em>
             </div>
         </div>
@@ -27,22 +28,34 @@
                 <i class="fas fa-th-large"></i>
                 <span>Dashboard</span>
             </a>
+
+            @if(auth()->user()->canAccessAdminModule('users'))
             <a href="{{ route('admin.users') }}" class="snav-item active">
                 <i class="fas fa-users"></i>
                 <span>Users</span>
             </a>
+            @endif
+
+            @if(auth()->user()->canAccessAdminModule('feedbacks'))
             <a href="{{ route('admin.feedbacks') }}" class="snav-item">
                 <i class="fas fa-comment-alt"></i>
                 <span>Feedbacks</span>
             </a>
+            @endif
+
+            @if(auth()->user()->canAccessAdminModule('reports'))
             <a href="{{ route('admin.reports') }}" class="snav-item">
                 <i class="fas fa-flag"></i>
                 <span>Reports</span>
             </a>
+            @endif
+
+            @if(auth()->user()->canAccessAdminModule('admins'))
             <a href="{{ route('admin.admins') }}" class="snav-item">
                 <i class="fas fa-user-shield"></i>
                 <span>Admins</span>
             </a>
+            @endif
         </nav>
 
         <div class="sidebar-footer">
@@ -52,7 +65,7 @@
                 </div>
                 <div class="sf-info">
                     <p class="sf-name">{{ auth()->user()->fullname }}</p>
-                    <p class="sf-role">Administrator</p>
+                    <p class="sf-role">{{ auth()->user()->isSuperAdmin() ? 'Super Admin' : 'Administrator' }}</p>
                 </div>
             </div>
             <form method="POST" action="{{ route('logout') }}">
@@ -123,16 +136,20 @@
                     </div>
 
                     <div class="filter-pills">
-                        <button type="submit" name="status" value="" class="pill {{ !request('status') ? 'active' : '' }}">
+                        <button type="submit" name="status" value=""
+                            class="pill {{ !request('status') ? 'active' : '' }}">
                             All
                         </button>
-                        <button type="submit" name="status" value="artist" class="pill pill-blue {{ request('status') === 'artist' ? 'active' : '' }}">
+                        <button type="submit" name="status" value="artist"
+                            class="pill pill-blue {{ request('status') === 'artist' ? 'active' : '' }}">
                             <i class="fas fa-palette"></i> Artists
                         </button>
-                        <button type="submit" name="status" value="buyer" class="pill {{ request('status') === 'buyer' ? 'active' : '' }}">
+                        <button type="submit" name="status" value="buyer"
+                            class="pill {{ request('status') === 'buyer' ? 'active' : '' }}">
                             <i class="fas fa-shopping-bag"></i> Buyers only
                         </button>
-                        <button type="submit" name="status" value="banned" class="pill pill-red {{ request('status') === 'banned' ? 'active' : '' }}">
+                        <button type="submit" name="status" value="banned"
+                            class="pill pill-red {{ request('status') === 'banned' ? 'active' : '' }}">
                             <i class="fas fa-ban"></i> Banned
                         </button>
                     </div>
@@ -169,6 +186,8 @@
                             </thead>
                             <tbody>
                                 @foreach($users as $index => $user)
+                                {{-- Extra safety: skip any admin/super_admin that slips through --}}
+                                @if($user->isAdmin()) @continue @endif
                                 <tr class="user-row">
                                     <td class="td-num">{{ $users->firstItem() + $index }}</td>
 
@@ -190,11 +209,9 @@
 
                                     <td class="td-role">
                                         <div class="role-badges">
-                                            {{-- Buyer badge — always shown --}}
                                             <span class="badge gray">
                                                 <i class="fas fa-shopping-bag"></i> Buyer
                                             </span>
-                                            {{-- Artist badge — only shown if registered as artist --}}
                                             @if($user->is_artist)
                                                 <span class="badge blue">
                                                     <i class="fas fa-palette"></i> Artist
@@ -254,7 +271,6 @@
                                 Showing {{ $users->firstItem() }}–{{ $users->lastItem() }} of {{ $users->total() }}
                             </div>
                             <div class="pag-links">
-                                {{-- Previous --}}
                                 @if($users->onFirstPage())
                                     <span class="pag-btn disabled"><i class="fas fa-chevron-left"></i></span>
                                 @else
@@ -263,7 +279,6 @@
                                     </a>
                                 @endif
 
-                                {{-- Page numbers --}}
                                 @foreach($users->getUrlRange(max(1, $users->currentPage()-2), min($users->lastPage(), $users->currentPage()+2)) as $page => $url)
                                     @if($page == $users->currentPage())
                                         <span class="pag-btn current">{{ $page }}</span>
@@ -272,7 +287,6 @@
                                     @endif
                                 @endforeach
 
-                                {{-- Next --}}
                                 @if($users->hasMorePages())
                                     <a href="{{ $users->nextPageUrl() }}&{{ http_build_query(request()->except('page')) }}" class="pag-btn">
                                         <i class="fas fa-chevron-right"></i>

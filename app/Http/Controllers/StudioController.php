@@ -19,7 +19,6 @@ class StudioController extends Controller
         $artworkTypes = [];
         $artist = null;
 
-        // Check if user already has artist profile
         if ($user->artist) {
             return redirect()->route('artist.profile');
         }
@@ -34,7 +33,6 @@ class StudioController extends Controller
     {
         $user = Auth::user();
 
-        // Check if user is already an artist
         if ($user && $user->artist) {
             return redirect()->route('artist.profile')->with('info', 'You already have an artist profile');
         }
@@ -50,18 +48,16 @@ class StudioController extends Controller
     }
 
     /**
-     * Process artist registration - AUTO APPROVED
+     * Process artist registration
      */
     public function register(Request $request)
     {
         $user = Auth::user();
 
-        // Check if user is already an artist
         if ($user->artist) {
             return redirect()->route('artist.profile')->with('info', 'You already have an artist profile');
         }
 
-        // Validate the form data
         $validated = $request->validate([
             'bio'                 => 'required|string|min:50|max:1000',
             'specialization'      => 'nullable|string|max:255',
@@ -78,28 +74,19 @@ class StudioController extends Controller
         ]);
 
         try {
-            // Create artist profile - AUTO APPROVED (verified status)
             $artist = Artist::create([
                 'user_id'             => $user->id,
                 'bio'                 => $validated['bio'],
                 'specialization'      => $validated['specialization'] ?? null,
                 'allow_customization' => $request->has('allow_customization'),
-                'verification_status' => 'verified'
             ]);
 
-            // Mark user as artist (keeps role as buyer — user can be both)
             $user->update(['is_artist' => true]);
 
-            // Attach selected artwork types
             $artist->artworkTypes()->attach($validated['artwork_types']);
 
-            // Force reload the user with the artist relationship
             $user->load('artist');
-
-            // Regenerate session to ensure fresh data
             $request->session()->regenerate();
-
-            // Explicitly refresh the auth user instance
             Auth::setUser($user->fresh(['artist']));
 
             return redirect()->route('artist.profile')

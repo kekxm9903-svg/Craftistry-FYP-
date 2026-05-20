@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use App\Services\NotificationService;   // ← NEW
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,11 +24,17 @@ class ArtistOrderController extends Controller
                        ->with(['user', 'items'])
                        ->get();
 
-        $status = $request->get('status');
+        $status  = $request->get('status');
+        $refund  = $request->get('refund'); // '1' when Refunds tab is active
 
         $filteredOrders = Order::where('artist_id', $artist->id)
                                ->with(['user', 'items'])
-                               ->when($status, fn($q) => $q->where('status', $status))
+                               ->when($refund === '1', fn($q) =>
+                                   $q->whereIn('refund_status', ['requested', 'refunded', 'rejected'])
+                               )
+                               ->when($refund !== '1' && $status, fn($q) =>
+                                   $q->where('status', $status)
+                               )
                                ->latest()
                                ->paginate(10)
                                ->withQueryString();
@@ -49,7 +55,6 @@ class ArtistOrderController extends Controller
 
         $order->update(['status' => 'preparing']);
 
-        // ── Notify buyer ── ← NEW
         NotificationService::orderStatusChanged($order->user_id, $order->id, 'preparing');
 
         return back()->with('success', 'Order accepted! Start preparing the item.');
@@ -77,7 +82,6 @@ class ArtistOrderController extends Controller
             'tracking_number' => $request->tracking_number,
         ]);
 
-        // ── Notify buyer ── ← NEW
         NotificationService::orderStatusChanged($order->user_id, $order->id, 'shipped');
 
         return back()->with('success', 'Order marked as shipped! Buyer can now track the parcel.');

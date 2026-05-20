@@ -44,10 +44,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
-    Route::get('/forgot-password',       [AuthController::class, 'showForgotPassword'])->name('password.request');
-    Route::post('/forgot-password',      [AuthController::class, 'sendResetLink'])     ->name('password.email');
-    Route::get('/reset-password/{token}',[AuthController::class, 'showResetPassword']) ->name('password.reset');
-    Route::post('/reset-password',       [AuthController::class, 'resetPassword'])     ->name('password.update');
+    Route::get('/forgot-password',        [AuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password',       [AuthController::class, 'sendResetLink'])     ->name('password.email');
+    Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword']) ->name('password.reset');
+    Route::post('/reset-password',        [AuthController::class, 'resetPassword'])     ->name('password.update');
 });
 
 // --- EMAIL VERIFICATION ROUTES ---
@@ -108,27 +108,82 @@ Route::middleware('auth')->group(function () {
         Route::get('/',           [NotificationController::class, 'index'])      ->name('index');
         Route::get('/dropdown',   [NotificationController::class, 'dropdown'])   ->name('dropdown');
         Route::post('/read-all',  [NotificationController::class, 'markAllRead'])->name('read-all');
-        Route::post('/{id}/read', [NotificationController::class, 'markRead'])  ->name('read');
+        Route::post('/{id}/read', [NotificationController::class, 'markRead'])   ->name('read');
     });
 
     // --- ADMIN ROUTES ---
     Route::prefix('admin')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
 
-        Route::get('/users',                [AdminController::class, 'users'])      ->name('admin.users');
-        Route::post('/users/{user}/ban',    [AdminController::class, 'banUser'])    ->name('admin.users.ban');
-        Route::post('/users/{user}/unban',  [AdminController::class, 'unbanUser'])  ->name('admin.users.unban');
+        Route::get('/users',               [AdminController::class, 'users'])    ->name('admin.users');
+        Route::post('/users/{user}/ban',   [AdminController::class, 'banUser'])  ->name('admin.users.ban');
+        Route::post('/users/{user}/unban', [AdminController::class, 'unbanUser'])->name('admin.users.unban');
 
-        Route::get('/feedbacks',                  [AdminController::class, 'feedbacks'])       ->name('admin.feedbacks');
-        Route::post('/feedbacks/{feedback}/read', [AdminController::class, 'markFeedbackRead'])->name('admin.feedbacks.read');
-        Route::delete('/feedbacks/{feedback}',    [AdminController::class, 'deleteFeedback'])  ->name('admin.feedbacks.delete');
+        Route::get('/feedbacks',                  [AdminController::class, 'feedbacks'])        ->name('admin.feedbacks');
+        Route::post('/feedbacks/{feedback}/read', [AdminController::class, 'markFeedbackRead']) ->name('admin.feedbacks.read');
+        Route::delete('/feedbacks/{feedback}',    [AdminController::class, 'deleteFeedback'])   ->name('admin.feedbacks.delete');
 
-        Route::get('/reports',                  [AdminController::class, 'reports'])           ->name('admin.reports');
-        Route::post('/reports/{report}/status', [AdminController::class, 'updateReportStatus'])->name('admin.reports.status');
+        Route::get('/reports',                  [AdminController::class, 'reports'])            ->name('admin.reports');
+        Route::post('/reports/{report}/status', [AdminController::class, 'updateReportStatus']) ->name('admin.reports.status');
 
-        Route::get('/admins',                [AdminController::class, 'admins'])     ->name('admin.admins');
-        Route::post('/admins/add',           [AdminController::class, 'addAdmin'])   ->name('admin.admins.add');
-        Route::post('/admins/{user}/remove', [AdminController::class, 'removeAdmin'])->name('admin.admins.remove');
+        Route::get('/admins',                     [AdminController::class, 'admins'])                 ->name('admin.admins');
+        Route::post('/admins/add',                [AdminController::class, 'addAdmin'])               ->name('admin.admins.add');
+        Route::post('/admins/{user}/remove',      [AdminController::class, 'removeAdmin'])            ->name('admin.admins.remove');
+        Route::post('/admins/{user}/permissions', [AdminController::class, 'updateAdminPermissions']) ->name('admin.admins.updatePermissions');
+    });
+
+    // --- STUDIO ROUTES ---
+    Route::get('/studio',           [StudioController::class, 'index'])          ->name('studio');
+    Route::get('/studio/register',  [StudioController::class, 'showRegisterForm'])->name('studio.register');
+    Route::post('/studio/register', [StudioController::class, 'register'])       ->name('studio.register.submit');
+
+    // --- ARTIST ROUTES ---
+    Route::prefix('artist')->group(function () {
+        Route::get('/studio',          [ArtistController::class, 'profile']) ->name('artist.profile');
+        Route::get('/profile/edit',    [ArtistController::class, 'edit'])    ->name('artist.profile.edit');
+        Route::post('/profile/update', [ArtistController::class, 'update'])  ->name('artist.profile.update');
+        Route::get('/dashboard',       [ArtistController::class, 'dashboard'])->name('artist.dashboard');
+
+        // Demo Artwork
+        Route::get('/demo/upload',            [DemoArtworkController::class, 'uploadPage'])->name('artist.demo.upload.page');
+        Route::post('/demo/upload',           [DemoArtworkController::class, 'store'])     ->name('artist.demo.upload');
+        Route::get('/demo/{id}/edit',         [DemoArtworkController::class, 'editPage'])  ->name('artist.demo.edit.page');
+        Route::get('/demo/{id}/edit-data',    [DemoArtworkController::class, 'edit'])      ->name('artist.demo.edit');
+        Route::post('/demo/{id}',             [DemoArtworkController::class, 'update'])    ->name('artist.demo.update');
+        Route::delete('/demo/{id}',           [DemoArtworkController::class, 'destroy'])   ->name('artist.demo.delete');
+        Route::post('/demo/{id}/unlink-sell', [DemoArtworkController::class, 'unlinkSell'])->name('artist.demo.unlink-sell');
+        Route::post('/demo/reorder',          [DemoArtworkController::class, 'reorder'])   ->name('artist.demo.reorder');
+
+        // Artwork Sell
+        Route::get('/artwork/sell',              [ArtworkSellController::class, 'sellPage'])  ->name('artist.artwork.sell.page');
+        Route::post('/artwork/sell',             [ArtworkSellController::class, 'store'])     ->name('artist.artwork.sell');
+        Route::get('/artwork/{id}/preview',      [ArtworkSellController::class, 'preview'])   ->name('artist.artwork.preview');
+        Route::get('/artwork/{id}/edit',         [ArtworkSellController::class, 'editPage'])  ->name('artist.artwork.edit.page');
+        Route::get('/artwork/{id}/edit-data',    [ArtworkSellController::class, 'edit'])      ->name('artist.artwork.edit');
+        Route::post('/artwork/{id}',             [ArtworkSellController::class, 'update'])    ->name('artist.artwork.update');
+        Route::delete('/artwork/{id}',           [ArtworkSellController::class, 'destroy'])   ->name('artist.artwork.delete');
+        Route::post('/artwork/{id}/unlink-demo', [ArtworkSellController::class, 'unlinkDemo'])->name('artist.artwork.unlink-demo');
+
+        // Artist Orders
+        Route::get('/orders',                 [ArtistOrderController::class, 'index']) ->name('artist.orders');
+        Route::post('/orders/{order}/accept', [ArtistOrderController::class, 'accept'])->name('artist.orders.accept');
+        Route::post('/orders/{order}/ship',   [ArtistOrderController::class, 'ship'])  ->name('artist.orders.ship');
+
+        // Order Summary
+        Route::get('/order-summary',            [OrderSummaryController::class, 'index'])    ->name('artist.order.summary');
+        Route::get('/order-summary/chart-data', [OrderSummaryController::class, 'chartData'])->name('artist.order.summary.chart');
+
+        // Custom Orders (seller)
+        Route::get('/custom-orders',                       [ArtistCustomOrderController::class, 'index']) ->name('artist.custom-orders.index');
+        Route::get('/custom-orders/{customOrder}',         [ArtistCustomOrderController::class, 'show'])  ->name('artist.custom-orders.show');
+        Route::post('/custom-orders/{customOrder}/accept', [ArtistCustomOrderController::class, 'accept'])->name('artist.custom-orders.accept');
+        Route::post('/custom-orders/{customOrder}/refuse', [ArtistCustomOrderController::class, 'refuse'])->name('artist.custom-orders.refuse');
+
+        // Bulk Orders (seller)
+        Route::get('/bulk-orders',              [BulkOrderController::class, 'sellerIndex'])->name('artist.bulk-orders.index');
+        Route::get('/bulk-orders/{id}',         [BulkOrderController::class, 'sellerShow']) ->name('artist.bulk-orders.show');
+        Route::post('/bulk-orders/{id}/accept', [BulkOrderController::class, 'accept'])     ->name('artist.bulk-orders.accept');
+        Route::post('/bulk-orders/{id}/refuse', [BulkOrderController::class, 'refuse'])     ->name('artist.bulk-orders.refuse');
     });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -148,17 +203,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // --- REFUND ROUTES ---
     Route::prefix('refund')->name('refund.')->group(function () {
-        // Buyer: submit request
         Route::post('/order/{order}',        [RefundController::class, 'storeForOrder'])  ->name('store.order');
         Route::post('/bulk/{bulkOrder}',     [RefundController::class, 'storeForBulk'])   ->name('store.bulk');
         Route::post('/custom/{customOrder}', [RefundController::class, 'storeForCustom']) ->name('store.custom');
 
-        // Seller: approve
         Route::post('/order/{order}/approve',        [RefundController::class, 'approveOrder'])  ->name('approve.order');
         Route::post('/bulk/{bulkOrder}/approve',     [RefundController::class, 'approveBulk'])   ->name('approve.bulk');
         Route::post('/custom/{customOrder}/approve', [RefundController::class, 'approveCustom']) ->name('approve.custom');
 
-        // Seller: reject
         Route::post('/order/{order}/reject',        [RefundController::class, 'rejectOrder'])  ->name('reject.order');
         Route::post('/bulk/{bulkOrder}/reject',     [RefundController::class, 'rejectBulk'])   ->name('reject.bulk');
         Route::post('/custom/{customOrder}/reject', [RefundController::class, 'rejectCustom']) ->name('reject.custom');
@@ -195,55 +247,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{order}/repay', [OrderCheckoutController::class, 'repay']) ->name('repay');
     });
 
-    // --- STUDIO ROUTES ---
-    Route::get('/studio',           [StudioController::class, 'index'])          ->name('studio');
-    Route::get('/studio/register',  [StudioController::class, 'showRegisterForm'])->name('studio.register');
-    Route::post('/studio/register', [StudioController::class, 'register'])       ->name('studio.register.submit');
-
-    // --- ARTIST ROUTES ---
-    Route::prefix('artist')->group(function () {
-        Route::get('/studio',          [ArtistController::class, 'profile']) ->name('artist.profile');
-        Route::get('/profile/edit',    [ArtistController::class, 'edit'])    ->name('artist.profile.edit');
-        Route::post('/profile/update', [ArtistController::class, 'update'])  ->name('artist.profile.update');
-        Route::get('/dashboard',       [ArtistController::class, 'dashboard'])->name('artist.dashboard');
-
-        Route::get('/demo/upload',            [DemoArtworkController::class, 'uploadPage'])->name('artist.demo.upload.page');
-        Route::post('/demo/upload',           [DemoArtworkController::class, 'store'])     ->name('artist.demo.upload');
-        Route::get('/demo/{id}/edit',         [DemoArtworkController::class, 'editPage'])  ->name('artist.demo.edit.page');
-        Route::get('/demo/{id}/edit-data',    [DemoArtworkController::class, 'edit'])      ->name('artist.demo.edit');
-        Route::post('/demo/{id}',             [DemoArtworkController::class, 'update'])    ->name('artist.demo.update');
-        Route::delete('/demo/{id}',           [DemoArtworkController::class, 'destroy'])   ->name('artist.demo.delete');
-        Route::post('/demo/{id}/unlink-sell', [DemoArtworkController::class, 'unlinkSell'])->name('artist.demo.unlink-sell');
-
-        Route::get('/artwork/sell',              [ArtworkSellController::class, 'sellPage'])  ->name('artist.artwork.sell.page');
-        Route::post('/artwork/sell',             [ArtworkSellController::class, 'store'])     ->name('artist.artwork.sell');
-        Route::get('/artwork/{id}/preview',      [ArtworkSellController::class, 'preview'])   ->name('artist.artwork.preview');
-        Route::get('/artwork/{id}/edit',         [ArtworkSellController::class, 'editPage'])  ->name('artist.artwork.edit.page');
-        Route::get('/artwork/{id}/edit-data',    [ArtworkSellController::class, 'edit'])      ->name('artist.artwork.edit');
-        Route::post('/artwork/{id}',             [ArtworkSellController::class, 'update'])    ->name('artist.artwork.update');
-        Route::delete('/artwork/{id}',           [ArtworkSellController::class, 'destroy'])   ->name('artist.artwork.delete');
-        Route::post('/artwork/{id}/unlink-demo', [ArtworkSellController::class, 'unlinkDemo'])->name('artist.artwork.unlink-demo');
-
-        Route::post('/demo/reorder', [DemoArtworkController::class, 'reorder'])->name('artist.demo.reorder');
-
-        Route::get('/orders',                 [ArtistOrderController::class, 'index']) ->name('artist.orders');
-        Route::post('/orders/{order}/accept', [ArtistOrderController::class, 'accept'])->name('artist.orders.accept');
-        Route::post('/orders/{order}/ship',   [ArtistOrderController::class, 'ship'])  ->name('artist.orders.ship');
-
-        Route::get('/order-summary',            [OrderSummaryController::class, 'index'])    ->name('artist.order.summary');
-        Route::get('/order-summary/chart-data', [OrderSummaryController::class, 'chartData'])->name('artist.order.summary.chart');
-
-        Route::get('/custom-orders',                       [ArtistCustomOrderController::class, 'index']) ->name('artist.custom-orders.index');
-        Route::get('/custom-orders/{customOrder}',         [ArtistCustomOrderController::class, 'show'])  ->name('artist.custom-orders.show');
-        Route::post('/custom-orders/{customOrder}/accept', [ArtistCustomOrderController::class, 'accept'])->name('artist.custom-orders.accept');
-        Route::post('/custom-orders/{customOrder}/refuse', [ArtistCustomOrderController::class, 'refuse'])->name('artist.custom-orders.refuse');
-
-        Route::get('/bulk-orders',              [BulkOrderController::class, 'sellerIndex'])->name('artist.bulk-orders.index');
-        Route::get('/bulk-orders/{id}',         [BulkOrderController::class, 'sellerShow']) ->name('artist.bulk-orders.show');
-        Route::post('/bulk-orders/{id}/accept', [BulkOrderController::class, 'accept'])     ->name('artist.bulk-orders.accept');
-        Route::post('/bulk-orders/{id}/refuse', [BulkOrderController::class, 'refuse'])     ->name('artist.bulk-orders.refuse');
-    });
-
     // --- CLASS AND EVENT ROUTES ---
     Route::prefix('class-event')->group(function () {
         Route::get('/browse',                           [ClassEventController::class, 'browse'])         ->name('class.event.browse');
@@ -268,12 +271,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/product/{id}', [ProductController::class, 'show'])      ->name('product.show');
 
     // --- BULK ORDER ROUTES (buyer) ---
-    Route::get('/bulk-orders/create/{artwork}',    [BulkOrderController::class, 'create'])     ->name('bulk-orders.create');
-    Route::post('/bulk-orders/store/{artwork}',    [BulkOrderController::class, 'store'])      ->name('bulk-orders.store');
-    Route::get('/bulk-orders/{id}/pay',            [BulkOrderController::class, 'pay'])        ->name('bulk-orders.pay');
-    Route::get('/bulk-orders/{id}/pay/success',    [BulkOrderController::class, 'paySuccess']) ->name('bulk-orders.pay.success');
-    Route::get('/bulk-orders/{id}',                [BulkOrderController::class, 'show'])       ->name('bulk-orders.show');
-    Route::get('/bulk-orders',                     [BulkOrderController::class, 'index'])      ->name('bulk-orders.index');
+    Route::get('/bulk-orders/create/{artwork}', [BulkOrderController::class, 'create'])    ->name('bulk-orders.create');
+    Route::post('/bulk-orders/store/{artwork}', [BulkOrderController::class, 'store'])     ->name('bulk-orders.store');
+    Route::get('/bulk-orders/{id}/pay',         [BulkOrderController::class, 'pay'])       ->name('bulk-orders.pay');
+    Route::get('/bulk-orders/{id}/pay/success', [BulkOrderController::class, 'paySuccess'])->name('bulk-orders.pay.success');
+    Route::get('/bulk-orders/{id}',             [BulkOrderController::class, 'show'])      ->name('bulk-orders.show');
+    Route::get('/bulk-orders',                  [BulkOrderController::class, 'index'])     ->name('bulk-orders.index');
 
     // --- FAVORITE ROUTES ---
     Route::post('/artist/{user}/favorite',          [FavoriteController::class, 'toggle'])       ->name('artist.favorite');

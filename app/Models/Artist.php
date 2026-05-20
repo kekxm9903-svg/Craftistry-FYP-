@@ -15,7 +15,6 @@ class Artist extends Model
         'bio',
         'specialization',
         'allow_customization',
-        'verification_status'
     ];
 
     // ── Relationships ────────────────────────────────────────────────────────
@@ -40,9 +39,6 @@ class Artist extends Model
         return $this->hasMany(ArtworkSell::class)->orderBy('created_at', 'desc');
     }
 
-    /**
-     * All reviews for this artist (across all their products)
-     */
     public function reviews()
     {
         return $this->hasMany(Review::class, 'artist_id');
@@ -50,12 +46,6 @@ class Artist extends Model
 
     // ── Computed Attributes ──────────────────────────────────────────────────
 
-    /**
-     * Average rating across all products.
-     * Formula: average of each product's average rating.
-     * e.g. product A=2.0, B=5.0, C=3.5 → (2.0+5.0+3.5)/3 = 3.5
-     * Usage: $artist->seller_rating
-     */
     public function getSellerRatingAttribute(): float
     {
         $perProduct = $this->reviews()
@@ -70,19 +60,11 @@ class Artist extends Model
         return round($perProduct->avg(), 1);
     }
 
-    /**
-     * Total number of reviews across all products.
-     * Usage: $artist->seller_review_count
-     */
     public function getSellerReviewCountAttribute(): int
     {
         return $this->reviews()->count();
     }
 
-    /**
-     * Number of unique products that have been reviewed.
-     * Usage: $artist->reviewed_products_count
-     */
     public function getReviewedProductsCountAttribute(): int
     {
         return $this->reviews()
@@ -90,9 +72,6 @@ class Artist extends Model
             ->count('artwork_sell_id');
     }
 
-    /**
-     * Get the total sales revenue from sold artworks.
-     */
     public function getTotalSalesRevenueAttribute()
     {
         return $this->artworkSells()
@@ -100,9 +79,6 @@ class Artist extends Model
             ->sum('product_price');
     }
 
-    /**
-     * Get the count of sold artworks.
-     */
     public function getSoldArtworksCountAttribute()
     {
         return $this->artworkSells()
@@ -110,9 +86,6 @@ class Artist extends Model
             ->count();
     }
 
-    /**
-     * Get the count of available artworks for sale.
-     */
     public function getAvailableArtworksCountAttribute()
     {
         return $this->artworkSells()
@@ -120,9 +93,6 @@ class Artist extends Model
             ->count();
     }
 
-    /**
-     * Get the total count of all artworks (demo + sell).
-     */
     public function getTotalArtworksCountAttribute()
     {
         return $this->demoArtworks()->count() + $this->artworkSells()->count();

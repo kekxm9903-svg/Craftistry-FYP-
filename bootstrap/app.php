@@ -33,5 +33,9 @@ return Application::configure(basePath: dirname(__DIR__))
                  ->dailyAt('08:00');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, $request) {
+            if ($e->getStatusCode() === 403) {
+                return response()->view('403', [], 403);
+            }
+        });
     })->create();

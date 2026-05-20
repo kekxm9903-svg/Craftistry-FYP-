@@ -73,7 +73,6 @@ class AuthController extends Controller
             'fullname' => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'phone'    => 'required|string|max:20',
-            'location' => 'required|string',
             'password' => 'required|min:8|confirmed',
             'terms'    => 'accepted',
         ], [
@@ -87,14 +86,11 @@ class AuthController extends Controller
             'fullname'         => $validated['fullname'],
             'email'            => $validated['email'],
             'phone'            => $validated['phone'],
-            'location'         => $validated['location'],
             'password'         => Hash::make($validated['password']),
             'role'             => 'buyer',
             'preference_shown' => false,
         ]);
 
-        // Log the user in so the verification routes (auth middleware) work,
-        // then send the verification email and redirect to the notice page.
         Auth::login($user);
         $user->sendEmailVerificationNotification();
 
@@ -137,22 +133,24 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
 
-            // Block unverified users — admins are exempt from email verification
-            if (!Auth::user()->hasVerifiedEmail() && Auth::user()->role !== 'admin') {
+            $authUser = Auth::user();
+
+            // Admins (both admin and super_admin) bypass email verification
+            if (!$authUser->hasVerifiedEmail() && !$authUser->isAdmin()) {
                 return redirect()->route('verification.notice')
                     ->with('warning', 'Please verify your email address before logging in.');
             }
 
-            $this->restoreCartFromDb(Auth::id());
+            $this->restoreCartFromDb($authUser->id);
 
-            // Admin — skip preference modal entirely
-            if (Auth::user()->role === 'admin') {
+            // Redirect admins and super_admins to admin panel
+            if ($authUser->isAdmin()) {
                 return redirect()->route('admin.dashboard')
-                    ->with('success', 'Welcome, Admin ' . Auth::user()->fullname . '!');
+                    ->with('success', 'Welcome, ' . $authUser->fullname . '!');
             }
 
             return redirect()->intended(route('dashboard'))
-                ->with('success', 'Welcome back, ' . Auth::user()->fullname . '!');
+                ->with('success', 'Welcome back, ' . $authUser->fullname . '!');
         }
 
         return back()->withErrors([
@@ -216,7 +214,7 @@ class AuthController extends Controller
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user, $password) {
                 $user->forceFill([
-                    'password' => Hash::make($password), // overwrites old password in DB
+                    'password' => Hash::make($password),
                 ])->setRememberToken(Str::random(60));
 
                 $user->save();

@@ -12,9 +12,32 @@ use Stripe\Checkout\Session;
 
 class OrderCheckoutController extends Controller
 {
+    // ── Helper: check if any item in a cart array is physical ────────────────
+    private function hasPhysicalItem(array $cartItems): bool
+    {
+        foreach ($cartItems as $item) {
+            $type = $item['artwork']->artwork_type ?? '';
+            if (in_array($type, ['physical', 'both'])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // ── Helper: check if user has a complete shipping address ────────────────
+    private function userHasAddress($user): bool
+    {
+        return !empty($user->address)
+            && !empty($user->city)
+            && !empty($user->state)
+            && !empty($user->postcode);
+    }
+
     // Show checkout page — summary of cart items OR buy now item
     public function show(Request $request)
     {
+        $user = auth()->user();
+
         // ── Buy Now: single item bypassing cart ──────────────────────────────
         if ($request->filled('buy_now') && $request->filled('artwork_id')) {
             $artwork = ArtworkSell::find($request->artwork_id);
@@ -40,7 +63,11 @@ class OrderCheckoutController extends Controller
                 'qty'        => $qty,
             ]]);
 
-            return view('orderCheckout', compact('cartItems', 'total'));
+            // Force address if physical
+            $needsAddress = $this->hasPhysicalItem($cartItems);
+            $hasAddress   = $this->userHasAddress($user);
+
+            return view('orderCheckout', compact('cartItems', 'total', 'user', 'needsAddress', 'hasAddress'));
         }
 
         // ── Normal cart checkout ─────────────────────────────────────────────
@@ -71,13 +98,38 @@ class OrderCheckoutController extends Controller
             }
         }
 
-        return view('orderCheckout', compact('cartItems', 'total'));
+        $needsAddress = $this->hasPhysicalItem($cartItems);
+        $hasAddress   = $this->userHasAddress($user);
+
+        return view('orderCheckout', compact('cartItems', 'total', 'user', 'needsAddress', 'hasAddress'));
     }
 
     // Process payment — redirect to Stripe
     public function process(Request $request)
     {
         $user = auth()->user();
+
+        // ── Block physical orders with no address ────────────────────────────
+        // Re-build cart items to check type
+        $buyNow    = session('buy_now');
+        $cartItems = [];
+
+        if ($buyNow) {
+            $artwork = ArtworkSell::find($buyNow['artwork_id']);
+            if ($artwork) {
+                $cartItems[] = ['artwork' => $artwork];
+            }
+        } else {
+            foreach (session('cart', []) as $id => $item) {
+                $artwork = ArtworkSell::find($id);
+                if ($artwork) $cartItems[] = ['artwork' => $artwork];
+            }
+        }
+
+        if ($this->hasPhysicalItem($cartItems) && !$this->userHasAddress($user)) {
+            return redirect()->route('order.checkout.show')
+                ->with('error', 'Please set your shipping address before placing an order for physical items.');
+        }
 
         Stripe::setApiKey(config('services.stripe.secret'));
 
@@ -86,8 +138,6 @@ class OrderCheckoutController extends Controller
         $groupedByArtist = [];
 
         // ── Buy Now flow ─────────────────────────────────────────────────────
-        $buyNow = session('buy_now');
-
         if ($buyNow) {
             $artwork = ArtworkSell::with('artist')->find($buyNow['artwork_id']);
 
@@ -179,13 +229,18 @@ class OrderCheckoutController extends Controller
             $artistTotal = collect($items)->sum(fn($i) => $i['price'] * $i['qty']);
 
             $order = Order::create([
-                'user_id'           => $user->id,
-                'artist_id'         => $artistId,
-                'type'              => 'product',
-                'total'             => $artistTotal,
-                'payment_status'    => 'pending',
-                'status'            => 'pending_payment',
-                'stripe_session_id' => $stripeSession->id,
+                'user_id'             => $user->id,
+                'artist_id'           => $artistId,
+                'type'                => 'product',
+                'total'               => $artistTotal,
+                'payment_status'      => 'pending',
+                'status'              => 'pending_payment',
+                'stripe_session_id'   => $stripeSession->id,
+                // Snapshot shipping address at time of order
+                'shipping_address'    => $user->address,
+                'shipping_city'       => $user->city,
+                'shipping_state'      => $user->state,
+                'shipping_postcode'   => $user->postcode,
             ]);
 
             foreach ($items as $item) {
