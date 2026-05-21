@@ -129,7 +129,6 @@
         gap: var(--sp-sm);
     }
 
-    /* ── Thumbnail gallery ── */
     .sp-thumbs {
         display: flex;
         gap: var(--sp-xs);
@@ -146,16 +145,10 @@
         transition: border-color .15s, transform .12s;
         background: #fafafa;
     }
-    .sp-thumb img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-    }
+    .sp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .sp-thumb:hover { border-color: var(--primary); transform: scale(1.04); }
     .sp-thumb.active { border-color: var(--primary); box-shadow: 0 0 0 2px #c4b5fd; }
 
-    /* CHANGE 1 — add position:relative so the promo badge can anchor to it */
     .sp-main-img {
         width: 100%;
         aspect-ratio: 1;
@@ -177,34 +170,23 @@
         font-size: 3.5rem;
     }
 
-    /* CHANGE 1 — promotion badge on image */
     .sp-promo-img-badge {
         position: absolute;
-        top: 10px;
-        left: 10px;
+        top: 10px; left: 10px;
         background: linear-gradient(135deg, #ef4444, #dc2626);
-        color: #fff;
-        font-size: 11px;
-        font-weight: 800;
-        padding: 3px 8px;
-        border-radius: 20px;
-        letter-spacing: .5px;
-        z-index: 2;
-        box-shadow: 0 2px 6px rgba(220,38,38,.35);
+        color: #fff; font-size: 11px; font-weight: 800;
+        padding: 3px 8px; border-radius: 20px; letter-spacing: .5px;
+        z-index: 2; box-shadow: 0 2px 6px rgba(220,38,38,.35);
     }
 
     .sp-artist-strip {
-        display: flex;
-        align-items: center;
-        gap: var(--sp-sm);
+        display: flex; align-items: center; gap: var(--sp-sm);
         padding: var(--sp-sm) var(--sp-md);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
+        border: 1px solid var(--border); border-radius: var(--radius-md);
         background: #fafafa;
     }
     .sp-artist-ava {
-        width: 38px; height: 38px;
-        border-radius: 50%;
+        width: 38px; height: 38px; border-radius: 50%;
         background: linear-gradient(135deg, var(--primary), var(--primary-2));
         display: flex; align-items: center; justify-content: center;
         color: #fff; font-weight: 700; font-size: var(--fs-sm);
@@ -215,428 +197,144 @@
     .sp-artist-name { font-size: var(--fs-base); font-weight: 600; color: var(--ink); }
     .sp-artist-role { font-size: var(--fs-sm); color: var(--muted); margin-top: 2px; }
     .sp-artist-btn {
-        flex-shrink: 0;
-        padding: var(--sp-xs) var(--sp-sm);
-        border: 1.5px solid var(--primary);
-        border-radius: var(--radius-sm);
-        color: var(--primary);
-        font-size: var(--fs-sm);
-        font-weight: 600;
-        text-decoration: none;
-        white-space: nowrap;
-        transition: all .15s;
+        flex-shrink: 0; padding: var(--sp-xs) var(--sp-sm);
+        border: 1.5px solid var(--primary); border-radius: var(--radius-sm);
+        color: var(--primary); font-size: var(--fs-sm); font-weight: 600;
+        text-decoration: none; white-space: nowrap; transition: all .15s;
     }
     .sp-artist-btn:hover { background: var(--primary); color: #fff; }
 
-    .sp-info-pane {
-        padding: var(--sp-xl);
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-    }
+    .sp-info-pane { padding: var(--sp-xl); display: flex; flex-direction: column; gap: 0; }
 
     .sp-title-row {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: var(--sp-md);
-        margin-bottom: var(--sp-sm);
+        display: flex; align-items: flex-start; justify-content: space-between;
+        gap: var(--sp-md); margin-bottom: var(--sp-sm);
     }
-
     .sp-cat-tag {
-        display: inline-block;
-        font-size: var(--fs-sm);
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .8px;
-        color: var(--primary-2);
-        background: var(--lavender);
-        padding: 3px var(--sp-sm);
-        border-radius: 20px;
-        margin-bottom: var(--sp-sm);
+        display: inline-block; font-size: var(--fs-sm); font-weight: 700;
+        text-transform: uppercase; letter-spacing: .8px;
+        color: var(--primary-2); background: var(--lavender);
+        padding: 3px var(--sp-sm); border-radius: 20px; margin-bottom: var(--sp-sm);
     }
+    .sp-title { font-size: var(--fs-lg); font-weight: 700; color: var(--ink); line-height: 1.3; flex: 1; min-width: 0; }
 
-    .sp-title {
-        font-size: var(--fs-lg);
-        font-weight: 700;
-        color: var(--ink);
-        line-height: 1.3;
-        flex: 1;
-        min-width: 0;
-    }
-
-    /* ── Favourite button ── */
     .btn-fav-product {
-        flex-shrink: 0;
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        border: 1.5px solid var(--border);
-        background: var(--white);
-        color: var(--muted);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 15px;
-        cursor: pointer;
-        transition: all .2s;
-        position: relative;
-        top: 2px;
+        flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%;
+        border: 1.5px solid var(--border); background: var(--white); color: var(--muted);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 15px; cursor: pointer; transition: all .2s; position: relative; top: 2px;
     }
-    .btn-fav-product:hover {
-        border-color: #fca5a5;
-        background: #fef2f2;
-        color: #ef4444;
-    }
-    .btn-fav-product.is-fav {
-        border-color: #fca5a5;
-        background: #fef2f2;
-        color: #ef4444;
-    }
-    .btn-fav-product.is-fav:hover {
-        background: #ef4444;
-        color: #fff;
-        border-color: #ef4444;
-    }
-    .btn-fav-product.loading {
-        pointer-events: none;
-        opacity: .6;
-    }
+    .btn-fav-product:hover { border-color: #fca5a5; background: #fef2f2; color: #ef4444; }
+    .btn-fav-product.is-fav { border-color: #fca5a5; background: #fef2f2; color: #ef4444; }
+    .btn-fav-product.is-fav:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+    .btn-fav-product.loading { pointer-events: none; opacity: .6; }
 
     .sp-rating-row {
-        display: flex;
-        align-items: center;
-        gap: var(--sp-sm);
-        padding-bottom: var(--sp-md);
-        border-bottom: 1px solid var(--divider);
+        display: flex; align-items: center; gap: var(--sp-sm);
+        padding-bottom: var(--sp-md); border-bottom: 1px solid var(--divider);
     }
     .sp-stars { display: flex; gap: 2px; }
     .sp-stars i { font-size: var(--fs-sm); }
-    .sp-rating-score {
-        font-size: var(--fs-base);
-        font-weight: 700;
-        color: var(--ink);
-        border-bottom: 1px solid var(--ink);
-        line-height: 1.2;
-    }
+    .sp-rating-score { font-size: var(--fs-base); font-weight: 700; color: var(--ink); border-bottom: 1px solid var(--ink); line-height: 1.2; }
     .sp-dot { color: #ddd; font-size: 8px; }
     .sp-rating-link { font-size: var(--fs-sm); color: var(--muted); text-decoration: none; }
     .sp-rating-link:hover { color: var(--primary); }
 
-    /* CHANGE 2 — normal price strip (unchanged) + promo variants */
     .sp-price-strip {
         background: linear-gradient(135deg, #f5f3ff 0%, #faf9ff 100%);
-        padding: var(--sp-md) var(--sp-xl);
-        margin: 0 calc(-1 * var(--sp-xl));
-        display: flex;
-        align-items: baseline;
-        gap: var(--sp-xs);
-        border-top: 1px solid #ece8ff;
-        border-bottom: 1px solid #ece8ff;
+        padding: var(--sp-md) var(--sp-xl); margin: 0 calc(-1 * var(--sp-xl));
+        display: flex; align-items: baseline; gap: var(--sp-xs);
+        border-top: 1px solid #ece8ff; border-bottom: 1px solid #ece8ff;
     }
-    .sp-price-label {
-        font-size: var(--fs-sm);
-        color: var(--muted);
-        width: var(--label-w);
-        flex-shrink: 0;
-    }
-    .sp-price-rm {
-        font-size: var(--fs-base);
-        font-weight: 700;
-        color: var(--primary);
-        align-self: flex-start;
-        margin-top: 5px;
-    }
-    .sp-price-val {
-        font-size: var(--fs-xl);
-        font-weight: 800;
-        line-height: 1;
-        background: linear-gradient(135deg, var(--primary), var(--primary-2));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    /* promotion active overrides */
-    .sp-price-strip.promo-active {
-        background: linear-gradient(135deg, #fff5f5 0%, #fef9f9 100%);
-        border-top-color: #fecaca;
-        border-bottom-color: #fecaca;
-        flex-wrap: wrap;
-        row-gap: 4px;
-    }
-    .sp-promo-price-rm {
-        font-size: var(--fs-base);
-        font-weight: 700;
-        color: #dc2626;
-        align-self: flex-start;
-        margin-top: 5px;
-    }
-    .sp-promo-price-val {
-        font-size: var(--fs-xl);
-        font-weight: 800;
-        line-height: 1;
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    .sp-promo-original {
-        align-self: flex-end;
-        margin-bottom: 3px;
-        font-size: var(--fs-base);
-        color: var(--muted);
-        text-decoration: line-through;
-        margin-left: var(--sp-xs);
-    }
-    .sp-promo-badge-strip {
-        align-self: flex-end;
-        margin-bottom: 3px;
-        margin-left: var(--sp-xs);
-        background: #ef4444;
-        color: #fff;
-        font-size: 11px;
-        font-weight: 800;
-        padding: 2px 7px;
-        border-radius: 20px;
-        letter-spacing: .4px;
-    }
-    .sp-promo-ends {
-        width: 100%;
-        font-size: var(--fs-sm);
-        color: #dc2626;
-        margin-top: 2px;
-        padding-left: var(--label-w);
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-    /* total price promo colour */
-    .sp-total-price.promo {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-        -webkit-background-clip: text;
-        background-clip: text;
-    }
+    .sp-price-label { font-size: var(--fs-sm); color: var(--muted); width: var(--label-w); flex-shrink: 0; }
+    .sp-price-rm { font-size: var(--fs-base); font-weight: 700; color: var(--primary); align-self: flex-start; margin-top: 5px; }
+    .sp-price-val { font-size: var(--fs-xl); font-weight: 800; line-height: 1; background: linear-gradient(135deg, var(--primary), var(--primary-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .sp-price-strip.promo-active { background: linear-gradient(135deg, #fff5f5 0%, #fef9f9 100%); border-top-color: #fecaca; border-bottom-color: #fecaca; flex-wrap: wrap; row-gap: 4px; }
+    .sp-promo-price-rm { font-size: var(--fs-base); font-weight: 700; color: #dc2626; align-self: flex-start; margin-top: 5px; }
+    .sp-promo-price-val { font-size: var(--fs-xl); font-weight: 800; line-height: 1; background: linear-gradient(135deg, #ef4444, #dc2626); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .sp-promo-original { align-self: flex-end; margin-bottom: 3px; font-size: var(--fs-base); color: var(--muted); text-decoration: line-through; margin-left: var(--sp-xs); }
+    .sp-promo-badge-strip { align-self: flex-end; margin-bottom: 3px; margin-left: var(--sp-xs); background: #ef4444; color: #fff; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 20px; letter-spacing: .4px; }
+    .sp-promo-ends { width: 100%; font-size: var(--fs-sm); color: #dc2626; margin-top: 2px; padding-left: var(--label-w); display: flex; align-items: center; gap: 4px; }
+    .sp-total-price.promo { background: linear-gradient(135deg, #ef4444, #dc2626); -webkit-background-clip: text; background-clip: text; }
 
     .sp-bulk-banner {
-        display: flex;
-        align-items: center;
-        gap: var(--sp-sm);
-        padding: var(--sp-sm) var(--sp-xl);
-        margin: 0 calc(-1 * var(--sp-xl));
-        background: var(--lavender);
-        border-bottom: 1px solid #ddd6fe;
-        font-size: var(--fs-sm);
-        color: var(--primary-2);
+        display: flex; align-items: center; gap: var(--sp-sm);
+        padding: var(--sp-sm) var(--sp-xl); margin: 0 calc(-1 * var(--sp-xl));
+        background: var(--lavender); border-bottom: 1px solid #ddd6fe;
+        font-size: var(--fs-sm); color: var(--primary-2);
     }
     .sp-bulk-banner i { color: var(--primary); font-size: 12px; flex-shrink: 0; }
     .sp-bulk-banner strong { font-weight: 700; }
 
-    .sp-meta-section {
-        padding: var(--sp-md) 0;
-        border-bottom: 1px solid var(--divider);
-    }
-    .sp-row {
-        display: flex;
-        align-items: flex-start;
-        padding: var(--sp-xs) 0;
-        font-size: var(--fs-base);
-        line-height: 1.5;
-    }
-    .sp-row-key {
-        width: var(--label-w);
-        flex-shrink: 0;
-        color: var(--muted);
-        font-weight: 400;
-    }
+    .sp-meta-section { padding: var(--sp-md) 0; border-bottom: 1px solid var(--divider); }
+    .sp-row { display: flex; align-items: flex-start; padding: var(--sp-xs) 0; font-size: var(--fs-base); line-height: 1.5; }
+    .sp-row-key { width: var(--label-w); flex-shrink: 0; color: var(--muted); font-weight: 400; }
     .sp-row-val { color: var(--ink); flex: 1; font-weight: 500; }
-    .sp-row-val .in-stock  { color: var(--success); font-weight: 600; }
-    .sp-row-val .sold-out  { color: #c62828; font-weight: 600; }
+    .sp-row-val .in-stock { color: var(--success); font-weight: 600; }
+    .sp-row-val .sold-out { color: #c62828; font-weight: 600; }
+
+    /* ── stock count pill ── */
+    .sp-stock-count {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: var(--fs-sm); color: var(--muted); font-weight: 500;
+        background: var(--divider); padding: 2px 8px; border-radius: 20px;
+        margin-left: var(--sp-xs);
+    }
+    .sp-stock-count.low { background: #fff7ed; color: #c2410c; }
 
     .sp-purchase-section {
-        padding: var(--sp-md) 0;
-        border-bottom: 1px solid var(--divider);
-        display: flex;
-        flex-direction: column;
-        gap: var(--sp-md);
+        padding: var(--sp-md) 0; border-bottom: 1px solid var(--divider);
+        display: flex; flex-direction: column; gap: var(--sp-md);
     }
-    .sp-qty-stepper {
-        display: inline-flex;
-        align-items: center;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        overflow: hidden;
-    }
+    .sp-qty-stepper { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
     .sp-qty-stepper.disabled { opacity: .4; pointer-events: none; }
-    .sp-qty-btn {
-        width: 32px; height: 32px;
-        background: #fafafa;
-        border: none;
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--ink);
-        cursor: pointer;
-        display: flex; align-items: center; justify-content: center;
-        transition: background .12s;
-    }
+    .sp-qty-btn { width: 32px; height: 32px; background: #fafafa; border: none; font-size: 1rem; font-weight: 600; color: var(--ink); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .12s; }
     .sp-qty-btn + .sp-qty-num { border-left: 1px solid var(--border); }
     .sp-qty-num + .sp-qty-btn { border-left: 1px solid var(--border); }
     .sp-qty-btn:hover:not(:disabled) { background: var(--lavender); color: var(--primary); }
     .sp-qty-btn:disabled { opacity: .35; cursor: not-allowed; }
-    .sp-qty-num {
-        width: 52px; height: 32px;
-        text-align: center;
-        font-size: var(--fs-base);
-        font-weight: 600;
-        color: var(--ink);
-        border: none;
-        outline: none;
-        background: transparent;
-        font-family: 'Inter', sans-serif;
-        -moz-appearance: textfield;
-    }
-    .sp-qty-num::-webkit-inner-spin-button,
-    .sp-qty-num::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .sp-qty-num { width: 52px; height: 32px; text-align: center; font-size: var(--fs-base); font-weight: 600; color: var(--ink); border: none; outline: none; background: transparent; font-family: 'Inter', sans-serif; -moz-appearance: textfield; }
+    .sp-qty-num::-webkit-inner-spin-button, .sp-qty-num::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     .sp-qty-note { font-size: var(--fs-sm); color: var(--muted); margin-left: var(--sp-sm); }
 
-    .sp-total-price {
-        font-size: var(--fs-xl);
-        font-weight: 800;
-        line-height: 1;
-        background: linear-gradient(135deg, var(--primary), var(--primary-2));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    .sp-total-hint {
-        font-size: var(--fs-sm);
-        color: var(--muted);
-        margin-left: var(--sp-sm);
-        font-weight: 400;
-    }
+    /* ── stock hint line under stepper ── */
+    .sp-stock-hint { font-size: var(--fs-sm); color: var(--muted); padding-left: var(--label-w); margin-top: 2px; }
+    .sp-stock-hint.at-max { color: #c2410c; font-weight: 600; }
 
-    .sp-cta-row {
-        display: flex;
-        gap: var(--sp-sm);
-        padding-top: var(--sp-md);
-        align-items: stretch;
-    }
+    .sp-total-price { font-size: var(--fs-xl); font-weight: 800; line-height: 1; background: linear-gradient(135deg, var(--primary), var(--primary-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .sp-total-hint { font-size: var(--fs-sm); color: var(--muted); margin-left: var(--sp-sm); font-weight: 400; }
+
+    .sp-cta-row { display: flex; gap: var(--sp-sm); padding-top: var(--sp-md); align-items: stretch; }
     .sp-cta-row-bulk { padding-top: var(--sp-xs); }
 
-    .sp-btn {
-        display: flex; align-items: center; justify-content: center; gap: var(--sp-xs);
-        padding: 11px var(--sp-md);
-        border-radius: var(--radius-sm);
-        font-family: 'Inter', sans-serif;
-        font-size: var(--fs-base);
-        font-weight: 700;
-        cursor: pointer;
-        transition: all .15s;
-        border: none;
-        white-space: nowrap;
-        text-decoration: none;
-    }
-    .sp-btn-cart {
-        flex: 1;
-        background: var(--lavender);
-        color: var(--primary);
-        border: 1.5px solid var(--primary);
-    }
+    .sp-btn { display: flex; align-items: center; justify-content: center; gap: var(--sp-xs); padding: 11px var(--sp-md); border-radius: var(--radius-sm); font-family: 'Inter', sans-serif; font-size: var(--fs-base); font-weight: 700; cursor: pointer; transition: all .15s; border: none; white-space: nowrap; text-decoration: none; }
+    .sp-btn-cart { flex: 1; background: var(--lavender); color: var(--primary); border: 1.5px solid var(--primary); }
     .sp-btn-cart:hover { background: #ddd6fe; }
     .sp-btn-cart:disabled { opacity: .5; cursor: not-allowed; }
     .sp-btn-cart.added { background: #ecfdf5; border-color: var(--success); color: var(--success); }
-
-    .sp-btn-buy {
-        flex: 1;
-        background: linear-gradient(135deg, var(--primary), var(--primary-2));
-        color: #fff;
-        box-shadow: 0 3px 10px rgba(102,126,234,.28);
-    }
+    .sp-btn-buy { flex: 1; background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: #fff; box-shadow: 0 3px 10px rgba(102,126,234,.28); }
     .sp-btn-buy:hover { opacity: .9; box-shadow: 0 5px 16px rgba(102,126,234,.38); }
     .sp-btn-buy:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
-
-    .sp-btn-bulk {
-        width: 100%;
-        background: #faf9ff;
-        color: var(--primary);
-        border: 1.5px solid var(--primary);
-        justify-content: center;
-        gap: var(--sp-sm);
-        box-shadow: none;
-    }
+    .sp-btn-bulk { width: 100%; background: #faf9ff; color: var(--primary); border: 1.5px solid var(--primary); justify-content: center; gap: var(--sp-sm); box-shadow: none; }
     .sp-btn-bulk:hover { background: var(--lavender); color: var(--primary-2); }
 
-    .bulk-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        background: var(--lavender);
-        color: var(--primary-2);
-        padding: 2px var(--sp-sm);
-        border-radius: 20px;
-        font-size: var(--fs-sm);
-        font-weight: 700;
-        border: 1px solid #ddd6fe;
-    }
+    .bulk-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--lavender); color: var(--primary-2); padding: 2px var(--sp-sm); border-radius: 20px; font-size: var(--fs-sm); font-weight: 700; border: 1px solid #ddd6fe; }
 
-    .sp-sold-notice {
-        display: flex; align-items: center; gap: var(--sp-xs);
-        background: #fff5f5; border: 1px solid #fecaca;
-        border-radius: var(--radius-sm); padding: 11px var(--sp-md);
-        color: #dc2626; font-weight: 700; font-size: var(--fs-base);
-        flex: 1;
-    }
-    .sp-btn-sold {
-        flex: 1; padding: 11px var(--sp-md);
-        background: #e5e7eb; color: #9ca3af;
-        border: none; border-radius: var(--radius-sm);
-        font-family: 'Inter', sans-serif;
-        font-size: var(--fs-base); font-weight: 700;
-        cursor: not-allowed;
-        display: flex; align-items: center; justify-content: center; gap: var(--sp-xs);
-    }
+    .sp-sold-notice { display: flex; align-items: center; gap: var(--sp-xs); background: #fff5f5; border: 1px solid #fecaca; border-radius: var(--radius-sm); padding: 11px var(--sp-md); color: #dc2626; font-weight: 700; font-size: var(--fs-base); flex: 1; }
+    .sp-btn-sold { flex: 1; padding: 11px var(--sp-md); background: #e5e7eb; color: #9ca3af; border: none; border-radius: var(--radius-sm); font-family: 'Inter', sans-serif; font-size: var(--fs-base); font-weight: 700; cursor: not-allowed; display: flex; align-items: center; justify-content: center; gap: var(--sp-xs); }
 
-    .sp-spec-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0;
-    }
-    .sp-spec-cell {
-        display: flex;
-        align-items: flex-start;
-        padding: var(--sp-sm) 0;
-        border-bottom: 1px solid var(--divider);
-        font-size: var(--fs-base);
-    }
+    .sp-spec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+    .sp-spec-cell { display: flex; align-items: flex-start; padding: var(--sp-sm) 0; border-bottom: 1px solid var(--divider); font-size: var(--fs-base); }
     .sp-spec-cell:nth-last-child(-n+2) { border-bottom: none; }
     .sp-spec-cell:nth-child(odd) { padding-right: var(--sp-xl); }
     .sp-spec-key { width: var(--label-w); flex-shrink: 0; color: var(--muted); font-weight: 400; }
     .sp-spec-val { color: var(--ink); font-weight: 500; flex: 1; }
 
-    .sp-desc {
-        font-size: var(--fs-base);
-        line-height: 1.8;
-        color: #4b5563;
-        white-space: pre-line;
-    }
+    .sp-desc { font-size: var(--fs-base); line-height: 1.8; color: #4b5563; white-space: pre-line; }
 
-    .sp-reviews-summary {
-        display: flex;
-        align-items: center;
-        gap: var(--sp-xl);
-        padding: var(--sp-lg) var(--sp-xl);
-        background: linear-gradient(135deg, #f5f3ff, #faf9ff);
-        border-bottom: 1px solid #ece8ff;
-    }
+    .sp-reviews-summary { display: flex; align-items: center; gap: var(--sp-xl); padding: var(--sp-lg) var(--sp-xl); background: linear-gradient(135deg, #f5f3ff, #faf9ff); border-bottom: 1px solid #ece8ff; }
     .sp-score-block { text-align: center; flex-shrink: 0; }
-    .sp-score-num {
-        font-size: 2.4rem;
-        font-weight: 800;
-        line-height: 1;
-        background: linear-gradient(135deg, var(--primary), var(--primary-2));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
+    .sp-score-num { font-size: 2.4rem; font-weight: 800; line-height: 1; background: linear-gradient(135deg, var(--primary), var(--primary-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .sp-score-stars { display: flex; justify-content: center; gap: 3px; margin: var(--sp-xs) 0; }
     .sp-score-stars i { font-size: 13px; }
     .sp-score-label { font-size: var(--fs-sm); color: var(--muted); }
@@ -651,38 +349,19 @@
     .sp-review-list { padding: 0 var(--sp-xl); }
     .sp-review-item { padding: var(--sp-md) 0; border-bottom: 1px solid var(--divider); }
     .sp-review-item:last-child { border-bottom: none; }
-
     .sp-reviewer-row { display: flex; align-items: center; gap: var(--sp-sm); margin-bottom: var(--sp-sm); }
-    .sp-reviewer-ava {
-        width: 36px; height: 36px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, var(--primary), var(--primary-2));
-        display: flex; align-items: center; justify-content: center;
-        color: #fff; font-weight: 700; font-size: var(--fs-sm);
-        flex-shrink: 0; overflow: hidden;
-    }
+    .sp-reviewer-ava { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-2)); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: var(--fs-sm); flex-shrink: 0; overflow: hidden; }
     .sp-reviewer-ava img { width: 100%; height: 100%; object-fit: cover; }
     .sp-reviewer-name { font-size: var(--fs-base); font-weight: 600; color: var(--ink); }
     .sp-reviewer-meta { display: flex; align-items: center; gap: var(--sp-xs); margin-top: 2px; }
     .sp-rev-stars { display: flex; gap: 1px; }
     .sp-rev-stars i { font-size: 11px; }
     .sp-rev-date { font-size: var(--fs-sm); color: var(--muted); }
-
     .sp-review-text { font-size: var(--fs-base); color: #4b5563; line-height: 1.7; margin-bottom: var(--sp-sm); }
-
     .sp-review-imgs { display: flex; gap: var(--sp-xs); flex-wrap: wrap; }
-    .sp-rev-img {
-        width: 76px; height: 76px;
-        border-radius: var(--radius-sm); overflow: hidden;
-        cursor: pointer; position: relative;
-        border: 1px solid var(--border);
-    }
+    .sp-rev-img { width: 76px; height: 76px; border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; position: relative; border: 1px solid var(--border); }
     .sp-rev-img img, .sp-rev-img video { width: 100%; height: 100%; object-fit: cover; }
-    .sp-rev-vid-ov {
-        position: absolute; inset: 0;
-        display: flex; align-items: center; justify-content: center;
-        background: rgba(0,0,0,.28);
-    }
+    .sp-rev-vid-ov { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.28); }
     .sp-rev-vid-ov i { color: #fff; font-size: var(--fs-base); }
 
     .sp-no-reviews { text-align: center; padding: 36px var(--sp-lg); color: var(--muted); }
@@ -696,18 +375,7 @@
     .lightbox-close { position: absolute; top: var(--sp-md); right: var(--sp-lg); color: #fff; font-size: 1.6rem; cursor: pointer; background: none; border: none; line-height: 1; opacity: .7; transition: opacity .15s; }
     .lightbox-close:hover { opacity: 1; }
 
-    .toast {
-        position: fixed; bottom: var(--sp-xl); right: var(--sp-xl);
-        background: var(--ink); color: #fff;
-        padding: var(--sp-sm) var(--sp-md);
-        border-radius: var(--radius-md);
-        font-size: var(--fs-base); font-weight: 600;
-        display: flex; align-items: center; gap: var(--sp-sm);
-        box-shadow: 0 6px 20px rgba(0,0,0,.18);
-        transform: translateY(80px); opacity: 0;
-        transition: all .32s cubic-bezier(.34,1.56,.64,1);
-        z-index: 9999; max-width: 300px;
-    }
+    .toast { position: fixed; bottom: var(--sp-xl); right: var(--sp-xl); background: var(--ink); color: #fff; padding: var(--sp-sm) var(--sp-md); border-radius: var(--radius-md); font-size: var(--fs-base); font-weight: 600; display: flex; align-items: center; gap: var(--sp-sm); box-shadow: 0 6px 20px rgba(0,0,0,.18); transform: translateY(80px); opacity: 0; transition: all .32s cubic-bezier(.34,1.56,.64,1); z-index: 9999; max-width: 300px; }
     .toast.show { transform: translateY(0); opacity: 1; }
     .t-success { color: #34d399; }
     .t-info    { color: #60a5fa; }
@@ -755,9 +423,13 @@
 </form>
 
 @php
-    $isSoldOut   = in_array(strtolower($artwork->status ?? ''), ['sold', 'sold_out']);
+    $isSoldOut      = in_array(strtolower($artwork->status ?? ''), ['sold', 'sold_out']);
+    $availableStock = (int) ($artwork->available_stock ?? 0);
+    // Treat as sold out if status is available but stock is 0
+    if (!$isSoldOut && $availableStock === 0) { $isSoldOut = true; }
+
     $isFavorited = auth()->check() && auth()->user()->favoriteProducts->contains($artwork->id);
-    // Compute directly — no model accessor dependency
+
     $promoEnabled  = (bool) ($artwork->getRawOriginal('promotion_enabled') ?? false);
     $promoDiscount = (float) ($artwork->getRawOriginal('promotion_discount') ?? 0);
     $origPrice     = (float) ($artwork->getRawOriginal('product_price') ?? 0);
@@ -798,13 +470,11 @@
                 @else
                     <div class="sp-img-placeholder"><i class="fas fa-image"></i></div>
                 @endif
-                {{-- promo badge on image --}}
                 @if($promoPrice !== null)
                     <div class="sp-promo-img-badge">-{{ number_format($promoDiscount, 0) }}% OFF</div>
                 @endif
             </div>
 
-            {{-- Thumbnails (only shown when more than 1 image) --}}
             @if(count($allImages) > 1)
             <div class="sp-thumbs">
                 @foreach($allImages as $i => $img)
@@ -858,10 +528,8 @@
                 <span class="sp-cat-tag">{{ ucfirst($artwork->artwork_type) }}</span>
             @endif
 
-            {{-- Title row with favourite button --}}
             <div class="sp-title-row">
                 <h1 class="sp-title">{{ $artwork->product_name ?? 'Untitled Artwork' }}</h1>
-
                 @auth
                 <button class="btn-fav-product {{ $isFavorited ? 'is-fav' : '' }}"
                         id="btn-fav-product"
@@ -887,7 +555,7 @@
             </div>
             @endif
 
-            {{-- CHANGE 2: price strip — shows promo or normal --}}
+            {{-- Price strip --}}
             @if($promoPrice !== null)
                 <div class="sp-price-strip promo-active">
                     <span class="sp-price-label">Price</span>
@@ -930,16 +598,30 @@
                         @endif
                     </span>
                 </div>
+
+                {{-- ── Availability + stock count ── --}}
                 <div class="sp-row">
                     <span class="sp-row-key">Availability</span>
                     <span class="sp-row-val">
                         @if($isSoldOut)
                             <span class="sold-out">Sold Out</span>
                         @else
-                            <span class="in-stock"><i class="fas fa-check-circle" style="font-size:11px;margin-right:3px;"></i>In Stock</span>
+                            <span class="in-stock">
+                                <i class="fas fa-check-circle" style="font-size:11px;margin-right:3px;"></i>In Stock
+                            </span>
+                            @if($availableStock > 0)
+                                <span class="sp-stock-count {{ $availableStock <= 5 ? 'low' : '' }}">
+                                    @if($availableStock <= 5)
+                                        <i class="fas fa-exclamation-circle" style="font-size:10px;"></i> Only {{ $availableStock }} left
+                                    @else
+                                        {{ $availableStock }} available
+                                    @endif
+                                </span>
+                            @endif
                         @endif
                     </span>
                 </div>
+
                 @if($artwork->material)
                 <div class="sp-row">
                     <span class="sp-row-key">Material</span>
@@ -951,26 +633,29 @@
             {{-- Qty + total --}}
             <div class="sp-purchase-section">
                 @if(!$isSoldOut)
-                <div class="sp-row" style="align-items:center;">
-                    <span class="sp-row-key">Quantity</span>
-                    <div style="display:flex;align-items:center;">
-                        <div class="sp-qty-stepper">
-                            <button class="sp-qty-btn" id="qty-minus" onclick="changeQty(-1)" disabled>−</button>
-                            <input class="sp-qty-num" id="qty-value"
-                                   type="number" value="1" min="1"
-                                   oninput="handleQtyInput(this)"
-                                   onblur="handleQtyBlur(this)">
-                            <button class="sp-qty-btn" id="qty-plus" onclick="changeQty(1)">+</button>
+                <div>
+                    <div class="sp-row" style="align-items:center;">
+                        <span class="sp-row-key">Quantity</span>
+                        <div style="display:flex;align-items:center;gap:var(--sp-sm);">
+                            <div class="sp-qty-stepper">
+                                <button class="sp-qty-btn" id="qty-minus" onclick="changeQty(-1)" disabled>−</button>
+                                <input class="sp-qty-num" id="qty-value"
+                                       type="number" value="1" min="1" max="{{ $availableStock }}"
+                                       oninput="handleQtyInput(this)"
+                                       onblur="handleQtyBlur(this)">
+                                <button class="sp-qty-btn" id="qty-plus" onclick="changeQty(1)">+</button>
+                            </div>
+                            <span class="sp-qty-note">/ {{ $availableStock }}</span>
                         </div>
-                        <span class="sp-qty-note">Available</span>
                     </div>
+                    {{-- stock hint shown when near/at max --}}
+                    <div class="sp-stock-hint" id="stock-hint"></div>
                 </div>
                 @endif
 
                 <div class="sp-row" style="align-items:center;">
                     <span class="sp-row-key">Total</span>
                     <div style="display:flex;align-items:baseline;gap:var(--sp-xs);">
-                        {{-- CHANGE 3: start from effective price, red colour when promo --}}
                         <span class="sp-total-price{{ $promoPrice !== null ? ' promo' : '' }}" id="total-price">
                             RM {{ number_format($unitPrice, 2) }}
                         </span>
@@ -1061,9 +746,12 @@
                     </span>
                 </div>
                 @endif
+                {{-- Stock shown in specs card too --}}
                 <div class="sp-spec-cell">
-                    <span class="sp-spec-key">Status</span>
-                    <span class="sp-spec-val">{{ $isSoldOut ? 'Sold Out' : 'Available' }}</span>
+                    <span class="sp-spec-key">Stock</span>
+                    <span class="sp-spec-val">
+                        {{ $isSoldOut ? 'Sold Out' : $availableStock . ' unit' . ($availableStock !== 1 ? 's' : '') }}
+                    </span>
                 </div>
             </div>
         </div>
@@ -1189,47 +877,73 @@
 </div>
 
 <script>
-    // UNIT_PRICE = effective_price (promo if active, else original)
     const UNIT_PRICE    = {{ (float) $unitPrice }};
     const BULK_ENABLED  = {{ $artwork->bulk_sell_enabled ? 'true' : 'false' }};
     const BULK_MIN_QTY  = {{ $artwork->bulk_sell_min_qty ?? 0 }};
     const BULK_DISCOUNT = {{ $artwork->bulk_sell_discount ?? 0 }};
+    const MAX_STOCK     = {{ $availableStock }};   // hard ceiling from DB
+
     let qty = 1;
 
     function updateQtyDisplay() {
-        const input = document.getElementById('qty-value');
-        input.value = qty;
-        document.getElementById('qty-minus').disabled = qty <= 1;
+        // Clamp to [1, MAX_STOCK]
+        qty = Math.min(Math.max(1, qty), MAX_STOCK);
 
-        let unitPrice = UNIT_PRICE;
+        const input    = document.getElementById('qty-value');
+        const minusBtn = document.getElementById('qty-minus');
+        const plusBtn  = document.getElementById('qty-plus');
+        const hintEl   = document.getElementById('stock-hint');
         const bulkNote = document.getElementById('bulk-discount-note');
-        if (BULK_ENABLED && BULK_MIN_QTY > 0 && qty >= BULK_MIN_QTY) {
-            unitPrice = UNIT_PRICE * (1 - BULK_DISCOUNT / 100);
+
+        input.value       = qty;
+        minusBtn.disabled = qty <= 1;
+        plusBtn.disabled  = qty >= MAX_STOCK;
+
+        // Hint below stepper: show when at max or within 5 of max
+        if (hintEl) {
+            if (qty >= MAX_STOCK) {
+                hintEl.textContent = 'Maximum stock reached';
+                hintEl.className   = 'sp-stock-hint at-max';
+            } else if (MAX_STOCK - qty <= 5) {
+                hintEl.textContent = (MAX_STOCK - qty) + ' more available';
+                hintEl.className   = 'sp-stock-hint';
+            } else {
+                hintEl.textContent = '';
+                hintEl.className   = 'sp-stock-hint';
+            }
+        }
+
+        // Bulk discount: applies when qty >= BULK_MIN_QTY (stock cap already applied above)
+        let effectiveUnit = UNIT_PRICE;
+        const bulkActive  = BULK_ENABLED && BULK_MIN_QTY > 0 && qty >= BULK_MIN_QTY;
+        if (bulkActive) {
+            effectiveUnit = UNIT_PRICE * (1 - BULK_DISCOUNT / 100);
             if (bulkNote) bulkNote.style.display = 'inline';
         } else {
             if (bulkNote) bulkNote.style.display = 'none';
         }
 
-        const total = unitPrice * qty;
+        const total = effectiveUnit * qty;
         document.getElementById('total-price').textContent =
             'RM ' + total.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         const hint = document.getElementById('total-hint');
-        if (qty > 1) { hint.style.display = 'inline'; document.getElementById('qty-hint-val').textContent = qty; }
-        else         { hint.style.display = 'none'; }
+        if (qty > 1) {
+            hint.style.display = 'inline';
+            document.getElementById('qty-hint-val').textContent = qty;
+        } else {
+            hint.style.display = 'none';
+        }
     }
 
     function changeQty(delta) {
-        qty = Math.max(1, qty + delta);
+        qty = qty + delta;
         updateQtyDisplay();
     }
 
     function handleQtyInput(input) {
         const val = parseInt(input.value, 10);
-        if (!isNaN(val) && val >= 1) {
-            qty = val;
-            updateQtyDisplay();
-        }
+        if (!isNaN(val)) { qty = val; updateQtyDisplay(); }
     }
 
     function handleQtyBlur(input) {
@@ -1272,16 +986,11 @@
         document.getElementById('buy-now-form').submit();
     }
 
-    // ── Toggle product favourite ──────────────────────────────────────────────
     async function toggleProductFav(btn) {
         if (btn.classList.contains('loading')) return;
         btn.classList.add('loading');
-
-        const url      = btn.dataset.url;
-        const wasFav   = btn.classList.contains('is-fav');
-
         try {
-            const res = await fetch(url, {
+            const res = await fetch(btn.dataset.url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1289,11 +998,8 @@
                     'Accept':       'application/json',
                 },
             });
-
             if (!res.ok) throw new Error('Request failed');
-
             const data = await res.json();
-
             if (data.favorited) {
                 btn.classList.add('is-fav');
                 btn.title = 'Remove from favourites';
@@ -1313,12 +1019,10 @@
     function showToast(message, type = 'success', showLink = true) {
         const toast = document.getElementById('toast');
         document.getElementById('toast-msg').textContent = message;
-
         const iconEl = document.getElementById('toast-icon');
-        if (type === 'heart')        iconEl.className = 'fas fa-heart t-heart';
-        else if (type === 'info')    iconEl.className = 'fas fa-info-circle t-info';
-        else                         iconEl.className = 'fas fa-check-circle t-success';
-
+        if (type === 'heart')     iconEl.className = 'fas fa-heart t-heart';
+        else if (type === 'info') iconEl.className = 'fas fa-info-circle t-info';
+        else                      iconEl.className = 'fas fa-check-circle t-success';
         document.getElementById('toast-link').style.display = showLink ? 'inline' : 'none';
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 3500);
@@ -1348,7 +1052,6 @@
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
-    // Initialize total on page load
     updateQtyDisplay();
 </script>
 @endsection

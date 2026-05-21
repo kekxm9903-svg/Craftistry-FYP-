@@ -145,7 +145,6 @@
                             <span class="field-counter" id="editNameCounter">0 / 255</span>
                         </div>
 
-                        {{-- Artwork Type --}}
                         <div class="field-group">
                             <label class="field-label">Artwork Type <span class="required">*</span></label>
                             <div class="type-selector">
@@ -162,7 +161,6 @@
                             </div>
                         </div>
 
-                        {{-- ── Product Category (NEW) ── --}}
                         <div class="field-group">
                             <label class="field-label">
                                 Product Category <span class="required">*</span>
@@ -258,6 +256,7 @@
                                    value="{{ old('material', $artwork->material) }}"
                                    required maxlength="255" class="field-input">
                         </div>
+
                         <div class="field-group">
                             <label class="field-label">Dimensions <span class="required">*</span></label>
                             <div class="dimensions-grid">
@@ -288,21 +287,41 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Status --}}
                         <div class="field-group">
                             <label class="field-label">Status <span class="required">*</span></label>
                             <div class="status-selector">
                                 <label class="status-option available-opt" for="editSellStatusAvailable">
                                     <input type="radio" id="editSellStatusAvailable" name="status" value="available"
+                                           onchange="syncEditStockVisibility()"
                                            {{ old('status', $artwork->status) === 'available' ? 'checked' : '' }}>
                                     <div class="status-option-inner"><i class="fas fa-check-circle"></i><span>Available</span></div>
                                 </label>
                                 <label class="status-option soldout-opt" for="editSellStatusSoldOut">
                                     <input type="radio" id="editSellStatusSoldOut" name="status" value="sold_out"
+                                           onchange="syncEditStockVisibility()"
                                            {{ old('status', $artwork->status) === 'sold_out' ? 'checked' : '' }}>
                                     <div class="status-option-inner"><i class="fas fa-times-circle"></i><span>Sold Out</span></div>
                                 </label>
                             </div>
                         </div>
+
+                        {{-- Available Stock --}}
+                        <div class="field-group" id="editStockGroup">
+                            <label for="editAvailableStock" class="field-label">
+                                Available Stock <span class="required">*</span>
+                            </label>
+                            <input type="number" id="editAvailableStock" name="available_stock"
+                                   min="1" max="9999" step="1"
+                                   placeholder="e.g. 10"
+                                   class="field-input"
+                                   style="max-width:160px;"
+                                   value="{{ old('available_stock', $artwork->available_stock ?? 1) }}"
+                                   required>
+                            <span class="field-hint">How many units are available for purchase.</span>
+                        </div>
+
                     </div>
                 </div>
 
@@ -515,7 +534,24 @@ document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('promotionEnabled')?.checked) {
         updatePromoPreview();
     }
+
+    // Init stock visibility on page load
+    syncEditStockVisibility();
 });
+
+function syncEditStockVisibility() {
+    const status     = document.querySelector('input[name="status"]:checked')?.value;
+    const stockGroup = document.getElementById('editStockGroup');
+    const stockInput = document.getElementById('editAvailableStock');
+
+    if (status === 'sold_out') {
+        stockGroup.style.display = 'none';
+        stockInput.removeAttribute('required');
+    } else {
+        stockGroup.style.display = '';
+        stockInput.setAttribute('required', 'required');
+    }
+}
 
 function updatePricingPreview() {
     const price    = parseFloat(document.getElementById('editSellPrice')?.value || document.getElementById('sellPrice')?.value) || 0;

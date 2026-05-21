@@ -62,6 +62,7 @@ class ArtworkSellController extends Controller
                 'depth'               => 'nullable|numeric|min:0',
                 'unit'                => 'required|in:cm,inch,px',
                 'status'              => 'required|in:available,sold_out',
+                'available_stock'     => 'nullable|integer|min:1|max:9999',
                 'also_demo'           => 'nullable',
                 'bulk_sell_enabled'   => 'nullable|boolean',
                 'bulk_sell_min_qty'   => 'nullable|integer|min:2',
@@ -153,6 +154,7 @@ class ArtworkSellController extends Controller
                 'shipping_fee'         => $request->input('shipping_fee') ?? 0,
                 'image_path'           => $path,
                 'status'               => $validated['status'],
+                'available_stock'      => $validated['status'] === 'sold_out' ? 0 : ($request->input('available_stock') ?? 1),
                 'artwork_type'         => $validated['artwork_type'],
                 'product_category'     => $validated['product_category'],
                 'material'             => $validated['material'],
@@ -192,6 +194,7 @@ class ArtworkSellController extends Controller
                         'image_url'          => $artworkSell->image_url,
                         'status'             => $artworkSell->status,
                         'status_label'       => $artworkSell->status_label,
+                        'available_stock'    => $artworkSell->available_stock,
                         'artwork_type'       => $artworkSell->artwork_type,
                         'product_category'   => $artworkSell->product_category,
                         'bulk_sell_enabled'  => $artworkSell->bulk_sell_enabled,
@@ -251,6 +254,7 @@ class ArtworkSellController extends Controller
                 'depth'               => $artwork->depth,
                 'unit'                => $artwork->unit,
                 'status'              => $artwork->status,
+                'available_stock'     => $artwork->available_stock,
                 'is_cross_posted'     => $artwork->is_cross_posted,
                 'bulk_sell_enabled'   => (bool) $artwork->bulk_sell_enabled,
                 'bulk_sell_min_qty'   => $artwork->bulk_sell_min_qty,
@@ -290,6 +294,7 @@ class ArtworkSellController extends Controller
                 'depth'               => 'nullable|numeric|min:0',
                 'unit'                => 'required|in:cm,inch,px',
                 'status'              => 'required|in:available,sold_out',
+                'available_stock'     => 'nullable|integer|min:1|max:9999',
                 'bulk_sell_enabled'   => 'nullable|boolean',
                 'bulk_sell_min_qty'   => 'nullable|integer|min:2',
                 'bulk_sell_discount'  => 'nullable|numeric|min:1|max:99',
@@ -318,6 +323,7 @@ class ArtworkSellController extends Controller
             $artwork->depth               = $request->input('depth');
             $artwork->unit                = $validated['unit'];
             $artwork->status              = $validated['status'];
+            $artwork->available_stock     = $validated['status'] === 'sold_out' ? 0 : ($request->input('available_stock') ?? $artwork->available_stock ?? 1);
             $artwork->bulk_sell_enabled   = $bulkEnabled;
             $artwork->bulk_sell_min_qty   = $bulkEnabled ? $request->input('bulk_sell_min_qty') : null;
             $artwork->bulk_sell_discount  = $bulkEnabled ? $request->input('bulk_sell_discount') : null;
@@ -390,6 +396,7 @@ class ArtworkSellController extends Controller
                         'product_category'    => $artwork->product_category,
                         'status'              => $artwork->status,
                         'status_label'        => $artwork->status_label,
+                        'available_stock'     => $artwork->available_stock,
                         'bulk_sell_enabled'   => $artwork->bulk_sell_enabled,
                         'bulk_sell_min_qty'   => $artwork->bulk_sell_min_qty,
                         'bulk_sell_discount'  => $artwork->bulk_sell_discount,

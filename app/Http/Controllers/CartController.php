@@ -40,16 +40,17 @@ class CartController extends Controller
         $shipping  = 0;
 
         foreach ($cart as $artworkId => $item) {
-            // Always re-fetch fresh from DB so promotion changes are reflected immediately
+            // Always re-fetch fresh from DB so promotion/bulk changes are reflected immediately
             $fresh = ArtworkSell::find($artworkId);
 
-            $effectivePrice   = $fresh ? $fresh->effective_price            : (float) ($item['price'] ?? 0);
-            $originalPrice    = $fresh ? (float) $fresh->product_price      : $effectivePrice;
-            $promotionPrice   = $fresh ? $fresh->promotion_price            : null;
-            $promotionDiscount= $fresh ? $fresh->promotion_discount         : null;
-            $shippingFee      = $fresh ? (float) ($fresh->shipping_fee ?? 0): 0;
+            $qty              = (int) ($item['quantity'] ?? 1);
+            $effectivePrice   = $fresh ? $fresh->resolveUnitPrice($qty)        : (float) ($item['price'] ?? 0);
+            $originalPrice    = $fresh ? (float) $fresh->product_price          : $effectivePrice;
+            $promotionPrice   = $fresh ? $fresh->promotion_price                : null;
+            $promotionDiscount= $fresh ? $fresh->promotion_discount             : null;
+            $shippingFee      = $fresh ? (float) ($fresh->shipping_fee ?? 0)   : 0;
 
-            // Keep session in sync
+            // Keep session price in sync with current quantity
             $cart[$artworkId]['price']        = $effectivePrice;
             $cart[$artworkId]['shipping_fee'] = $shippingFee;
 
@@ -61,7 +62,7 @@ class CartController extends Controller
             $item['shipping_fee']       = $shippingFee;
 
             $cartItems[] = $item;
-            $subtotal   += $effectivePrice * $item['quantity'];
+            $subtotal   += $effectivePrice * $qty;
             $shipping   += $shippingFee;
         }
 
@@ -81,7 +82,7 @@ class CartController extends Controller
     {
         $request->validate([
             'artwork_id' => 'required|integer|exists:artwork_sells,id',
-            'quantity'   => 'sometimes|integer|min:1|max:99',
+            'quantity'   => 'sometimes|integer|min:1|max:9999',
         ]);
 
         $artworkId = $request->artwork_id;
@@ -99,16 +100,17 @@ class CartController extends Controller
         $cart = session('cart', []);
 
         if (isset($cart[$artworkId])) {
-            // Already in cart — increment and refresh price
-            $cart[$artworkId]['quantity']      += $addQty;
-            $cart[$artworkId]['price']          = $artwork->effective_price; // ← promotion-aware
-            $cart[$artworkId]['shipping_fee']   = (float) ($artwork->shipping_fee ?? 0);
+            // Already in cart — increment quantity, then re-resolve price for new total qty
+            $newQty = $cart[$artworkId]['quantity'] + $addQty;
+            $cart[$artworkId]['quantity']    = $newQty;
+            $cart[$artworkId]['price']       = $artwork->resolveUnitPrice($newQty); // bulk-aware
+            $cart[$artworkId]['shipping_fee']= (float) ($artwork->shipping_fee ?? 0);
             $message = 'Quantity updated in cart.';
         } else {
             $cart[$artworkId] = [
                 'id'           => $artworkId,
                 'name'         => $artwork->product_name ?? 'Untitled Artwork',
-                'price'        => $artwork->effective_price, // ← promotion-aware
+                'price'        => $artwork->resolveUnitPrice($addQty), // bulk-aware
                 'shipping_fee' => (float) ($artwork->shipping_fee ?? 0),
                 'image_path'   => $artwork->image_path ?? null,
                 'artwork_type' => $artwork->artwork_type ?? null,
@@ -149,12 +151,19 @@ class CartController extends Controller
             return response()->json(['success' => false, 'message' => 'Item not found in cart.']);
         }
 
-        $cart[$artworkId]['quantity'] += $delta;
+        $newQty = $cart[$artworkId]['quantity'] + $delta;
 
         $removed = false;
-        if ($cart[$artworkId]['quantity'] <= 0) {
+        if ($newQty <= 0) {
             unset($cart[$artworkId]);
             $removed = true;
+        } else {
+            // Re-resolve price for new qty — bulk discount threshold may have been crossed
+            $artwork = ArtworkSell::find($artworkId);
+            $cart[$artworkId]['quantity'] = $newQty;
+            $cart[$artworkId]['price']    = $artwork
+                ? $artwork->resolveUnitPrice($newQty)
+                : $cart[$artworkId]['price'];
         }
 
         session(['cart' => $cart]);
@@ -167,8 +176,8 @@ class CartController extends Controller
         return response()->json([
             'success'    => true,
             'removed'    => $removed,
-            'new_qty'    => $removed ? 0 : $cart[$artworkId]['quantity'],
-            'item_total' => $removed ? '0.00' : number_format($cart[$artworkId]['price'] * $cart[$artworkId]['quantity'], 2),
+            'new_qty'    => $removed ? 0 : $newQty,
+            'item_total' => $removed ? '0.00' : number_format($cart[$artworkId]['price'] * $newQty, 2),
             'subtotal'   => number_format($subtotal, 2),
             'shipping'   => number_format($shipping, 2),
             'cart_total' => number_format($cartTotal, 2),

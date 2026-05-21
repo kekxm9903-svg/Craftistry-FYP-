@@ -127,7 +127,7 @@
                     
                     <div class="form-group">
                         <label for="bio">Artist Bio <span class="required">*</span></label>
-                        <p class="help-text">Tell buyers about your artistic journey, style, and inspiration (minimum 50 words)</p>
+                        <p class="help-text">Tell buyers about your artistic journey, style, and inspiration (minimum 50 character)</p>
                         <textarea 
                             name="bio" 
                             id="bio" 

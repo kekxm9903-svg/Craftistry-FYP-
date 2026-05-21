@@ -48,7 +48,7 @@ class OrderCheckoutController extends Controller
             }
 
             $qty   = max(1, (int) $request->get('qty', 1));
-            $price = $artwork->effective_price;
+            $price = $artwork->resolveUnitPrice($qty); // ← bulk-aware
 
             $cartItems = [[
                 'artwork'  => $artwork,
@@ -63,7 +63,6 @@ class OrderCheckoutController extends Controller
                 'qty'        => $qty,
             ]]);
 
-            // Force address if physical
             $needsAddress = $this->hasPhysicalItem($cartItems);
             $hasAddress   = $this->userHasAddress($user);
 
@@ -86,8 +85,8 @@ class OrderCheckoutController extends Controller
         foreach ($cart as $id => $item) {
             $artwork = ArtworkSell::find($id);
             if ($artwork) {
-                $price       = $artwork->effective_price;
                 $qty         = (int) ($item['quantity'] ?? 1);
+                $price       = $artwork->resolveUnitPrice($qty); // ← bulk-aware
                 $cartItems[] = [
                     'artwork'  => $artwork,
                     'price'    => $price,
@@ -110,7 +109,6 @@ class OrderCheckoutController extends Controller
         $user = auth()->user();
 
         // ── Block physical orders with no address ────────────────────────────
-        // Re-build cart items to check type
         $buyNow    = session('buy_now');
         $cartItems = [];
 
@@ -146,8 +144,8 @@ class OrderCheckoutController extends Controller
                                  ->with('error', 'Artwork not found.');
             }
 
-            $price    = $artwork->effective_price;
             $qty      = (int) ($buyNow['qty'] ?? 1);
+            $price    = $artwork->resolveUnitPrice($qty); // ← bulk-aware
             $name     = $artwork->product_name ?? 'Artwork';
             $artistId = $artwork->artist_id;
 
@@ -184,9 +182,9 @@ class OrderCheckoutController extends Controller
                 $artwork = ArtworkSell::with('artist')->find($id);
                 if (!$artwork) continue;
 
-                $price    = $artwork->effective_price;
-                $name     = $artwork->product_name ?? 'Artwork';
                 $qty      = (int) ($item['quantity'] ?? 1);
+                $price    = $artwork->resolveUnitPrice($qty); // ← bulk-aware
+                $name     = $artwork->product_name ?? 'Artwork';
                 $artistId = $artwork->artist_id;
 
                 $lineItems[] = [
@@ -229,18 +227,17 @@ class OrderCheckoutController extends Controller
             $artistTotal = collect($items)->sum(fn($i) => $i['price'] * $i['qty']);
 
             $order = Order::create([
-                'user_id'             => $user->id,
-                'artist_id'           => $artistId,
-                'type'                => 'product',
-                'total'               => $artistTotal,
-                'payment_status'      => 'pending',
-                'status'              => 'pending_payment',
-                'stripe_session_id'   => $stripeSession->id,
-                // Snapshot shipping address at time of order
-                'shipping_address'    => $user->address,
-                'shipping_city'       => $user->city,
-                'shipping_state'      => $user->state,
-                'shipping_postcode'   => $user->postcode,
+                'user_id'           => $user->id,
+                'artist_id'         => $artistId,
+                'type'              => 'product',
+                'total'             => $artistTotal,
+                'payment_status'    => 'pending',
+                'status'            => 'pending_payment',
+                'stripe_session_id' => $stripeSession->id,
+                'shipping_address'  => $user->address,
+                'shipping_city'     => $user->city,
+                'shipping_state'    => $user->state,
+                'shipping_postcode' => $user->postcode,
             ]);
 
             foreach ($items as $item) {

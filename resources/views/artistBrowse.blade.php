@@ -18,17 +18,25 @@
     </div>
 </div>
 
-{{-- Category filter pills --}}
+{{-- Fixed artwork type filter pills --}}
 <div class="category-bar">
     <div class="category-inner">
         @php
-            $currentSpec = request('specialty', '');
-            $allSpecs    = array_merge([''], is_array($specialties) ? $specialties : $specialties->toArray());
+            $currentCat = request('category', '');
+            $fixedTypes = [
+                ''           => 'All',
+                'Crochet'   => 'Crochet',
+                'Drawing'    => 'Drawing',
+                'Embroidery'=> 'Embroidery',
+                'Beadwork'  => 'Beadwork',
+                'Knitting'=> 'Knitting',
+                'Perler Beads'      => 'Perler Beads',
+            ];
         @endphp
-        @foreach($allSpecs as $spec)
-            <a href="{{ route('artist.browse', array_merge(request()->query(), ['specialty' => $spec])) }}"
-               class="cat-pill {{ $currentSpec === $spec ? 'active' : '' }}">
-                {{ $spec === '' ? 'All' : $spec }}
+        @foreach($fixedTypes as $value => $label)
+            <a href="{{ route('artist.browse', array_merge(request()->except('category', 'page'), $value !== '' ? ['category' => $value] : [])) }}"
+               class="cat-pill {{ $currentCat === $value ? 'active' : '' }}">
+                {{ $label }}
             </a>
         @endforeach
     </div>
@@ -40,8 +48,8 @@
     <div class="sp-card filter-card">
         <form action="{{ route('artist.browse') }}" method="GET" class="filter-form" id="filter-form">
 
-            @if(request('specialty'))
-                <input type="hidden" name="specialty" value="{{ request('specialty') }}">
+            @if(request('category'))
+                <input type="hidden" name="category" value="{{ request('category') }}">
             @endif
 
             {{-- Search --}}
@@ -94,7 +102,9 @@
             <div class="sp-card-header-left">
                 <div class="hline"></div>
                 Browse Artworks
-                @if(request('type'))
+                @if(request('category'))
+                    <span class="active-type-badge">{{ request('category') }}</span>
+                @elseif(request('type'))
                     <span class="active-type-badge">{{ ucfirst(request('type')) }}</span>
                 @endif
             </div>
@@ -129,17 +139,14 @@
                                 </div>
                             @endif
 
-                            {{-- Sold out overlay --}}
                             @if($isSold)
                                 <div class="sold-stamp">SOLD</div>
                             @endif
 
-                            {{-- Promotion badge --}}
                             @if($hasPromo)
                                 <div class="promo-badge">-{{ number_format($artwork->promotion_discount, 0) }}%</div>
                             @endif
 
-                            {{-- Artwork type badge --}}
                             @if($artwork->artwork_type)
                                 @php $typeClass = 'type-' . strtolower(str_replace([' ', '-'], '', $artwork->artwork_type ?? '')); @endphp
                                 <div class="type-badge {{ $typeClass }}">{{ ucfirst($artwork->artwork_type) }}</div>
@@ -162,7 +169,6 @@
                                 <div class="card-spec">by {{ $artistName }}</div>
                             </div>
 
-                            {{-- Price: show promo or normal --}}
                             @if($artwork->product_price)
                                 @if($hasPromo)
                                     <div class="card-price-block">

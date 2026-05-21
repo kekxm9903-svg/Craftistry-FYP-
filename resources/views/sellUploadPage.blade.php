@@ -83,7 +83,7 @@
                 </div>
 
                 {{-- Pricing Preview Card --}}
-                <div class="form-card pricing-preview-card" id="pricingPreviewCard" style="display:none;">
+                <div class="form-card pricing-preview-card" id="pricingPreviewCard">
                     <div class="form-card-header">
                         <i class="fas fa-receipt"></i>
                         <h2>Pricing Summary</h2>
@@ -132,7 +132,7 @@
                             <span class="field-counter" id="nameCounter">0 / 255</span>
                         </div>
 
-                        {{-- Artwork Type (Physical / Digital) --}}
+                        {{-- Artwork Type --}}
                         <div class="field-group">
                             <label class="field-label">Artwork Type <span class="required">*</span></label>
                             <div class="type-selector">
@@ -155,7 +155,7 @@
                             </div>
                         </div>
 
-                        {{-- ── Product Category (NEW) ── --}}
+                        {{-- Product Category --}}
                         <div class="field-group">
                             <label class="field-label">
                                 Product Category <span class="required">*</span>
@@ -212,7 +212,6 @@
                         <h2>Pricing & Shipping</h2>
                     </div>
                     <div class="form-card-body">
-
                         <div class="field-row">
                             <div class="field-group">
                                 <label for="sellPrice" class="field-label">Price (RM) <span class="required">*</span></label>
@@ -244,11 +243,10 @@
                                 </label>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
-                {{-- Artwork Details --}}
+                {{-- Artwork Specifications --}}
                 <div class="form-card">
                     <div class="form-card-header">
                         <i class="fas fa-ruler-combined"></i>
@@ -295,11 +293,13 @@
                             </div>
                         </div>
 
+                        {{-- Status --}}
                         <div class="field-group">
                             <label class="field-label">Availability Status <span class="required">*</span></label>
                             <div class="status-selector">
                                 <label class="status-option available-opt" for="sellStatusAvailable">
                                     <input type="radio" id="sellStatusAvailable" name="status" value="available"
+                                           onchange="syncSellStockVisibility()"
                                            {{ old('status', 'available') === 'available' ? 'checked' : '' }}>
                                     <div class="status-option-inner">
                                         <i class="fas fa-check-circle"></i>
@@ -308,6 +308,7 @@
                                 </label>
                                 <label class="status-option soldout-opt" for="sellStatusSoldOut">
                                     <input type="radio" id="sellStatusSoldOut" name="status" value="sold_out"
+                                           onchange="syncSellStockVisibility()"
                                            {{ old('status') === 'sold_out' ? 'checked' : '' }}>
                                     <div class="status-option-inner">
                                         <i class="fas fa-times-circle"></i>
@@ -315,6 +316,21 @@
                                     </div>
                                 </label>
                             </div>
+                        </div>
+
+                        {{-- Available Stock --}}
+                        <div class="field-group" id="sellStockGroup">
+                            <label for="sellAvailableStock" class="field-label">
+                                Available Stock <span class="required">*</span>
+                            </label>
+                            <input type="number" id="sellAvailableStock" name="available_stock"
+                                   min="1" max="9999" step="1"
+                                   placeholder="e.g. 10"
+                                   class="field-input"
+                                   style="max-width:160px;"
+                                   value="{{ old('available_stock', 1) }}"
+                                   required>
+                            <span class="field-hint">How many units are available for purchase.</span>
                         </div>
 
                     </div>
@@ -484,4 +500,21 @@
 
 @section('scripts')
 <script src="{{ asset('js/uploadForm.js') }}"></script>
+<script>
+function syncSellStockVisibility() {
+    const status     = document.querySelector('input[name="status"]:checked')?.value;
+    const stockGroup = document.getElementById('sellStockGroup');
+    const stockInput = document.getElementById('sellAvailableStock');
+
+    if (status === 'sold_out') {
+        stockGroup.style.display = 'none';
+        stockInput.removeAttribute('required');
+    } else {
+        stockGroup.style.display = '';
+        stockInput.setAttribute('required', 'required');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', syncSellStockVisibility);
+</script>
 @endsection

@@ -25,6 +25,7 @@ class ArtworkSell extends Model
         'depth',
         'unit',
         'status',
+        'available_stock',
         'is_cross_posted',
         'cross_posted_from_id',
         'bulk_sell_enabled',
@@ -42,6 +43,7 @@ class ArtworkSell extends Model
         'height'              => 'decimal:2',
         'width'               => 'decimal:2',
         'depth'               => 'decimal:2',
+        'available_stock'     => 'integer',
         'is_cross_posted'     => 'boolean',
         'bulk_sell_enabled'   => 'boolean',
         'promotion_enabled'   => 'boolean',
@@ -57,7 +59,7 @@ class ArtworkSell extends Model
         'is_on_promotion',
         'promotion_price',
         'formatted_promotion_price',
-        'effective_price',              // ← added
+        'effective_price',
     ];
 
     // ── Relationships ──────────────────────────
@@ -146,11 +148,32 @@ class ArtworkSell extends Model
      */
     public function getEffectivePriceAttribute(): float
     {
-        $promotionPrice = $this->promotion_price; // reuses existing accessor
+        $promotionPrice = $this->promotion_price;
         if ($promotionPrice !== null && $promotionPrice > 0) {
             return (float) $promotionPrice;
         }
         return (float) ($this->attributes['product_price'] ?? 0);
+    }
+
+    /**
+     * Compute the per-unit price for a given quantity.
+     * Applies promo discount first (via effective_price),
+     * then bulk discount on top if qty meets the threshold.
+     */
+    public function resolveUnitPrice(int $qty = 1): float
+    {
+        $unit = $this->effective_price;
+
+        if (
+            $this->bulk_sell_enabled &&
+            $this->bulk_sell_min_qty > 0 &&
+            $qty >= $this->bulk_sell_min_qty &&
+            $this->bulk_sell_discount > 0
+        ) {
+            $unit = round($unit * (1 - $this->bulk_sell_discount / 100), 2);
+        }
+
+        return (float) $unit;
     }
 
     // ── Methods ────────────────────────────────
@@ -162,12 +185,12 @@ class ArtworkSell extends Model
 
     public function isAvailable(): bool
     {
-        return $this->status === 'available';
+        return $this->status === 'available' && ($this->attributes['available_stock'] ?? 0) > 0;
     }
 
     public function isSoldOut(): bool
     {
-        return $this->status === 'sold_out';
+        return $this->status === 'sold_out' || ($this->attributes['available_stock'] ?? 0) <= 0;
     }
 
     public function markAsSoldOut(): void
@@ -180,5 +203,18 @@ class ArtworkSell extends Model
     {
         $this->status = 'available';
         $this->save();
+    }
+
+    /**
+     * Deduct stock after a successful order.
+     * Auto-marks as sold_out when stock reaches 0.
+     */
+    public function deductStock(int $qty): void
+    {
+        $newStock = max(0, ($this->attributes['available_stock'] ?? 0) - $qty);
+        $this->update([
+            'available_stock' => $newStock,
+            'status'          => $newStock === 0 ? 'sold_out' : $this->status,
+        ]);
     }
 }

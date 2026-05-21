@@ -352,11 +352,13 @@
                                 </div>
                             </div>
 
+                            {{-- Status --}}
                             <div class="field-group">
                                 <label class="field-label">Availability Status <span class="required">*</span></label>
                                 <div class="status-selector">
                                     <label class="status-option available-opt" for="demoStatusAvailable">
                                         <input type="radio" id="demoStatusAvailable" name="status" value="available" class="sell-req"
+                                               onchange="syncDemoStockVisibility()"
                                                {{ old('status', 'available') === 'available' ? 'checked' : '' }}>
                                         <div class="status-option-inner">
                                             <i class="fas fa-check-circle"></i>
@@ -365,6 +367,7 @@
                                     </label>
                                     <label class="status-option soldout-opt" for="demoStatusSoldOut">
                                         <input type="radio" id="demoStatusSoldOut" name="status" value="sold_out" class="sell-req"
+                                               onchange="syncDemoStockVisibility()"
                                                {{ old('status') === 'sold_out' ? 'checked' : '' }}>
                                         <div class="status-option-inner">
                                             <i class="fas fa-times-circle"></i>
@@ -372,6 +375,20 @@
                                         </div>
                                     </label>
                                 </div>
+                            </div>
+
+                            {{-- Available Stock --}}
+                            <div class="field-group" id="demoStockGroup">
+                                <label for="demoAvailableStock" class="field-label">
+                                    Available Stock <span class="required">*</span>
+                                </label>
+                                <input type="number" id="demoAvailableStock" name="available_stock"
+                                       min="1" max="9999" step="1"
+                                       placeholder="e.g. 10"
+                                       class="field-input sell-req"
+                                       style="max-width:160px;"
+                                       value="{{ old('available_stock', 1) }}">
+                                <span class="field-hint">How many units are available for purchase.</span>
                             </div>
 
                         </div>
@@ -531,28 +548,45 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Initialise required state on page load (for old() repopulation)
+    // Restore state on old() repopulation
     const checkbox = document.getElementById('alsoSellCheckbox');
     if (checkbox && checkbox.checked) {
         document.querySelectorAll('.sell-req').forEach(el => el.setAttribute('required', 'required'));
         document.getElementById('pricingPreviewCard').style.display = 'block';
+        syncDemoStockVisibility();
     }
 });
 
 function toggleDemoSellFields() {
-    const checkbox        = document.getElementById('alsoSellCheckbox');
-    const section         = document.getElementById('demoSellSection');
-    const pricingCard     = document.getElementById('pricingPreviewCard');
-    const sellReqs        = document.querySelectorAll('.sell-req');
+    const checkbox    = document.getElementById('alsoSellCheckbox');
+    const section     = document.getElementById('demoSellSection');
+    const pricingCard = document.getElementById('pricingPreviewCard');
+    const sellReqs    = document.querySelectorAll('.sell-req');
 
     if (checkbox.checked) {
         section.style.display     = 'flex';
         pricingCard.style.display = 'block';
         sellReqs.forEach(el => el.setAttribute('required', 'required'));
+        syncDemoStockVisibility();
     } else {
         section.style.display     = 'none';
         pricingCard.style.display = 'none';
         sellReqs.forEach(el => el.removeAttribute('required'));
+    }
+}
+
+function syncDemoStockVisibility() {
+    const status     = document.querySelector('input[name="status"]:checked')?.value;
+    const stockGroup = document.getElementById('demoStockGroup');
+    const stockInput = document.getElementById('demoAvailableStock');
+    const alsoSell   = document.getElementById('alsoSellCheckbox')?.checked;
+
+    if (!alsoSell || status === 'sold_out') {
+        stockGroup.style.display = 'none';
+        if (stockInput) stockInput.removeAttribute('required');
+    } else {
+        stockGroup.style.display = '';
+        if (stockInput) stockInput.setAttribute('required', 'required');
     }
 }
 
