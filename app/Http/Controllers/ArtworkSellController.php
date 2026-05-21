@@ -20,7 +20,7 @@ class ArtworkSellController extends Controller
     public function editPage($id)
     {
         $user    = Auth::user();
-        $artwork = ArtworkSell::where('id', $id)->where('artist_id', $user->id)->firstOrFail();
+        $artwork = ArtworkSell::where('id', $id)->where('artist_id', $user->artist->id)->firstOrFail();
         return view('sellEditPage', compact('artwork'));
     }
 
@@ -29,7 +29,7 @@ class ArtworkSellController extends Controller
         $user = Auth::user();
 
         $artwork = ArtworkSell::with('artist.user')
-                   ->where('artist_id', $user->id)
+                   ->where('artist_id', $user->artist->id)
                    ->findOrFail($id);
 
         return view('artistProductPreview', compact('artwork'));
@@ -124,11 +124,11 @@ class ArtworkSellController extends Controller
                     $demoExtraPaths[] = $demoExtraDest;
                 }
 
-                $maxOrder = DemoArtwork::where('artist_id', $user->id)->max('order');
+                $maxOrder = DemoArtwork::where('artist_id', $user->artist->id)->max('order');
                 $order    = $maxOrder !== null ? $maxOrder + 1 : 0;
 
                 $newDemo = DemoArtwork::create([
-                    'artist_id'       => $user->id,
+                    'artist_id'       => $user->artist->id,
                     'title'           => $validated['product_name'],
                     'description'     => $validated['product_description'] ?? null,
                     'image_path'      => $demoPath,
@@ -146,7 +146,7 @@ class ArtworkSellController extends Controller
             }
 
             $artworkSell = ArtworkSell::create([
-                'artist_id'            => $user->id,
+                'artist_id'            => $user->artist->id,
                 'product_name'         => $validated['product_name'],
                 'product_description'  => $validated['product_description'] ?? null,
                 'product_price'        => $validated['product_price'],
@@ -233,7 +233,7 @@ class ArtworkSellController extends Controller
             if (!$user->artist) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
-            $artwork = ArtworkSell::where('id', $id)->where('artist_id', $user->id)->firstOrFail();
+            $artwork = ArtworkSell::where('id', $id)->where('artist_id', $user->artist->id)->firstOrFail();
             return response()->json([
                 'success'             => true,
                 'id'                  => $artwork->id,
@@ -299,7 +299,7 @@ class ArtworkSellController extends Controller
                 'promotion_ends_at'   => 'nullable|date|after_or_equal:promotion_starts_at',
             ]);
 
-            $artwork = ArtworkSell::where('id', $id)->where('artist_id', $user->id)->firstOrFail();
+            $artwork = ArtworkSell::where('id', $id)->where('artist_id', $user->artist->id)->firstOrFail();
 
             DB::beginTransaction();
 
@@ -331,7 +331,6 @@ class ArtworkSellController extends Controller
             $existingExtras = $artwork->extra_images ?? [];
 
             foreach ($deleteImages as $deletePath) {
-                // Only delete if path belongs to artwork-sells folder
                 if (str_starts_with($deletePath, 'artwork-sells/') && Storage::disk('public')->exists($deletePath)) {
                     Storage::disk('public')->delete($deletePath);
                 }
@@ -347,7 +346,6 @@ class ArtworkSellController extends Controller
             $artwork->extra_images = !empty($existingExtras) ? array_values($existingExtras) : null;
 
             // Handle new image uploads — always go to artwork-sells
-            $imageUpdated = false;
             if ($request->hasFile('new_images')) {
                 $newImages = $request->file('new_images');
                 $newPaths  = $artwork->extra_images ?? [];
@@ -361,14 +359,12 @@ class ArtworkSellController extends Controller
                         } else {
                             $newPaths[] = $stored;
                         }
-                        $imageUpdated = true;
                     }
                 }
                 $artwork->extra_images = !empty($newPaths) ? array_values($newPaths) : null;
             }
 
             // Sync cross-posted demo — only update text fields, NOT image_path
-            // Each record owns its own image file now
             if ($artwork->is_cross_posted && $artwork->crossPostedFrom) {
                 $demo              = $artwork->crossPostedFrom;
                 $demo->title       = $validated['product_name'];
@@ -431,7 +427,7 @@ class ArtworkSellController extends Controller
                 return redirect()->back()->with('error', 'Unauthorized');
             }
 
-            $artworkSell = ArtworkSell::where('id', $id)->where('artist_id', $user->id)->first();
+            $artworkSell = ArtworkSell::where('id', $id)->where('artist_id', $user->artist->id)->first();
             if (!$artworkSell) {
                 if ($request->expectsJson()) {
                     return response()->json(['success' => false, 'message' => 'Not found'], 404);
@@ -454,7 +450,6 @@ class ArtworkSellController extends Controller
                 Storage::disk('public')->delete($artworkSell->image_path);
             }
 
-            // Delete extra images in artwork-sells folder
             foreach ($artworkSell->extra_images ?? [] as $ep) {
                 if (str_starts_with($ep, 'artwork-sells/') && Storage::disk('public')->exists($ep)) {
                     Storage::disk('public')->delete($ep);
@@ -486,7 +481,7 @@ class ArtworkSellController extends Controller
             if (!$user->artist) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
             }
-            $artworkSell = ArtworkSell::where('id', $id)->where('artist_id', $user->id)->first();
+            $artworkSell = ArtworkSell::where('id', $id)->where('artist_id', $user->artist->id)->first();
             if (!$artworkSell || !$artworkSell->is_cross_posted) {
                 return response()->json(['success' => false, 'message' => 'Not cross-posted'], 404);
             }

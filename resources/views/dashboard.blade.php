@@ -135,7 +135,7 @@
                     $pPromo  = $product->promotion_price;
                     $sold    = $product->total_sold ?? 0;
                 @endphp
-                <a href="{{ route('product.show', $product->id) }}" class="product-card">
+                <a href="{{ $product->artist?->user_id === auth()->id() ? route('artist.artwork.preview', $product->id) : route('product.show', $product->id) }}" class="product-card">
                     <div class="product-img">
                         @if($product->image_path)
                             <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->product_name }}">
@@ -189,7 +189,6 @@
                 <div class="hline"></div>
                 🔥 Hot Artists
             </div>
-            <a href="{{ route('artist.browse') }}" class="see-all">See All <i class="bi bi-chevron-right"></i></a>
         </div>
         <div class="sp-card-body no-pad">
             <div class="artist-scroll-row">

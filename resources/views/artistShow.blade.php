@@ -60,6 +60,21 @@
                         @endforeach
                     </div>
                 @endif
+
+                {{-- Custom Order Status Badge (visible to viewers, not the artist themselves) --}}
+                @if(!auth()->check() || auth()->id() !== $user->id)
+                    @if($user->artist)
+                        @if($user->artist->allow_customization)
+                            <div class="custom-order-badge open">
+                                <i class="fas fa-check-circle"></i> Accepting Custom Orders
+                            </div>
+                        @else
+                            <div class="custom-order-badge closed">
+                                <i class="fas fa-times-circle"></i> Not Accepting Custom Orders
+                            </div>
+                        @endif
+                    @endif
+                @endif
             </div>
         </div>
 
@@ -83,15 +98,19 @@
             </div>
 
             <div class="action-buttons">
-            @auth
-                <a href="{{ route('custom-orders.create', $user->id) }}" class="btn-request">
-                    <i class="fas fa-paper-plane"></i> Request
-                </a>
-            @else
-                <a href="{{ route('login') }}" class="btn-request">
-                    <i class="fas fa-paper-plane"></i> Request
-                </a>
-            @endauth
+
+                {{-- Request button: only show if artist allows custom orders --}}
+                @if($user->artist && $user->artist->allow_customization)
+                    @auth
+                        <a href="{{ route('custom-orders.create', $user->id) }}" class="btn-request">
+                            <i class="fas fa-paper-plane"></i> Request
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="btn-request">
+                            <i class="fas fa-paper-plane"></i> Request
+                        </a>
+                    @endauth
+                @endif
 
                 @auth
                     @php
@@ -232,7 +251,15 @@
                             <h3 class="product-name">{{ $artwork->product_name ?? 'Untitled Artwork' }}</h3>
                             <div class="product-price">
                                 @if($artwork->product_price)
-                                    RM {{ number_format($artwork->product_price, 2) }}
+                                    @if($artwork->is_on_promotion)
+                                        <div class="price-promo-row">
+                                            <span class="price-discount-badge">-{{ $artwork->promotion_discount }}%</span>
+                                            <span class="price-final">RM {{ number_format($artwork->promotion_price, 2) }}</span>
+                                        </div>
+                                        <span class="price-original">RM {{ number_format($artwork->product_price, 2) }}</span>
+                                    @else
+                                        RM {{ number_format($artwork->product_price, 2) }}
+                                    @endif
                                 @else
                                     <span style="color:var(--muted);font-size:12px;">Price not set</span>
                                 @endif

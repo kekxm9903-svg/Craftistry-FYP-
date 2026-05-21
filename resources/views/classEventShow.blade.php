@@ -289,9 +289,6 @@
                             @endif
                         @endif
 
-                        <button class="btn-contact" onclick="handleContact()">
-                            <i class="fas fa-envelope"></i> Contact Instructor
-                        </button>
                     </div>
 
                 </div>

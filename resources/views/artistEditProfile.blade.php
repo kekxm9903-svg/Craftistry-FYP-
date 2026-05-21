@@ -74,7 +74,6 @@
             <div class="sp-card-body">
                 <div class="avatar-row">
 
-                    {{-- Avatar preview with camera button --}}
                     <div class="avatar-preview">
                         <div class="avatar-circle">
                             @if($user->profile_image && $user->profile_image !== 'images/Profile.png')
@@ -102,7 +101,6 @@
                         <input type="hidden" id="remove_profile_image" name="remove_profile_image" value="0">
                     </div>
 
-                    {{-- Upload controls --}}
                     <div class="avatar-controls">
                         <div class="avatar-actions">
                             <label for="profile_image" class="btn-upload">
@@ -175,6 +173,38 @@
                     @enderror
                 </div>
 
+            </div>
+        </div>
+
+        {{-- ══ CUSTOM ORDER SETTINGS CARD ══ --}}
+        <div class="sp-card">
+            <div class="sp-card-header">
+                <div class="sp-card-header-left">
+                    <div class="hline"></div>
+                    Custom Order Settings
+                </div>
+            </div>
+            <div class="sp-card-body">
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <div class="toggle-label">
+                            <i class="fas fa-paint-brush" style="color:var(--primary);margin-right:6px;"></i>
+                            Accept Custom Orders
+                        </div>
+                        <div class="toggle-desc">
+                            Allow buyers to send you custom order requests. When turned off, the Request button will be hidden from your public profile.
+                        </div>
+                    </div>
+                    <label class="toggle-switch" for="allow_customization">
+                        <input type="hidden" name="allow_customization" value="0">
+                        <input type="checkbox"
+                               id="allow_customization"
+                               name="allow_customization"
+                               value="1"
+                               {{ old('allow_customization', $artist->allow_customization) ? 'checked' : '' }}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
             </div>
         </div>
 

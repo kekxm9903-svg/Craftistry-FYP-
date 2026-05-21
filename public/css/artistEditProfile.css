@@ -562,6 +562,89 @@ textarea.form-input {
 }
 
 
+/* ══════════════════════════════
+   CUSTOM ORDER TOGGLE
+══════════════════════════════ */
+
+.toggle-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sp-lg);
+}
+
+.toggle-info {
+    flex: 1;
+}
+
+.toggle-label {
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: var(--sp-xs);
+    display: flex;
+    align-items: center;
+}
+
+.toggle-desc {
+    font-size: var(--fs-sm);
+    color: var(--muted);
+    line-height: 1.6;
+    max-width: 480px;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    cursor: pointer;
+}
+
+.toggle-switch input[type="hidden"] {
+    display: none;
+}
+
+.toggle-switch input[type="checkbox"] {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: #d1d5db;
+    border-radius: 26px;
+    transition: background .2s;
+    cursor: pointer;
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 3px;
+    top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform .2s cubic-bezier(.34, 1.56, .64, 1);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .15);
+}
+
+.toggle-switch input[type="checkbox"]:checked + .toggle-slider {
+    background: linear-gradient(135deg, var(--primary), var(--primary-2));
+}
+
+.toggle-switch input[type="checkbox"]:checked + .toggle-slider::before {
+    transform: translateX(22px);
+}
+
+
 /* ── Animations ── */
 
 @keyframes slideInRight {
@@ -627,5 +710,9 @@ textarea.form-input {
         right: var(--sp-sm);
         left: var(--sp-sm);
         min-width: auto;
+    }
+
+    .toggle-row {
+        gap: var(--sp-md);
     }
 }

@@ -280,6 +280,36 @@ body {
 }
 
 
+/* ── Custom Order Badge ── */
+
+.custom-order-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px var(--sp-sm);
+    border-radius: 20px;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    margin-top: 5px;
+}
+
+.custom-order-badge.open {
+    background: #d4f4dd;
+    border: 1px solid #86efac;
+    color: #15803d;
+}
+
+.custom-order-badge.closed {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    color: #b91c1c;
+}
+
+.custom-order-badge i {
+    font-size: 11px;
+}
+
+
 /* ── Row 2: Stats + Buttons ── */
 
 .profile-actions-row {
@@ -1179,4 +1209,55 @@ body {
         width: 64px;
         height: 64px;
     }
+}
+
+
+/* ══════════════════════════════
+   PROMOTION PRICE DISPLAY
+══════════════════════════════ */
+
+.price-promo-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 2px;
+}
+
+.price-discount-badge {
+    display: inline-block;
+    background: #dc2626;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.price-final {
+    font-size: var(--fs-md);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+}
+
+.price-original {
+    font-size: var(--fs-sm);
+    color: var(--muted);
+    text-decoration: line-through;
+    font-weight: 500;
+    display: block;
+}
+
+/* Sold item — override promo colours to muted */
+.sell-item.sold .price-final {
+    background: none;
+    -webkit-text-fill-color: var(--muted);
+}
+
+.sell-item.sold .price-discount-badge {
+    background: #9ca3af;
 }

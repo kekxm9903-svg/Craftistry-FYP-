@@ -64,14 +64,23 @@ class DemoArtworkController extends Controller
 
             if ($alsoSell) {
                 $rules = array_merge($rules, [
-                    'artwork_type' => 'required|in:physical,digital',
-                    'material'     => 'required|string|max:255',
-                    'height'       => 'required|numeric|min:0',
-                    'width'        => 'required|numeric|min:0',
-                    'depth'        => 'nullable|numeric|min:0',
-                    'unit'         => 'required|in:cm,inch,px',
-                    'price'        => 'required|numeric|min:0.01|max:999999.99',
-                    'status'       => 'nullable|in:available,sold_out',
+                    'artwork_type'        => 'required|in:physical,digital',
+                    'material'            => 'required|string|max:255',
+                    'height'              => 'required|numeric|min:0',
+                    'width'               => 'required|numeric|min:0',
+                    'depth'               => 'nullable|numeric|min:0',
+                    'unit'                => 'required|in:cm,inch,px',
+                    'price'               => 'required|numeric|min:0.01|max:999999.99',
+                    'status'              => 'nullable|in:available,sold_out',
+                    // Bulk sell
+                    'bulk_sell_enabled'   => 'nullable|boolean',
+                    'bulk_sell_min_qty'   => 'nullable|integer|min:2',
+                    'bulk_sell_discount'  => 'nullable|numeric|min:1|max:99',
+                    // Promotion
+                    'promotion_enabled'   => 'nullable|boolean',
+                    'promotion_discount'  => 'nullable|numeric|min:1|max:99',
+                    'promotion_starts_at' => 'nullable|date',
+                    'promotion_ends_at'   => 'nullable|date',
                 ]);
                 $messages = array_merge($messages, [
                     'artwork_type.required' => 'Artwork type is required when listing for sale',
@@ -170,10 +179,12 @@ class DemoArtworkController extends Controller
                     $sellExtraPaths[] = $sellExtraDest;
                 }
 
-                $bulkEnabled = $request->boolean('bulk_sell_enabled');
+                $promoEnabled = $request->boolean('promotion_enabled');
+                $bulkEnabled  = $request->boolean('bulk_sell_enabled');
+
                 $newSell = ArtworkSell::create([
                     'artist_id'            => $user->artist->id,
-                    'product_name'         => $validated['title'],
+                    'product_name'         => $request->input('product_name') ?: $validated['title'],
                     'product_description'  => $request->input('product_description') ?? $request->input('description'),
                     'product_price'        => $request->input('price'),
                     'shipping_fee'         => $request->input('shipping_fee') ?? 0,
@@ -181,6 +192,7 @@ class DemoArtworkController extends Controller
                     'extra_images'         => !empty($sellExtraPaths) ? $sellExtraPaths : null,
                     'status'               => $request->input('status', 'available'),
                     'artwork_type'         => $validated['artwork_type'],
+                    'product_category'     => $request->input('product_category'),
                     'material'             => $validated['material'],
                     'height'               => $validated['height'],
                     'width'                => $validated['width'],
@@ -188,9 +200,15 @@ class DemoArtworkController extends Controller
                     'unit'                 => $validated['unit'],
                     'is_cross_posted'      => true,
                     'cross_posted_from_id' => $demoArtwork->id,
+                    // Bulk sell
                     'bulk_sell_enabled'    => $bulkEnabled,
                     'bulk_sell_min_qty'    => $bulkEnabled ? $request->input('bulk_sell_min_qty') : null,
                     'bulk_sell_discount'   => $bulkEnabled ? $request->input('bulk_sell_discount') : null,
+                    // Promotion
+                    'promotion_enabled'    => $promoEnabled,
+                    'promotion_discount'   => $promoEnabled ? $request->input('promotion_discount') : null,
+                    'promotion_starts_at'  => $promoEnabled ? $request->input('promotion_starts_at') : null,
+                    'promotion_ends_at'    => $promoEnabled ? $request->input('promotion_ends_at') : null,
                 ]);
 
                 $demoArtwork->is_cross_posted    = true;
@@ -355,7 +373,6 @@ class DemoArtworkController extends Controller
             $demo->extra_images = !empty($existingExtras) ? array_values($existingExtras) : null;
 
             // Handle new image uploads — always go to demo-artworks
-            $imageUpdated = false;
             if ($request->hasFile('new_images')) {
                 $newImages = $request->file('new_images');
                 $newPaths  = $demo->extra_images ?? [];
@@ -369,7 +386,6 @@ class DemoArtworkController extends Controller
                         } else {
                             $newPaths[] = $stored;
                         }
-                        $imageUpdated = true;
                     }
                 }
                 $demo->extra_images = !empty($newPaths) ? array_values($newPaths) : null;

@@ -206,6 +206,26 @@
 
 </div>
 
+{{-- ══ CLEAR CART MODAL ══ --}}
+<div class="modal-overlay" id="clearCartModal" style="display:none;" onclick="handleOverlayClick(event)">
+    <div class="modal-box">
+        <div class="modal-icon-wrap">
+            <i class="fas fa-trash-alt"></i>
+        </div>
+        <p class="modal-title">Clear your cart?</p>
+        <p class="modal-desc">
+            All <strong>{{ count($cartItems) }} item{{ count($cartItems) > 1 ? 's' : '' }}</strong>
+            will be removed from your cart. This cannot be undone.
+        </p>
+        <div class="modal-actions">
+            <button class="btn-modal-cancel" onclick="closeModal()">Keep items</button>
+            <button class="btn-modal-confirm" onclick="confirmClearCart()">
+                <i class="fas fa-trash-alt"></i> Yes, clear cart
+            </button>
+        </div>
+    </div>
+</div>
+
 {{-- Toast --}}
 <div class="toast" id="toast">
     <i class="fas fa-check-circle" id="toast-icon"></i>
@@ -273,15 +293,42 @@ function updateShippingDisplay(shippingValue) {
     }
 }
 
+/* ── Clear cart modal ── */
+
 function clearCart() {
-    if (!confirm('Clear all items from your cart?')) return;
+    document.getElementById('clearCartModal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('clearCartModal').style.display = 'none';
+}
+
+function handleOverlayClick(e) {
+    // Close when clicking the dark backdrop, not the modal box itself
+    if (e.target === document.getElementById('clearCartModal')) {
+        closeModal();
+    }
+}
+
+function confirmClearCart() {
+    closeModal();
     fetch('{{ route("cart.clear") }}', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF }
     })
     .then(r => r.json())
-    .then(data => { if (data.success) location.reload(); });
+    .then(data => {
+        if (data.success) {
+            showToast('Cart cleared.', 'danger');
+            setTimeout(() => location.reload(), 800);
+        }
+    });
 }
+
+/* ── Keyboard: Esc closes modal ── */
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModal();
+});
 
 function showToast(msg, type = 'success') {
     const toast = document.getElementById('toast');

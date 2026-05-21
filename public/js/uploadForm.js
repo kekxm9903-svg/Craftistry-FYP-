@@ -24,14 +24,23 @@ document.addEventListener('DOMContentLoaded', function () {
     setupCounter('sellProductName', 'nameCounter',     255);
     setupCounter('sellProductDesc', 'sellDescCounter', 2000);
 
+    // Sell page pricing listeners
     ['sellPrice', 'sellShipping'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', updatePricingPreview);
     });
 
-    // Also update promo preview when price changes
+    // Demo page pricing listeners
+    ['demoPrice', 'demoShipping'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', updatePricingPreview);
+    });
+
+    // Promo preview — sell page
     ['sellPrice', 'editSellPrice'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', updatePromoPreview);
     });
+
+    // Promo preview — demo page
+    document.getElementById('demoPrice')?.addEventListener('input', updatePromoPreview);
 
     ['bulkMinQty', 'bulkDiscount'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', updateBulkPreview);
@@ -50,7 +59,6 @@ function setupMultiDropZone(zoneId, inputId, innerId, gridId, filesArr) {
 
     input.addEventListener('change', function () {
         addFiles(Array.from(this.files), filesArr, gridId, zoneId, innerId, inputId);
-        // DO NOT reset this.value — keep files in input for native form submission
     });
 
     zone.addEventListener('dragover',  (e) => { e.preventDefault(); zone.classList.add('dragover'); });
@@ -83,8 +91,6 @@ function addFiles(newFiles, filesArr, gridId, zoneId, innerId, inputId) {
 }
 
 function syncFilesToInput(filesArr, inputId) {
-    // Sync the full filesArr back into the <input> via DataTransfer
-    // so the native form POST sends all files under images[]
     try {
         const dt    = new DataTransfer();
         filesArr.forEach(f => dt.items.add(f));
@@ -100,7 +106,6 @@ function renderPreviews(filesArr, gridId, zoneId, innerId, inputId) {
     const zone  = document.getElementById(zoneId);
     if (!grid || !zone) return;
 
-    // Remove old count label
     const oldCount = grid.nextElementSibling;
     if (oldCount?.classList.contains('multi-preview-count')) oldCount.remove();
 
@@ -180,7 +185,6 @@ function setupSubmitLoader(formId, btnId, loadingHTML, filesArr, inputId) {
             alert('Please select at least one image before submitting.');
             return;
         }
-        // Final sync right before submit
         syncFilesToInput(filesArr, inputId);
         btn.disabled  = true;
         btn.innerHTML = loadingHTML;
@@ -202,6 +206,28 @@ function setupCounter(inputId, counterId, max) {
 }
 
 
+// ══════════════════════════════
+// PRICING PREVIEW
+// ══════════════════════════════
+
+function updatePricingPreview() {
+    // Support both sell page (#sellPrice) and demo page (#demoPrice)
+    const price    = parseFloat(document.getElementById('sellPrice')?.value  || document.getElementById('demoPrice')?.value)    || 0;
+    const shipping = parseFloat(document.getElementById('sellShipping')?.value || document.getElementById('demoShipping')?.value) || 0;
+    const card     = document.getElementById('pricingPreviewCard');
+    if (!card) return;
+
+    if (price > 0) {
+        card.style.display = 'block';
+        document.getElementById('previewBasePrice').textContent = `RM ${price.toFixed(2)}`;
+        document.getElementById('previewShipping').textContent  = shipping > 0 ? `RM ${shipping.toFixed(2)}` : 'Free';
+        document.getElementById('previewTotal').textContent     = `RM ${(price + shipping).toFixed(2)}`;
+    } else {
+        card.style.display = 'none';
+    }
+    updateBulkPreview();
+    updatePromoPreview();
+}
 
 
 // ══════════════════════════════
@@ -223,8 +249,10 @@ function togglePromoFields(checkbox) {
 }
 
 function updatePromoPreview() {
-    // Get price from either upload page or edit page field IDs
-    const priceEl    = document.getElementById('sellPrice') || document.getElementById('editSellPrice');
+    // Support sell page (#sellPrice) AND demo page (#demoPrice)
+    const priceEl    = document.getElementById('sellPrice')
+                    || document.getElementById('demoPrice')
+                    || document.getElementById('editSellPrice');
     const discountEl = document.getElementById('promoDiscount');
     const preview    = document.getElementById('promoPricePreview');
     const origEl     = document.getElementById('promoOriginalPrice');
@@ -236,46 +264,46 @@ function updatePromoPreview() {
     const price    = parseFloat(priceEl?.value) || 0;
     const discount = parseFloat(discountEl.value) || 0;
 
-    if (price > 0 && discount > 0 && discount < 100) {
-        const finalPrice = price * (1 - discount / 100);
-        const saving     = price - finalPrice;
-
-        if (origEl)   origEl.textContent   = `RM ${price.toFixed(2)}`;
-        if (finalEl)  finalEl.textContent  = `RM ${finalPrice.toFixed(2)}`;
-        if (savingEl) savingEl.textContent  = `Save ${discount}% (RM ${saving.toFixed(2)})`;
-
+    if (discount > 0 && discount < 100) {
         preview.style.display = 'block';
+        if (price > 0) {
+            const finalPrice = price * (1 - discount / 100);
+            const saving     = price - finalPrice;
+            if (origEl)   origEl.textContent   = `RM ${price.toFixed(2)}`;
+            if (finalEl)  finalEl.textContent  = `RM ${finalPrice.toFixed(2)}`;
+            if (savingEl) savingEl.textContent  = `Save ${discount}% (RM ${saving.toFixed(2)})`;
+            if (preview)  preview.style.background = '';
+        } else {
+            if (origEl)   origEl.textContent   = '—';
+            if (finalEl)  finalEl.textContent  = '—';
+            if (savingEl) savingEl.textContent  = 'Enter a price above to see the calculation';
+            if (preview)  preview.style.background = '#f8f9fa';
+        }
     } else {
         preview.style.display = 'none';
     }
 }
 
+
 // ══════════════════════════════
 // IMAGE MANAGER (edit pages)
 // ══════════════════════════════
 
-/**
- * Mark an existing image for deletion.
- * Adds a hidden input with the path so the controller knows to delete it.
- * Clicking again toggles the mark off (undo).
- */
 function removeExistingImage(btn, formType) {
-    const item       = btn.closest('.img-manager-item');
-    const path       = item.dataset.path;
+    const item        = btn.closest('.img-manager-item');
+    const path        = item.dataset.path;
     const containerId = formType === 'demo' ? 'demoDeletedInputs' : 'sellDeletedInputs';
-    const container  = document.getElementById(containerId);
+    const container   = document.getElementById(containerId);
     if (!container) return;
 
     const isMarked = item.classList.contains('marked-delete');
 
     if (isMarked) {
-        // Undo — remove the hidden input
         item.classList.remove('marked-delete');
         const existing = container.querySelector(`input[value="${CSS.escape(path)}"]`);
         if (existing) existing.remove();
         btn.title = 'Remove';
     } else {
-        // Mark for deletion
         item.classList.add('marked-delete');
         const hidden = document.createElement('input');
         hidden.type  = 'hidden';
@@ -285,13 +313,9 @@ function removeExistingImage(btn, formType) {
         btn.title = 'Undo remove';
     }
 
-    // Update main badge — first non-deleted existing item or first new item becomes main
     refreshMainBadge(formType);
 }
 
-/**
- * Add newly selected files to the grid as preview tiles.
- */
 function addNewImagesToGrid(files, gridId, newFilesArr, inputId, formType) {
     const valid    = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     let   rejected = 0;
@@ -331,7 +355,6 @@ function renderNewImageTile(file, index, gridId, newFilesArr, inputId, formType)
                     title="Remove">
                 <i class="fas fa-times"></i>
             </button>`;
-        // Insert before the Add tile
         if (addBtn) {
             grid.insertBefore(item, addBtn);
         } else {
@@ -342,14 +365,13 @@ function renderNewImageTile(file, index, gridId, newFilesArr, inputId, formType)
 }
 
 function removeNewImage(btn, gridId, inputId) {
-    const item  = btn.closest('.img-manager-item');
-    const index = parseInt(item.dataset.index);
+    const item        = btn.closest('.img-manager-item');
+    const index       = parseInt(item.dataset.index);
     const newFilesArr = inputId === 'demoEditImage' ? demoEditNewFiles : sellEditNewFiles;
 
     newFilesArr.splice(index, 1);
     item.remove();
 
-    // Re-index remaining new items
     const grid = document.getElementById(gridId);
     grid.querySelectorAll('.img-manager-item[data-type="new"]').forEach((el, i) => {
         el.dataset.index = i;
@@ -374,34 +396,56 @@ function refreshMainBadge(formType) {
     const grid   = document.getElementById(gridId);
     if (!grid) return;
 
-    // Remove all main badges first
     grid.querySelectorAll('.img-manager-badge.main-badge').forEach(b => b.remove());
 
-    // First non-deleted item (existing or new) gets the main badge
     const firstActive = grid.querySelector('.img-manager-item:not(.marked-delete)');
     if (firstActive) {
-        const badge       = document.createElement('span');
-        badge.className   = 'img-manager-badge main-badge';
-        badge.innerHTML   = '<i class="fas fa-star"></i> Main';
+        const badge     = document.createElement('span');
+        badge.className = 'img-manager-badge main-badge';
+        badge.innerHTML = '<i class="fas fa-star"></i> Main';
         firstActive.appendChild(badge);
     }
 }
+
 
 // ══════════════════════════════
 // DEMO PAGE FUNCTIONS
 // ══════════════════════════════
 
 function toggleDemoSellFields() {
-    const checkbox = document.getElementById('alsoSellCheckbox');
-    const section  = document.getElementById('demoSellSection');
+    const checkbox    = document.getElementById('alsoSellCheckbox');
+    const section     = document.getElementById('demoSellSection');
+    const pricingCard = document.getElementById('pricingPreviewCard');
+    const sellReqs    = document.querySelectorAll('.sell-req');
+
     if (!section) return;
-    section.style.display = checkbox.checked ? 'block' : 'none';
-    section.querySelectorAll('.sell-req').forEach(input => {
-        input.required = checkbox.checked;
-    });
+
     if (checkbox.checked) {
+        section.style.display     = 'flex';
+        if (pricingCard) pricingCard.style.display = 'block';
+        sellReqs.forEach(el => el.setAttribute('required', 'required'));
         setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    } else {
+        section.style.display     = 'none';
+        if (pricingCard) pricingCard.style.display = 'none';
+        sellReqs.forEach(el => el.removeAttribute('required'));
     }
+}
+
+function toggleDemoFreeShipping(checkbox) {
+    const input = document.getElementById('demoShipping');
+    if (!input) return;
+    if (checkbox.checked) {
+        input.value            = '0';
+        input.disabled         = true;
+        input.style.background = '#f0fdf4';
+        input.style.color      = '#16a34a';
+    } else {
+        input.disabled         = false;
+        input.style.background = '';
+        input.style.color      = '';
+    }
+    updatePricingPreview();
 }
 
 
@@ -423,22 +467,6 @@ function toggleSellFreeShipping(checkbox) {
         input.style.color      = '';
     }
     updatePricingPreview();
-}
-
-function updatePricingPreview() {
-    const price    = parseFloat(document.getElementById('sellPrice')?.value)    || 0;
-    const shipping = parseFloat(document.getElementById('sellShipping')?.value) || 0;
-    const card     = document.getElementById('pricingPreviewCard');
-    if (!card) return;
-    if (price > 0) {
-        card.style.display = 'block';
-        document.getElementById('previewBasePrice').textContent = `RM ${price.toFixed(2)}`;
-        document.getElementById('previewShipping').textContent  = shipping > 0 ? `RM ${shipping.toFixed(2)}` : 'Free';
-        document.getElementById('previewTotal').textContent     = `RM ${(price + shipping).toFixed(2)}`;
-    } else {
-        card.style.display = 'none';
-    }
-    updateBulkPreview();
 }
 
 function toggleBulkFields(checkbox) {
