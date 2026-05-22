@@ -54,6 +54,30 @@
             to   { opacity:1; transform:scale(1) translateY(0); }
         }
         #deleteModal.active .modal-content { animation: ceDeleteIn .22s cubic-bezier(.34,1.56,.64,1); }
+
+        /* ── Social links row on card ── */
+        .ce-social-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .ce-social-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px; height: 28px;
+            border-radius: 6px;
+            font-size: .9rem;
+            text-decoration: none;
+            transition: opacity .15s, transform .15s;
+            flex-shrink: 0;
+        }
+        .ce-social-link:hover { opacity: .8; transform: translateY(-1px); }
+        .ce-social-link.ig { background: #fce4ec; color: #e1306c; }
+        .ce-social-link.fb { background: #e3f0fd; color: #1877f2; }
+        .ce-social-link.x  { background: #f0f0f0; color: #000; }
     </style>
 @endsection
 
@@ -178,6 +202,31 @@
                             </div>
                             @endif
                         </div>
+
+                        {{-- Social links — only rendered if at least one is set --}}
+                        @if($event->instagram_url || $event->facebook_url || $event->x_url)
+                        <div class="ce-social-row">
+                            @if($event->instagram_url)
+                                <a href="{{ $event->instagram_url }}" target="_blank" rel="noopener noreferrer"
+                                   class="ce-social-link ig" title="Instagram">
+                                    <i class="bi bi-instagram"></i>
+                                </a>
+                            @endif
+                            @if($event->facebook_url)
+                                <a href="{{ $event->facebook_url }}" target="_blank" rel="noopener noreferrer"
+                                   class="ce-social-link fb" title="Facebook">
+                                    <i class="bi bi-facebook"></i>
+                                </a>
+                            @endif
+                            @if($event->x_url)
+                                <a href="{{ $event->x_url }}" target="_blank" rel="noopener noreferrer"
+                                   class="ce-social-link x" title="X (Twitter)">
+                                    <i class="bi bi-twitter-x"></i>
+                                </a>
+                            @endif
+                        </div>
+                        @endif
+
                     </div>
 
                 </div>
@@ -342,9 +391,6 @@
         const indexRoute            = "{{ route('class.event.index') }}";
     </script>
     <script>
-    // Bootstrap.Modal shim — this page doesn't load Bootstrap JS.
-    // classEventParticipants.js calls bootstrap.Modal.getOrCreateInstance().show()
-    // and bootstrap.Modal.getInstance().hide() — we override both with .active class toggle.
     window.bootstrap = {
         Modal: {
             getOrCreateInstance: function(el) {

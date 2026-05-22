@@ -416,14 +416,15 @@ class ClassEventController extends Controller
                 'start_time'             => $startTime,
                 'end_time'               => $endTime,
                 'poster_url'             => $classEvent->poster_url,
+                'instagram_url'          => $classEvent->instagram_url,
+                'facebook_url'           => $classEvent->facebook_url,
+                'x_url'                  => $classEvent->x_url,
             ],
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
-     * POST /class-event
-     * Now returns a redirect instead of JSON (form page submission).
      */
     public function store(Request $request)
     {
@@ -438,8 +439,8 @@ class ClassEventController extends Controller
             'location'              => 'required_if:media_type,physical|nullable|string|max:255',
             'start_date'            => 'required|date|after_or_equal:today',
             'end_date'              => 'required|date|after_or_equal:start_date',
-            'enrollment_deadline'   => 'nullable|date|before_or_equal:start_date',
-            'cancellation_deadline' => 'nullable|date',
+            'enrollment_deadline'   => 'required|date|before_or_equal:start_date',
+            'cancellation_deadline' => 'required|date',
             'require_form'          => 'nullable|boolean',
             'enrollment_form_url'   => 'nullable|url|max:2048',
             'max_participants'      => 'nullable|integer|min:1|max:99999',
@@ -448,6 +449,9 @@ class ClassEventController extends Controller
             'duration_weeks'        => 'nullable|numeric',
             'duration_hours'        => 'nullable|integer',
             'duration_minutes'      => 'nullable|integer',
+            'instagram_url'         => 'nullable|url|max:2048',
+            'facebook_url'          => 'nullable|url|max:2048',
+            'x_url'                 => 'nullable|url|max:2048',
         ]);
 
         $posterPath = null;
@@ -481,8 +485,8 @@ class ClassEventController extends Controller
             'location'              => $validated['location'] ?? null,
             'start_date'            => $validated['start_date'],
             'end_date'              => $validated['end_date'],
-            'enrollment_deadline'   => $validated['enrollment_deadline'] ?? null,
-            'cancellation_deadline' => $validated['cancellation_deadline'] ?? null,
+            'enrollment_deadline'   => $validated['enrollment_deadline'],
+            'cancellation_deadline' => $validated['cancellation_deadline'],
             'require_form'          => $validated['require_form'] ?? 0,
             'enrollment_form_url'   => $validated['enrollment_form_url'] ?? null,
             'max_participants'      => $validated['max_participants'] ?? null,
@@ -491,6 +495,9 @@ class ClassEventController extends Controller
             'end_time'              => $validated['end_time'],
             'duration_hours'        => $validated['duration_hours'],
             'duration_minutes'      => $validated['duration_minutes'],
+            'instagram_url'         => $validated['instagram_url'] ?? null,
+            'facebook_url'          => $validated['facebook_url'] ?? null,
+            'x_url'                 => $validated['x_url'] ?? null,
         ]);
 
         return redirect()->route('class.event.index')
@@ -499,8 +506,6 @@ class ClassEventController extends Controller
 
     /**
      * Update the specified resource in storage.
-     * POST /class-event/{id}
-     * Now returns a redirect instead of JSON (form page submission).
      */
     public function update(Request $request, $id)
     {
@@ -517,13 +522,16 @@ class ClassEventController extends Controller
             'location'              => 'required_if:media_type,physical|nullable|string|max:255',
             'start_date'            => 'required|date',
             'end_date'              => 'required|date|after_or_equal:start_date',
-            'enrollment_deadline'   => 'nullable|date|before_or_equal:start_date',
-            'cancellation_deadline' => 'nullable|date',
+            'enrollment_deadline'   => 'required|date|before_or_equal:start_date',
+            'cancellation_deadline' => 'required|date',
             'require_form'          => 'nullable|boolean',
             'enrollment_form_url'   => 'nullable|url|max:2048',
             'max_participants'      => 'nullable|integer|min:1|max:99999',
             'start_time'            => 'required|date_format:H:i',
             'end_time'              => 'required|date_format:H:i',
+            'instagram_url'         => 'nullable|url|max:2048',
+            'facebook_url'          => 'nullable|url|max:2048',
+            'x_url'                 => 'nullable|url|max:2048',
         ]);
 
         $updateData = [
@@ -536,13 +544,16 @@ class ClassEventController extends Controller
             'location'              => $validated['location'] ?? null,
             'start_date'            => $validated['start_date'],
             'end_date'              => $validated['end_date'],
-            'enrollment_deadline'   => $validated['enrollment_deadline'] ?? null,
-            'cancellation_deadline' => $request->input('cancellation_deadline') ?: null,
+            'enrollment_deadline'   => $validated['enrollment_deadline'],
+            'cancellation_deadline' => $validated['cancellation_deadline'],
             'require_form'          => $request->input('require_form', 0),
             'enrollment_form_url'   => $request->input('enrollment_form_url') ?: null,
             'max_participants'      => $request->input('max_participants') ?: null,
             'start_time'            => $validated['start_time'],
             'end_time'              => $validated['end_time'],
+            'instagram_url'         => $validated['instagram_url'] ?? null,
+            'facebook_url'          => $validated['facebook_url'] ?? null,
+            'x_url'                 => $validated['x_url'] ?? null,
         ];
 
         if ($request->hasFile('poster_image')) {

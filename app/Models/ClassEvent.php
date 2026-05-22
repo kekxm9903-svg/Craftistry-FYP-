@@ -17,8 +17,8 @@ class ClassEvent extends Model
         'title',
         'description',
         'poster_image',
-        'is_paid',           // ← ADDED
-        'price',             // ← ADDED
+        'is_paid',
+        'price',
         'media_type',
         'platform',
         'location',
@@ -28,6 +28,9 @@ class ClassEvent extends Model
         'cancellation_deadline',
         'require_form',
         'enrollment_form_url',
+        'instagram_url',
+        'facebook_url',
+        'x_url',
         'max_participants',
         'duration_weeks',
         'start_time',
@@ -43,8 +46,8 @@ class ClassEvent extends Model
         'cancellation_deadline'  => 'date',
         'start_time'             => 'datetime:H:i',
         'end_time'               => 'datetime:H:i',
-        'is_paid'                => 'boolean',  // ← ADDED
-        'price'                  => 'decimal:2', // ← ADDED
+        'is_paid'                => 'boolean',
+        'price'                  => 'decimal:2',
     ];
 
     // ================================================================
@@ -121,9 +124,6 @@ class ClassEvent extends Model
         return $text ?: '0 mins';
     }
 
-    /**
-     * Human-readable enrollment deadline e.g. "Mar 20, 2025"
-     */
     public function getFormattedDeadlineAttribute()
     {
         if ($this->enrollment_deadline) {
@@ -132,17 +132,11 @@ class ClassEvent extends Model
         return null;
     }
 
-    /**
-     * True if artist requires a Google Form to enroll.
-     */
     public function getRequiresFormAttribute()
     {
         return !empty($this->enrollment_form_url);
     }
 
-    /**
-     * True if enrollment is still open (no deadline set OR today is on/before deadline).
-     */
     public function getIsEnrollmentOpenAttribute()
     {
         if (!$this->enrollment_deadline) {
@@ -151,9 +145,6 @@ class ClassEvent extends Model
         return now()->toDateString() <= $this->enrollment_deadline->toDateString();
     }
 
-    /**
-     * Days remaining until deadline. Negative = past deadline. Null = no deadline set.
-     */
     public function getDaysUntilDeadlineAttribute()
     {
         if (!$this->enrollment_deadline) return null;
@@ -184,6 +175,22 @@ class ClassEvent extends Model
     }
 
     // ================================================================
+    // SOCIAL LINKS ACCESSOR
+    // ================================================================
+
+    /**
+     * Returns array of [platform => url] for any social links that are set.
+     */
+    public function getSocialLinksAttribute(): array
+    {
+        $links = [];
+        if ($this->instagram_url) $links['instagram'] = $this->instagram_url;
+        if ($this->facebook_url)  $links['facebook']  = $this->facebook_url;
+        if ($this->x_url)         $links['x']         = $this->x_url;
+        return $links;
+    }
+
+    // ================================================================
     // SCOPES
     // ================================================================
 
@@ -205,27 +212,18 @@ class ClassEvent extends Model
         return $query->where('media_type', $type);
     }
 
-    /**
-     * Whether enrollment is full (max_participants reached).
-     */
     public function getIsFullAttribute(): bool
     {
         if (!$this->max_participants) return false;
         return $this->bookings()->count() >= $this->max_participants;
     }
 
-    /**
-     * How many spots remain. null = unlimited.
-     */
     public function getSpotsRemainingAttribute(): ?int
     {
         if (!$this->max_participants) return null;
         return max(0, $this->max_participants - $this->bookings()->count());
     }
 
-    /**
-     * Formatted cancellation deadline for display.
-     */
     public function getFormattedCancellationDeadlineAttribute(): ?string
     {
         return $this->cancellation_deadline
@@ -233,18 +231,12 @@ class ClassEvent extends Model
             : null;
     }
 
-    /**
-     * Whether cancellation is still allowed.
-     */
     public function getIsCancellationOpenAttribute(): bool
     {
         if (!$this->cancellation_deadline) return true;
         return now()->toDateString() <= $this->cancellation_deadline->toDateString();
     }
 
-    /**
-     * Display price — "Free" or "RM 25.00"
-     */
     public function getPriceDisplayAttribute(): string
     {
         if (!$this->is_paid) {

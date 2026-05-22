@@ -118,6 +118,37 @@
 
 .ce-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-md); }
 @media (max-width: 600px) { .ce-two-col { grid-template-columns: 1fr; } }
+
+/* ── Social link input with prefix icon ── */
+.ce-social-wrap {
+    display: flex;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    transition: border-color .15s, box-shadow .15s;
+}
+.ce-social-wrap:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(102,126,234,.1);
+}
+.ce-social-prefix {
+    display: flex; align-items: center; justify-content: center;
+    width: 42px; flex-shrink: 0;
+    background: var(--lavender);
+    border-right: 1.5px solid var(--border);
+    font-size: 1rem;
+}
+.ce-social-prefix.ig  { color: #e1306c; }
+.ce-social-prefix.fb  { color: #1877f2; }
+.ce-social-prefix.x   { color: #000; }
+.ce-social-input {
+    border: none !important; border-radius: 0 !important; box-shadow: none !important;
+    flex: 1; min-width: 0; padding: 9px var(--sp-md);
+    font-family: 'Inter', sans-serif; font-size: var(--fs-base); color: var(--ink);
+    background: var(--white);
+}
+.ce-social-input:focus { outline: none; box-shadow: none !important; }
+.ce-social-input::placeholder { color: #bbb; }
 </style>
 @endsection
 
@@ -307,16 +338,16 @@
 
                 <div class="ce-two-col" style="margin-bottom:var(--sp-lg);">
                     <div>
-                        <label class="ce-label">Enrollment Deadline <span class="opt">(optional)</span></label>
+                        <label class="ce-label">Enrollment Deadline <span class="required">*</span></label>
                         <input type="date" name="enrollment_deadline" class="ce-input"
-                               min="{{ date('Y-m-d') }}" value="{{ old('enrollment_deadline') }}">
-                        <span class="ce-hint">Leave blank for no deadline.</span>
+                               min="{{ date('Y-m-d') }}" required value="{{ old('enrollment_deadline') }}">
+                        @error('enrollment_deadline')<span class="ce-err">{{ $message }}</span>@enderror
                     </div>
                     <div>
-                        <label class="ce-label">Cancellation Deadline <span class="opt">(optional)</span></label>
+                        <label class="ce-label">Cancellation Deadline <span class="required">*</span></label>
                         <input type="date" name="cancellation_deadline" class="ce-input"
-                               min="{{ date('Y-m-d') }}" value="{{ old('cancellation_deadline') }}">
-                        <span class="ce-hint">Leave blank to allow anytime.</span>
+                               min="{{ date('Y-m-d') }}" required value="{{ old('cancellation_deadline') }}">
+                        @error('cancellation_deadline')<span class="ce-err">{{ $message }}</span>@enderror
                     </div>
                 </div>
 
@@ -359,6 +390,44 @@
                         @error('enrollment_form_url')<span class="ce-err">{{ $message }}</span>@enderror
                         <span class="ce-hint">Buyers will be redirected here to enroll.</span>
                     </div>
+                </div>
+
+                <hr class="ce-divider">
+
+                {{-- ── Social Links ── --}}
+                <div class="ce-section-title"><i class="bi bi-share-fill"></i> Social Links <span style="font-weight:400; color:var(--muted); font-size:.85em;">(optional)</span></div>
+
+                <div style="margin-bottom:var(--sp-lg);">
+                    <label class="ce-label">Instagram</label>
+                    <div class="ce-social-wrap">
+                        <span class="ce-social-prefix ig"><i class="bi bi-instagram"></i></span>
+                        <input type="url" name="instagram_url" class="ce-social-input"
+                               placeholder="https://instagram.com/yourpage"
+                               maxlength="2048" value="{{ old('instagram_url') }}">
+                    </div>
+                    @error('instagram_url')<span class="ce-err">{{ $message }}</span>@enderror
+                </div>
+
+                <div style="margin-bottom:var(--sp-lg);">
+                    <label class="ce-label">Facebook</label>
+                    <div class="ce-social-wrap">
+                        <span class="ce-social-prefix fb"><i class="bi bi-facebook"></i></span>
+                        <input type="url" name="facebook_url" class="ce-social-input"
+                               placeholder="https://facebook.com/yourpage"
+                               maxlength="2048" value="{{ old('facebook_url') }}">
+                    </div>
+                    @error('facebook_url')<span class="ce-err">{{ $message }}</span>@enderror
+                </div>
+
+                <div style="margin-bottom:var(--sp-lg);">
+                    <label class="ce-label">X (Twitter)</label>
+                    <div class="ce-social-wrap">
+                        <span class="ce-social-prefix x"><i class="bi bi-twitter-x"></i></span>
+                        <input type="url" name="x_url" class="ce-social-input"
+                               placeholder="https://x.com/yourhandle"
+                               maxlength="2048" value="{{ old('x_url') }}">
+                    </div>
+                    @error('x_url')<span class="ce-err">{{ $message }}</span>@enderror
                 </div>
 
                 <div class="form-actions">

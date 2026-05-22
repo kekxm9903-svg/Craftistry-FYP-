@@ -3,8 +3,41 @@
 @section('title', 'Edit Class/Event - Craftistry')
 
 @section('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ asset('css/classEvent.css') }}">
     <link rel="stylesheet" href="{{ asset('css/classEventForm.css') }}">
+    <style>
+        /* ── Social link input with prefix icon ── */
+        .ce-social-wrap {
+            display: flex;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .ce-social-wrap:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102,126,234,.1);
+        }
+        .ce-social-prefix {
+            display: flex; align-items: center; justify-content: center;
+            width: 42px; flex-shrink: 0;
+            background: var(--lavender);
+            border-right: 1.5px solid var(--border);
+            font-size: 1rem;
+        }
+        .ce-social-prefix.ig { color: #e1306c; }
+        .ce-social-prefix.fb { color: #1877f2; }
+        .ce-social-prefix.x  { color: #000; }
+        .ce-social-input {
+            border: none !important; border-radius: 0 !important; box-shadow: none !important;
+            flex: 1; min-width: 0; padding: 9px 14px;
+            font-family: 'Inter', sans-serif; font-size: var(--fs-base); color: var(--ink);
+            background: var(--white);
+        }
+        .ce-social-input:focus { outline: none; }
+        .ce-social-input::placeholder { color: #bbb; }
+    </style>
 @endsection
 
 @section('content')
@@ -101,16 +134,16 @@
                     <div class="radio-group">
                         <div class="radio-option">
                             <input type="radio" id="editFeeFree" name="is_paid" value="0"
-                                   {{ old('is_paid', $classEvent->is_paid) == '0' ? 'checked' : '' }}>
+                                   {{ old('is_paid', (int)$classEvent->is_paid) == '0' ? 'checked' : '' }}>
                             <label for="editFeeFree"><i class="bi bi-gift-fill"></i> Free</label>
                         </div>
                         <div class="radio-option">
                             <input type="radio" id="editFeePaid" name="is_paid" value="1"
-                                   {{ old('is_paid', $classEvent->is_paid) == '1' ? 'checked' : '' }}>
+                                   {{ old('is_paid', (int)$classEvent->is_paid) == '1' ? 'checked' : '' }}>
                             <label for="editFeePaid"><i class="bi bi-tag-fill"></i> Paid</label>
                         </div>
                     </div>
-                    <div class="conditional-field {{ old('is_paid', $classEvent->is_paid) == '1' ? 'active' : '' }}"
+                    <div class="conditional-field {{ old('is_paid', (int)$classEvent->is_paid) == '1' ? 'active' : '' }}"
                          id="editPriceField" style="margin-top:10px;">
                         <label class="form-label">Price (RM) <span class="required">*</span></label>
                         <div class="price-input-wrapper">
@@ -163,12 +196,12 @@
 
                 {{-- Dates --}}
                 @php
-                    $startDate            = old('start_date',            $classEvent->start_date            ? \Carbon\Carbon::parse($classEvent->start_date)->format('Y-m-d')            : '');
-                    $endDate              = old('end_date',              $classEvent->end_date              ? \Carbon\Carbon::parse($classEvent->end_date)->format('Y-m-d')              : '');
-                    $enrollmentDeadline   = old('enrollment_deadline',   $classEvent->enrollment_deadline   ? \Carbon\Carbon::parse($classEvent->enrollment_deadline)->format('Y-m-d')   : '');
-                    $cancellationDeadline = old('cancellation_deadline', $classEvent->cancellation_deadline ? \Carbon\Carbon::parse($classEvent->cancellation_deadline)->format('Y-m-d') : '');
-                    $startTime            = old('start_time',            $classEvent->start_time            ? \Carbon\Carbon::parse($classEvent->start_time)->format('H:i')             : '');
-                    $endTime              = old('end_time',              $classEvent->end_time              ? \Carbon\Carbon::parse($classEvent->end_time)->format('H:i')               : '');
+                    $startDate            = old('start_date',            $classEvent->start_date            ? $classEvent->start_date->format('Y-m-d')                                                        : '');
+                    $endDate              = old('end_date',              $classEvent->end_date              ? $classEvent->end_date->format('Y-m-d')                                                          : '');
+                    $enrollmentDeadline   = old('enrollment_deadline',   $classEvent->enrollment_deadline   ? $classEvent->enrollment_deadline->format('Y-m-d')                                               : '');
+                    $cancellationDeadline = old('cancellation_deadline', $classEvent->cancellation_deadline ? $classEvent->cancellation_deadline->format('Y-m-d')                                             : '');
+                    $startTime            = old('start_time',            $classEvent->start_time            ? \Carbon\Carbon::parse($classEvent->start_time)->format('H:i')                                  : '');
+                    $endTime              = old('end_time',              $classEvent->end_time              ? \Carbon\Carbon::parse($classEvent->end_time)->format('H:i')                                    : '');
                 @endphp
 
                 <div class="form-row">
@@ -190,19 +223,23 @@
                     </div>
                 </div>
 
-                {{-- Deadlines --}}
+                {{-- Deadlines — required --}}
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Enrollment Deadline <span class="form-label-opt">(optional)</span></label>
-                        <input type="date" name="enrollment_deadline" class="form-input"
+                        <label class="form-label">Enrollment Deadline <span class="required">*</span></label>
+                        <input type="date" name="enrollment_deadline" class="form-input" required
                                value="{{ $enrollmentDeadline }}">
-                        <span class="char-count">Leave blank for no deadline.</span>
+                        @error('enrollment_deadline')
+                            <span class="error-message">{{ $message }}</span>
+                        @enderror
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Cancellation Deadline <span class="form-label-opt">(optional)</span></label>
-                        <input type="date" name="cancellation_deadline" class="form-input"
+                        <label class="form-label">Cancellation Deadline <span class="required">*</span></label>
+                        <input type="date" name="cancellation_deadline" class="form-input" required
                                value="{{ $cancellationDeadline }}">
-                        <span class="char-count">Leave blank to allow cancellation anytime.</span>
+                        @error('cancellation_deadline')
+                            <span class="error-message">{{ $message }}</span>
+                        @enderror
                     </div>
                 </div>
 
@@ -212,16 +249,16 @@
                     <div class="radio-group">
                         <div class="radio-option">
                             <input type="radio" id="editRequireFormNo" name="require_form" value="0"
-                                   {{ old('require_form', $classEvent->require_form) == '0' ? 'checked' : '' }}>
+                                   {{ old('require_form', (int)$classEvent->require_form) == '0' ? 'checked' : '' }}>
                             <label for="editRequireFormNo"><i class="bi bi-x-circle-fill"></i> No — direct enroll</label>
                         </div>
                         <div class="radio-option">
                             <input type="radio" id="editRequireFormYes" name="require_form" value="1"
-                                   {{ old('require_form', $classEvent->require_form) == '1' ? 'checked' : '' }}>
+                                   {{ old('require_form', (int)$classEvent->require_form) == '1' ? 'checked' : '' }}>
                             <label for="editRequireFormYes"><i class="bi bi-file-earmark-text-fill"></i> Yes — Google Form</label>
                         </div>
                     </div>
-                    <div class="conditional-field {{ old('require_form', $classEvent->require_form) == '1' ? 'active' : '' }}"
+                    <div class="conditional-field {{ old('require_form', (int)$classEvent->require_form) == '1' ? 'active' : '' }}"
                          id="editFormUrlField" style="margin-top:10px;">
                         <label class="form-label">Google Form URL</label>
                         <input type="url" name="enrollment_form_url" class="form-input"
@@ -271,6 +308,54 @@
                     <span class="char-count" id="editDescCount">
                         {{ strlen(old('description', $classEvent->description ?? '')) }} / 1000 characters
                     </span>
+                </div>
+
+                {{-- ── Social Links ── --}}
+                <div class="form-group" style="border-top:1px solid var(--divider);padding-top:var(--sp-lg);margin-top:var(--sp-sm);">
+                    <label class="form-label" style="font-size:var(--fs-base);font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:var(--sp-md);">
+                        <i class="bi bi-share-fill" style="color:var(--primary);"></i>
+                        Social Links <span class="form-label-opt">(optional)</span>
+                    </label>
+
+                    <div style="display:flex;flex-direction:column;gap:14px;">
+
+                        <div>
+                            <label class="form-label" style="font-size:.85rem;">Instagram</label>
+                            <div class="ce-social-wrap">
+                                <span class="ce-social-prefix ig"><i class="bi bi-instagram"></i></span>
+                                <input type="url" name="instagram_url" class="ce-social-input"
+                                       placeholder="https://instagram.com/yourpage"
+                                       maxlength="2048"
+                                       value="{{ old('instagram_url', $classEvent->instagram_url) }}">
+                            </div>
+                            @error('instagram_url')<span class="error-message">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div>
+                            <label class="form-label" style="font-size:.85rem;">Facebook</label>
+                            <div class="ce-social-wrap">
+                                <span class="ce-social-prefix fb"><i class="bi bi-facebook"></i></span>
+                                <input type="url" name="facebook_url" class="ce-social-input"
+                                       placeholder="https://facebook.com/yourpage"
+                                       maxlength="2048"
+                                       value="{{ old('facebook_url', $classEvent->facebook_url) }}">
+                            </div>
+                            @error('facebook_url')<span class="error-message">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div>
+                            <label class="form-label" style="font-size:.85rem;">X (Twitter)</label>
+                            <div class="ce-social-wrap">
+                                <span class="ce-social-prefix x"><i class="bi bi-twitter-x"></i></span>
+                                <input type="url" name="x_url" class="ce-social-input"
+                                       placeholder="https://x.com/yourhandle"
+                                       maxlength="2048"
+                                       value="{{ old('x_url', $classEvent->x_url) }}">
+                            </div>
+                            @error('x_url')<span class="error-message">{{ $message }}</span>@enderror
+                        </div>
+
+                    </div>
                 </div>
 
                 <div class="form-actions">

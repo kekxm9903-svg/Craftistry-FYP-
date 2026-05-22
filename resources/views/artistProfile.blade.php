@@ -30,9 +30,6 @@
                     </div>
                 @endif
 
-                <div class="verification-badge" title="Verified Artist">
-                    <i class="fas fa-check-circle"></i>
-                </div>
             </div>
 
             <div class="artist-info">
@@ -41,7 +38,11 @@
                 <div class="artist-meta">
                     <div class="meta-item">
                         <i class="fas fa-star"></i>
-                        <span>5.0 Rating</span>
+                        @if($artist->seller_rating > 0)
+                            <span>{{ number_format($artist->seller_rating, 1) }} Rating</span>
+                        @else
+                            <span style="color:var(--muted);">No ratings yet</span>
+                        @endif
                     </div>
                     <div class="meta-item">
                         <i class="fas fa-box"></i>

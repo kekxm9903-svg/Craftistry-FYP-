@@ -3,6 +3,8 @@
 @section('title', $classEvent->title)
 
 @section('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="{{ asset('css/classEventShow.css') }}">
 @endsection
 
@@ -34,7 +36,7 @@
     {{-- ══ TWO COLUMN: big poster left, all info right ══ --}}
     <div class="two-col">
 
-        {{-- ── LEFT: Poster only ── --}}
+        {{-- ── LEFT: Poster + Social Links ── --}}
         <div class="left-col">
             <div class="poster-card">
                 @if($classEvent->poster_image)
@@ -54,6 +56,69 @@
                     @else 📍 Physical Event @endif
                 </span>
             </div>
+
+            {{-- ── Social Links — only shown if at least one link is set ── --}}
+            @if($classEvent->instagram_url || $classEvent->facebook_url || $classEvent->x_url)
+            <div class="sp-card" style="margin-top:16px;">
+                <div class="sp-card-header">
+                    <div class="sp-card-header-left">
+                        <div class="hline"></div>
+                        Follow &amp; Connect
+                    </div>
+                </div>
+                <div class="sp-card-body">
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+
+                        @if($classEvent->instagram_url)
+                        <a href="{{ $classEvent->instagram_url }}" target="_blank" rel="noopener noreferrer"
+                           style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:#fce4ec;text-decoration:none;transition:opacity .15s;"
+                           onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+                            <span style="width:34px;height:34px;border-radius:8px;background:#e1306c;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <i class="fab fa-instagram" style="color:#fff;font-size:1rem;"></i>
+                            </span>
+                            <div style="min-width:0;">
+                                <div style="font-size:.75rem;color:#9e3a5a;font-weight:600;line-height:1;">Instagram</div>
+                                <div style="font-size:.82rem;color:#e1306c;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $classEvent->instagram_url }}</div>
+                            </div>
+                            <i class="fas fa-external-link-alt" style="color:#e1306c;font-size:.75rem;margin-left:auto;flex-shrink:0;"></i>
+                        </a>
+                        @endif
+
+                        @if($classEvent->facebook_url)
+                        <a href="{{ $classEvent->facebook_url }}" target="_blank" rel="noopener noreferrer"
+                           style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:#e3f0fd;text-decoration:none;transition:opacity .15s;"
+                           onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+                            <span style="width:34px;height:34px;border-radius:8px;background:#1877f2;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <i class="fab fa-facebook-f" style="color:#fff;font-size:1rem;"></i>
+                            </span>
+                            <div style="min-width:0;">
+                                <div style="font-size:.75rem;color:#1a5faa;font-weight:600;line-height:1;">Facebook</div>
+                                <div style="font-size:.82rem;color:#1877f2;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $classEvent->facebook_url }}</div>
+                            </div>
+                            <i class="fas fa-external-link-alt" style="color:#1877f2;font-size:.75rem;margin-left:auto;flex-shrink:0;"></i>
+                        </a>
+                        @endif
+
+                        @if($classEvent->x_url)
+                        <a href="{{ $classEvent->x_url }}" target="_blank" rel="noopener noreferrer"
+                           style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:#f0f0f0;text-decoration:none;transition:opacity .15s;"
+                           onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+                            <span style="width:34px;height:34px;border-radius:8px;background:#000;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <i class="fab fa-x-twitter" style="color:#fff;font-size:1rem;"></i>
+                            </span>
+                            <div style="min-width:0;">
+                                <div style="font-size:.75rem;color:#333;font-weight:600;line-height:1;">X (Twitter)</div>
+                                <div style="font-size:.82rem;color:#555;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $classEvent->x_url }}</div>
+                            </div>
+                            <i class="fas fa-external-link-alt" style="color:#555;font-size:.75rem;margin-left:auto;flex-shrink:0;"></i>
+                        </a>
+                        @endif
+
+                    </div>
+                </div>
+            </div>
+            @endif
+
         </div>
 
         {{-- ── RIGHT: All info ── --}}
@@ -288,7 +353,6 @@
                             <p class="form-hint"><i class="fas fa-info-circle"></i> An enrollment form will open in a new tab after you enroll.</p>
                             @endif
                         @endif
-
                     </div>
 
                 </div>

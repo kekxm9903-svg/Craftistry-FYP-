@@ -60,21 +60,6 @@
                         @endforeach
                     </div>
                 @endif
-
-                {{-- Custom Order Status Badge (visible to viewers, not the artist themselves) --}}
-                @if(!auth()->check() || auth()->id() !== $user->id)
-                    @if($user->artist)
-                        @if($user->artist->allow_customization)
-                            <div class="custom-order-badge open">
-                                <i class="fas fa-check-circle"></i> Accepting Custom Orders
-                            </div>
-                        @else
-                            <div class="custom-order-badge closed">
-                                <i class="fas fa-times-circle"></i> Not Accepting Custom Orders
-                            </div>
-                        @endif
-                    @endif
-                @endif
             </div>
         </div>
 
@@ -82,8 +67,13 @@
         <div class="profile-actions-row">
             <div class="artist-meta">
                 <div class="meta-item">
-                    <strong>{{ number_format($user->seller_rating, 1) }}</strong>
-                    <span>Rating</span>
+                    @if($user->seller_rating > 0)
+                        <strong>{{ number_format($user->seller_rating, 1) }}</strong>
+                        <span>Rating</span>
+                    @else
+                        <strong style="color:var(--muted);font-size:.85rem;">—</strong>
+                        <span>No ratings yet</span>
+                    @endif
                 </div>
                 <div class="meta-divider"></div>
                 <div class="meta-item">
