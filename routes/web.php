@@ -166,6 +166,7 @@ Route::middleware('auth')->group(function () {
 
         // Artist Orders
         Route::get('/orders',                 [ArtistOrderController::class, 'index']) ->name('artist.orders');
+        Route::get('/orders/{order}',         [ArtistOrderController::class, 'show'])  ->name('artist.orders.show');
         Route::post('/orders/{order}/accept', [ArtistOrderController::class, 'accept'])->name('artist.orders.accept');
         Route::post('/orders/{order}/ship',   [ArtistOrderController::class, 'ship'])  ->name('artist.orders.ship');
 

@@ -23,6 +23,25 @@ class RefundController extends Controller
         $this->assertRefundable($order->status, $order->payment_status, $order->refund_status ?? 'none', $order->updated_at);
         $request->validate(['reason' => 'required|string|min:10|max:1000']);
 
+        // ── Auto-refund: paid but seller hasn't accepted yet (processing) ──
+        // No seller review needed — process Stripe refund immediately
+        if ($order->status === 'processing') {
+            $refundId = $this->issueStripeRefund($order->stripe_session_id);
+
+            DB::table('orders')->where('id', $order->id)->update([
+                'refund_status'       => 'refunded',
+                'refund_reason'       => $request->reason,
+                'refund_requested_at' => now(),
+                'stripe_refund_id'    => $refundId,
+                'refund_amount'       => $order->total,
+                'refunded_at'         => now(),
+                'status'              => 'cancelled',
+            ]);
+
+            return redirect()->route('orders.index')->with('success', 'Refund processed successfully. Your payment will be returned within 3–5 business days.');
+        }
+
+        // ── Seller-reviewed refund: preparing / shipped / completed ──
         DB::table('orders')->where('id', $order->id)->update([
             'refund_status'       => 'requested',
             'refund_reason'       => $request->reason,
@@ -176,7 +195,7 @@ class RefundController extends Controller
     private function assertRefundable(string $status, string $paymentStatus, string $refundStatus, $updatedAt): void
     {
         abort_if($paymentStatus !== 'paid', 403, 'Order has not been paid.');
-        abort_if(!in_array($status, ['completed','shipped','preparing','processing']), 403, 'Order not eligible for refund.');
+        abort_if(!in_array($status, ['completed', 'shipped', 'preparing', 'processing']), 403, 'Order not eligible for refund.');
         abort_if($refundStatus !== 'none', 403, 'A refund has already been requested or processed.');
         if ($status === 'completed') {
             abort_if(now()->diffInDays(\Carbon\Carbon::parse($updatedAt)) > self::REFUND_WINDOW_DAYS, 403, 'Refund window has expired.');

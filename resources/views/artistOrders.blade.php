@@ -95,6 +95,20 @@
 .refund-header-badge.requested { background: #fff3cd; color: #92400e; }
 .refund-header-badge.refunded  { background: #dcfce7; color: #166534; }
 .refund-header-badge.rejected  { background: #fee2e2; color: #991b1b; }
+
+/* ── View Details button ── */
+.btn-view-details {
+    display: inline-flex; align-items: center; gap: var(--sp-xs);
+    padding: 7px var(--sp-md); border-radius: var(--radius-sm);
+    background: var(--lavender); color: var(--primary-2);
+    font-weight: 700; font-size: var(--fs-base);
+    text-decoration: none; border: 1.5px solid #ddd8f8;
+    transition: all .15s; white-space: nowrap;
+}
+.btn-view-details:hover {
+    background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    color: #fff; border-color: transparent;
+}
 </style>
 @endsection
 
@@ -138,8 +152,7 @@
         @endforeach
         {{-- Refund tab --}}
         <a href="{{ route('artist.orders', ['refund' => '1']) }}"
-           class="tab {{ request('refund') === '1' ? 'active' : '' }}"
-           style="color: {{ request('refund') === '1' ? 'var(--primary)' : '#d97706' }};">
+        class="tab {{ request('refund') === '1' ? 'active' : '' }}">
             Refunds
             @if($refundCount > 0)
                 <span class="tab-dot" style="background:#d97706;"></span>
@@ -173,7 +186,7 @@
                    style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;
                           font-size:12px;font-weight:700;background:#fff3cd;color:#92400e;
                           text-decoration:none;border:1px solid #fcd34d;">
-                    </i> {{ $refundCount }} refund request{{ $refundCount > 1 ? 's' : '' }}
+                    {{ $refundCount }} refund request{{ $refundCount > 1 ? 's' : '' }}
                 </a>
             @endif
             <span class="header-badge">{{ $orders->count() }} total</span>
@@ -405,7 +418,7 @@
                             @endif
                         </div>
 
-                        {{-- ── Refund Banner (prominent, full-width, above footer) ── --}}
+                        {{-- ── Refund Banner ── --}}
                         @if($refundStatus === 'requested')
                         <div class="refund-banner">
                             <div class="refund-banner-header">
@@ -491,6 +504,12 @@
 
                         {{-- ── Card Footer (Actions) ── --}}
                         <div class="order-footer">
+
+                            {{-- View Details — always first ── --}}
+                            <a href="{{ route('artist.orders.show', $order->id) }}"
+                               class="btn-view-details">
+                                <i class="bi bi-eye"></i> View Details
+                            </a>
 
                             @if($order->status === 'pending_payment')
                                 <span class="status-note">

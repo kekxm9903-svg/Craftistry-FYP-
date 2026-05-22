@@ -261,12 +261,22 @@
                     && $orderReview->created_at->diffInDays(now()) <= 30;
                 $canDownloadReceipt = $order->status === 'completed';
 
-                // Refund eligibility
                 $refundStatus = $order->refund_status ?? 'none';
-                $canRefund    = $refundStatus === 'none'
-                             && $order->payment_status === 'paid'
-                             && in_array($order->status, ['completed','shipped','preparing','processing'])
-                             && ($order->status !== 'completed' || now()->diffInDays($order->updated_at) <= 7);
+
+                // Cancel: only for unpaid orders (pending_payment)
+                $canCancel = $order->status === 'pending_payment';
+
+                // Auto-refund: paid but seller hasn't accepted yet (processing)
+                // No seller review needed — processed immediately
+                $autoRefund = $refundStatus === 'none'
+                           && $order->payment_status === 'paid'
+                           && $order->status === 'processing';
+
+                // Seller-reviewed refund: paid + seller accepted (preparing / shipped / completed)
+                $canRefund = $refundStatus === 'none'
+                          && $order->payment_status === 'paid'
+                          && in_array($order->status, ['preparing', 'shipped', 'completed'])
+                          && ($order->status !== 'completed' || now()->diffInDays($order->updated_at) <= 7);
             @endphp
 
             <div class="order-card">
@@ -449,6 +459,7 @@
                             </form>
                         @endif
 
+                        {{-- Pay Now: pending_payment only --}}
                         @if($order->status === 'pending_payment')
                             <a href="{{ route('order.checkout.repay', $order->id) }}"
                                class="btn-craft btn-craft-primary">
@@ -456,7 +467,8 @@
                             </a>
                         @endif
 
-                        @if($order->status === 'processing')
+                        {{-- Cancel: pending_payment only (not yet paid) --}}
+                        @if($canCancel)
                             <button type="button"
                                 class="btn-craft btn-craft-cancel"
                                 onclick="openCancelConfirm({{ $order->id }}, '{{ addslashes($order->items->first()?->name ?? 'this order') }}')">
@@ -464,14 +476,29 @@
                             </button>
                         @endif
 
-                        {{-- Refund button --}}
+                        {{-- Auto-refund: paid but seller hasn't accepted yet (processing) --}}
+                        @if($autoRefund)
+                            <button type="button"
+                                class="btn-craft btn-craft-refund"
+                                onclick="openRefundModal(
+                                    {{ $order->id }},
+                                    '{{ addslashes($order->items->first()?->name ?? 'this order') }}',
+                                    'RM {{ number_format($order->total ?? 0, 2) }}',
+                                    true
+                                )">
+                                <i class="fas fa-undo-alt"></i> Refund
+                            </button>
+                        @endif
+
+                        {{-- Seller-reviewed refund: preparing / shipped / completed --}}
                         @if($canRefund)
                             <button type="button"
                                 class="btn-craft btn-craft-refund"
                                 onclick="openRefundModal(
                                     {{ $order->id }},
                                     '{{ addslashes($order->items->first()?->name ?? 'this order') }}',
-                                    'RM {{ number_format($order->total ?? 0, 2) }}'
+                                    'RM {{ number_format($order->total ?? 0, 2) }}',
+                                    false
                                 )">
                                 <i class="fas fa-undo-alt"></i> Refund
                             </button>
@@ -536,8 +563,7 @@
             You are about to cancel <strong id="cancelOrderName" style="color:#4a5568;"></strong>.
         </p>
         <p style="font-size:0.82rem; color:#718096; line-height:1.65; margin-bottom:28px;">
-            A <strong style="color:#48bb78;">full refund</strong> will be initiated to your original
-            payment method and may take <strong>5–10 business days</strong> to appear.
+            This order has not been paid yet. Cancelling will remove the order permanently.
             This action cannot be undone.
         </p>
         <div style="display:flex; gap:10px;">
@@ -586,14 +612,13 @@
             <p id="refundModalSubtitle" style="font-size:0.8rem; color:#718096; margin:0;"></p>
         </div>
 
-        <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:9px;
+        {{-- Info box — text swapped by JS based on isAuto --}}
+        <div id="refundInfoBox"
+             style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:9px;
                     padding:11px 14px; margin-bottom:16px;
                     display:flex; align-items:flex-start; gap:9px;">
             <i class="fas fa-info-circle" style="color:#2563eb; font-size:14px; margin-top:1px; flex-shrink:0;"></i>
-            <span style="font-size:12px; color:#1d4ed8; line-height:1.55;">
-                The seller will review your request. If approved, the refund returns to your original
-                payment method within <strong>3–5 business days</strong>.
-            </span>
+            <span id="refundInfoText" style="font-size:12px; color:#1d4ed8; line-height:1.55;"></span>
         </div>
 
         <div class="refund-chips">
@@ -606,6 +631,7 @@
 
         <form id="refundModalForm" method="POST">
             @csrf
+            <input type="hidden" name="auto_refund" id="refundAutoInput" value="0">
             <label style="font-size:13px; font-weight:600; color:#1a1a2e; display:block; margin-bottom:7px;">
                 Reason <span style="color:#ef4444;">*</span>
             </label>
@@ -673,16 +699,27 @@ window.executeCancelOrder = function () {
     document.getElementById('cancelOrderForm').submit();
 };
 
-window.openRefundModal = function (orderId, orderName, orderAmount) {
+window.openRefundModal = function (orderId, orderName, orderAmount, isAuto) {
     var modal    = document.getElementById('refundModal');
     var inner    = document.getElementById('refundModalInner');
     var form     = document.getElementById('refundModalForm');
     var subtitle = document.getElementById('refundModalSubtitle');
     var textarea = document.getElementById('refundReasonInput');
-    form.action          = '/refund/order/' + orderId;
-    subtitle.textContent = '\u201c' + orderName + '\u201d \u2022 ' + orderAmount;
-    textarea.value       = '';
-    modal.style.display  = 'flex';
+    var infoText = document.getElementById('refundInfoText');
+    var autoInput = document.getElementById('refundAutoInput');
+
+    form.action           = '/refund/order/' + orderId;
+    autoInput.value       = isAuto ? '1' : '0';
+    subtitle.textContent  = '\u201c' + orderName + '\u201d \u2022 ' + orderAmount;
+    textarea.value        = '';
+
+    if (isAuto) {
+        infoText.innerHTML = 'The seller has not accepted your order yet. Your refund will be processed <strong>automatically</strong> and returned to your original payment method within <strong>3–5 business days</strong>.';
+    } else {
+        infoText.innerHTML = 'The seller will review your request. If approved, the refund returns to your original payment method within <strong>3–5 business days</strong>.';
+    }
+
+    modal.style.display   = 'flex';
     inner.style.animation = 'none';
     void inner.offsetWidth;
     inner.style.animation = 'cancelModalIn .22s cubic-bezier(.34,1.56,.64,1)';

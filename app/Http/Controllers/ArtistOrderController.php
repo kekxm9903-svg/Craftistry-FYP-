@@ -24,8 +24,8 @@ class ArtistOrderController extends Controller
                        ->with(['user', 'items'])
                        ->get();
 
-        $status  = $request->get('status');
-        $refund  = $request->get('refund'); // '1' when Refunds tab is active
+        $status = $request->get('status');
+        $refund = $request->get('refund'); // '1' when Refunds tab is active
 
         $filteredOrders = Order::where('artist_id', $artist->id)
                                ->with(['user', 'items'])
@@ -40,6 +40,18 @@ class ArtistOrderController extends Controller
                                ->withQueryString();
 
         return view('artistOrders', compact('orders', 'filteredOrders'));
+    }
+
+    /**
+     * Show full detail for a single order.
+     */
+    public function show(Order $order)
+    {
+        $this->authorizeOrder($order);
+
+        $order->load(['user', 'items.artwork', 'artist']);
+
+        return view('artistOrderDetail', compact('order'));
     }
 
     /**
