@@ -20,7 +20,7 @@ function showToast(msg, icon = 'check-circle') {
 async function removeFavorite(url, row, name) {
     try {
         const res = await fetch(url, {
-            method: 'POST',
+            method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrfToken(),
@@ -30,16 +30,12 @@ async function removeFavorite(url, row, name) {
 
         if (!res.ok) throw new Error('Request failed');
 
-        const data = await res.json();
-
-        if (!data.favorited) {
-            row.classList.add('removing');
-            setTimeout(() => {
-                row.remove();
-                updateHeaderCount();
-            }, 300);
-            showToast(`${name} removed from favourites`, 'heart-broken');
-        }
+        row.classList.add('removing');
+        setTimeout(() => {
+            row.remove();
+            updateHeaderCount();
+        }, 300);
+        showToast(`${name} removed from favourites`, 'heart-broken');
 
     } catch (err) {
         showToast('Something went wrong. Please try again.', 'exclamation-circle');
@@ -93,8 +89,18 @@ function updateHeaderCount() {
 
     const badge = document.querySelector('.page-header-card .status-badge');
     if (badge) {
-        badge.innerHTML = `<i class="fas fa-heart"></i> ${total} saved total`;
+        if (total > 0) {
+            badge.innerHTML = `<i class="fas fa-heart"></i> ${total} saved &nbsp;&middot;&nbsp; ${artistRows} ${artistRows === 1 ? 'artist' : 'artists'} &nbsp;&middot;&nbsp; ${productRows} ${productRows === 1 ? 'artwork' : 'artworks'}`;
+        } else {
+            badge.remove();
+        }
     }
+
+    // Update tab badges
+    const artistTabBadge  = document.querySelector('.tab-item:first-child .tab-badge');
+    const productTabBadge = document.querySelector('.tab-item:last-child .tab-badge');
+    if (artistTabBadge)  artistTabBadge.textContent = artistRows;
+    if (productTabBadge) productTabBadge.textContent = productRows;
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────

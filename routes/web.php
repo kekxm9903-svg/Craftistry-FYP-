@@ -280,9 +280,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/bulk-orders',                  [BulkOrderController::class, 'index'])     ->name('bulk-orders.index');
 
     // --- FAVORITE ROUTES ---
-    Route::post('/artist/{user}/favorite',          [FavoriteController::class, 'toggle'])       ->name('artist.favorite');
-    Route::get('/my-favorites',                     [FavoriteController::class, 'index'])        ->name('favorites.index');
-    Route::post('/products/{artworkSell}/favorite', [FavoriteController::class, 'toggleProduct'])->name('product.favorite');
+    Route::post('/artist/{user}/favorite',           [FavoriteController::class, 'toggle'])          ->name('artist.favorite');
+    Route::delete('/artist/{user}/favorite',         [FavoriteController::class, 'unfavorite'])       ->name('artist.unfavorite');
+    Route::get('/my-favorites',                      [FavoriteController::class, 'index'])            ->name('favorites.index');
+    Route::post('/products/{artworkSell}/favorite',  [FavoriteController::class, 'toggleProduct'])    ->name('product.favorite');
+    Route::delete('/products/{artworkSell}/favorite',[FavoriteController::class, 'unfavoriteProduct'])->name('product.unfavorite');
 
     // --- REPORT ROUTES ---
     Route::post('/artist/{id}/report', [ArtistController::class, 'report'])->name('artist.report');

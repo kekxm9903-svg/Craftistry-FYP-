@@ -2,87 +2,90 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\Favorite;
 use App\Models\ArtworkSell;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class FavoriteController extends Controller
 {
     /**
-     * Toggle favourite status for an artist.
-     * POST /artist/{user}/favorite
+     * Show the favourites page.
+     */
+    public function index()
+    {
+        $user = Auth::user();
+
+        $favoriteArtists = $user->favoriteArtists()
+            ->with('artist.artworkTypes')
+            ->withPivot('created_at')
+            ->latest('favorites.created_at')
+            ->get();
+
+        $favoriteProducts = $user->favoriteProducts()
+            ->with('artist.user')
+            ->withPivot('created_at')
+            ->latest('user_favorite_products.created_at')
+            ->get();
+
+        return view('favoriteList', compact('favoriteArtists', 'favoriteProducts'));
+    }
+
+    /**
+     * Toggle artist favourite (used by the heart button on artist profile/browse pages).
      */
     public function toggle(User $user)
     {
-        $authUser = auth()->user();
-
-        if ($authUser->id === $user->id) {
-            return response()->json([
-                'favorited' => false,
-                'message'   => 'You cannot favourite yourself.',
-            ], 422);
-        }
+        $authUser = Auth::user();
 
         $existing = $authUser->favorites()->where('artist_id', $user->id)->first();
 
         if ($existing) {
             $existing->delete();
-            return response()->json([
-                'favorited' => false,
-                'message'   => 'Removed from favourites.',
-            ]);
+            $favorited = false;
+        } else {
+            $authUser->favorites()->create(['artist_id' => $user->id]);
+            $favorited = true;
         }
 
-        $authUser->favorites()->create(['artist_id' => $user->id]);
-
-        return response()->json([
-            'favorited' => true,
-            'message'   => 'Added to favourites!',
-        ]);
+        return response()->json(['favorited' => $favorited]);
     }
 
     /**
-     * Toggle favourite status for a product.
-     * POST /products/{artworkSell}/favorite
+     * Always unfavourite an artist — used by the favourites list page.
+     */
+    public function unfavorite(User $user)
+    {
+        Auth::user()->favorites()->where('artist_id', $user->id)->delete();
+
+        return response()->json(['favorited' => false]);
+    }
+
+    /**
+     * Toggle product favourite (used by the heart button on product pages).
      */
     public function toggleProduct(ArtworkSell $artworkSell)
     {
-        $authUser = auth()->user();
+        $user = Auth::user();
 
-        if ($authUser->favoriteProducts()->where('artwork_sell_id', $artworkSell->id)->exists()) {
-            $authUser->favoriteProducts()->detach($artworkSell->id);
-            return response()->json([
-                'favorited' => false,
-                'message'   => 'Removed from favourites.',
-            ]);
+        if ($user->favoriteProducts()->where('artwork_sell_id', $artworkSell->id)->exists()) {
+            $user->favoriteProducts()->detach($artworkSell->id);
+            $favorited = false;
+        } else {
+            $user->favoriteProducts()->attach($artworkSell->id);
+            $favorited = true;
         }
 
-        $authUser->favoriteProducts()->attach($artworkSell->id);
-
-        return response()->json([
-            'favorited' => true,
-            'message'   => 'Added to favourites!',
-        ]);
+        return response()->json(['favorited' => $favorited]);
     }
 
     /**
-     * Show the favourites page with both artists and products.
-     * GET /my-favorites
+     * Always unfavourite a product — used by the favourites list page.
      */
-    public function index()
+    public function unfavoriteProduct(ArtworkSell $artworkSell)
     {
-        $favoriteArtists = auth()->user()
-            ->favoriteArtists()
-            ->with(['artist.artworkTypes', 'artist.demoArtworks', 'artist.artworkSells'])
-            ->get();
+        Auth::user()->favoriteProducts()->detach($artworkSell->id);
 
-        $favoriteProducts = auth()->user()
-            ->favoriteProducts()
-            ->with(['artist', 'artist.user'])
-            ->withPivot('created_at')
-            ->get();
-
-        return view('favoriteList', compact('favoriteArtists', 'favoriteProducts'));
+        return response()->json(['favorited' => false]);
     }
 }

@@ -125,10 +125,10 @@
                                     <i class="fas fa-heart meta-icon"></i>
                                     Saved {{ \Carbon\Carbon::parse($artist->pivot->created_at)->diffForHumans() }}
                                 </span>
-                                @if(($artist->artist->rating ?? 0) > 0)
+                                @if($artist->seller_rating > 0)
                                     <span class="rating-lbl">
                                         <i class="fas fa-star" style="color:#f97316;"></i>
-                                        {{ number_format($artist->artist->rating, 1) }}
+                                        {{ number_format($artist->seller_rating, 1) }}
                                     </span>
                                 @endif
                             </div>
@@ -137,7 +137,7 @@
                         {{-- Unfav --}}
                         <div class="request-right">
                             <button class="btn-unfav"
-                                    data-url="{{ route('artist.favorite', $artist->id) }}"
+                                    data-url="{{ route('artist.unfavorite', $artist->id) }}"
                                     title="Remove from favourites"
                                     aria-label="Remove {{ $artist->fullname ?? $artist->name }}">
                                 <i class="fas fa-heart"></i>
@@ -223,7 +223,7 @@
                         <div class="request-right">
                             <div class="request-price">RM {{ number_format($product->product_price ?? 0, 2) }}</div>
                             <button class="btn-unfav"
-                                    data-url="{{ route('product.favorite', $product->id) }}"
+                                    data-url="{{ route('product.unfavorite', $product->id) }}"
                                     title="Remove from favourites"
                                     aria-label="Remove {{ $product->product_name }}">
                                 <i class="fas fa-heart"></i>
@@ -247,5 +247,5 @@
 @endsection
 
 @section('scripts')
-<script src="{{ asset('js/favorites.js') }}"></script>
+<script src="{{ asset('js/favoriteList.js') }}"></script>
 @endsection
