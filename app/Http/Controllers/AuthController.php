@@ -149,7 +149,7 @@ class AuthController extends Controller
                     ->with('success', 'Welcome, ' . $authUser->fullname . '!');
             }
 
-            return redirect()->intended(route('dashboard'))
+            return redirect()->route('dashboard')
                 ->with('success', 'Welcome back, ' . $authUser->fullname . '!');
         }
 

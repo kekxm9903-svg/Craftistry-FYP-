@@ -443,6 +443,12 @@
                     @error('last_ship_date')
                         <span class="field-error">{{ $message }}</span>
                     @enderror
+                    <div style="display:flex;align-items:flex-start;gap:8px;margin-top:6px;padding:10px 12px;background:#fefce8;border:1px solid #fde68a;border-radius:var(--radius-sm);">
+                        <i class="fas fa-truck" style="color:#d97706;font-size:12px;margin-top:1px;flex-shrink:0;"></i>
+                        <span style="font-size:var(--fs-sm);color:#92400e;line-height:1.5;">
+                            <strong>Estimated shipping:</strong> Most bulk orders are shipped within <strong>7–14 business days</strong> after the seller accepts your request. The seller may adjust this based on quantity and availability.
+                        </span>
+                    </div>
                 </div>
 
                 <div class="form-group">

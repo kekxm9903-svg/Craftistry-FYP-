@@ -41,7 +41,7 @@ class Artist extends Model
 
     public function reviews()
     {
-        return $this->hasMany(Review::class, 'artist_id');
+        return $this->hasMany(Review::class, 'artist_id', 'user_id');
     }
 
     // ── Computed Attributes ──────────────────────────────────────────────────

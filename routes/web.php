@@ -108,7 +108,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/',           [NotificationController::class, 'index'])      ->name('index');
         Route::get('/dropdown',   [NotificationController::class, 'dropdown'])   ->name('dropdown');
         Route::post('/read-all',  [NotificationController::class, 'markAllRead'])->name('read-all');
-        Route::post('/{id}/read', [NotificationController::class, 'markRead'])   ->name('read');
+        Route::get('/{id}/read', [NotificationController::class, 'markRead'])   ->name('read');
     });
 
     // --- ADMIN ROUTES ---

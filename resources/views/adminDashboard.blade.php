@@ -18,6 +18,7 @@
         <div class="sidebar-logo">
             <img src="{{ asset('images/Logo.png') }}" alt="Craftistry" class="sidebar-logo-img">
             <div class="logo-text">
+                Craftistry
                 <em>Admin Panel</em>
             </div>
         </div>
@@ -27,10 +28,15 @@
                 <i class="fas fa-th-large"></i>
                 <span>Dashboard</span>
             </a>
+
+            @if(auth()->user()->canAccessAdminModule('users'))
             <a href="{{ route('admin.users') }}" class="snav-item">
                 <i class="fas fa-users"></i>
                 <span>Users</span>
             </a>
+            @endif
+
+            @if(auth()->user()->canAccessAdminModule('feedbacks'))
             <a href="{{ route('admin.feedbacks') }}" class="snav-item">
                 <i class="fas fa-comment-alt"></i>
                 <span>Feedbacks</span>
@@ -38,6 +44,9 @@
                     <span class="snav-badge">{{ $stats['unread_feedbacks'] }}</span>
                 @endif
             </a>
+            @endif
+
+            @if(auth()->user()->canAccessAdminModule('reports'))
             <a href="{{ route('admin.reports') }}" class="snav-item">
                 <i class="fas fa-flag"></i>
                 <span>Reports</span>
@@ -45,10 +54,14 @@
                     <span class="snav-badge">{{ $stats['pending_reports'] }}</span>
                 @endif
             </a>
+            @endif
+
+            @if(auth()->user()->canAccessAdminModule('admins'))
             <a href="{{ route('admin.admins') }}" class="snav-item">
                 <i class="fas fa-user-shield"></i>
                 <span>Admins</span>
             </a>
+            @endif
         </nav>
 
         <div class="sidebar-footer">
@@ -58,7 +71,7 @@
                 </div>
                 <div class="sf-info">
                     <p class="sf-name">{{ auth()->user()->fullname }}</p>
-                    <p class="sf-role">Administrator</p>
+                    <p class="sf-role">{{ auth()->user()->isSuperAdmin() ? 'Super Admin' : 'Administrator' }}</p>
                 </div>
             </div>
             <form method="POST" action="{{ route('logout') }}">
@@ -112,6 +125,7 @@
             {{-- Stats --}}
             <div class="stats-grid">
 
+                @if(auth()->user()->canAccessAdminModule('users'))
                 <div class="stat-card purple" style="--i:0">
                     <div class="stat-icon"><i class="fas fa-users"></i></div>
                     <div class="stat-body">
@@ -129,7 +143,9 @@
                     </div>
                     <a href="{{ route('admin.users') }}?status=banned" class="stat-arrow"><i class="fas fa-arrow-right"></i></a>
                 </div>
+                @endif
 
+                @if(auth()->user()->canAccessAdminModule('feedbacks'))
                 <div class="stat-card blue" style="--i:2">
                     <div class="stat-icon"><i class="fas fa-comment-alt"></i></div>
                     <div class="stat-body">
@@ -138,7 +154,9 @@
                     </div>
                     <a href="{{ route('admin.feedbacks') }}" class="stat-arrow"><i class="fas fa-arrow-right"></i></a>
                 </div>
+                @endif
 
+                @if(auth()->user()->canAccessAdminModule('reports'))
                 <div class="stat-card orange" style="--i:3">
                     <div class="stat-icon"><i class="fas fa-flag"></i></div>
                     <div class="stat-body">
@@ -147,12 +165,14 @@
                     </div>
                     <a href="{{ route('admin.reports') }}" class="stat-arrow"><i class="fas fa-arrow-right"></i></a>
                 </div>
+                @endif
 
             </div>
 
             {{-- Two Panels --}}
             <div class="panels-grid">
 
+                @if(auth()->user()->canAccessAdminModule('feedbacks'))
                 {{-- Recent Feedbacks --}}
                 <div class="panel">
                     <div class="panel-head">
@@ -181,7 +201,9 @@
                         </div>
                     @endforelse
                 </div>
+                @endif
 
+                @if(auth()->user()->canAccessAdminModule('reports'))
                 {{-- Pending Reports --}}
                 <div class="panel">
                     <div class="panel-head">
@@ -212,6 +234,7 @@
                         </div>
                     @endforelse
                 </div>
+                @endif
 
             </div>
 

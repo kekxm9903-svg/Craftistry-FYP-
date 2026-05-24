@@ -14,7 +14,7 @@ class NotificationController extends Controller
      */
     public function dropdown()
     {
-        $user  = Auth::user();
+        $user = Auth::user();
 
         $notifications = Notification::forUser($user->id)
             ->latest()
@@ -26,38 +26,40 @@ class NotificationController extends Controller
         return response()->json([
             'unread_count'  => $unreadCount,
             'notifications' => $notifications->map(fn($n) => [
-                'id'         => $n->id,
-                'type'       => $n->type,
-                'title'      => $n->title,
-                'message'    => $n->message,
-                'url'        => $n->url,
-                'icon'       => $n->icon,
-                'color'      => $n->color,
-                'is_unread'  => $n->isUnread(),
-                'time'       => $n->created_at->diffForHumans(),
+                'id'        => $n->id,
+                'type'      => $n->type,
+                'title'     => $n->title,
+                'message'   => $n->message,
+                'url'       => $n->url,
+                'icon'      => $n->icon,
+                'color'     => $n->color,
+                'is_unread' => $n->isUnread(),
+                'time'      => $n->created_at->diffForHumans(),
             ]),
         ]);
     }
 
     /**
-     * Mark a single notification as read and redirect to its URL.
-     * POST /notifications/{id}/read
+     * Mark a single notification as read.
+     * GET /notifications/{id}/read
+     *
+     * - From the notification page (<a href>): redirects to dashboard after marking read
+     * - From the dropdown (fetch with Accept: application/json): returns JSON only, no redirect
      */
-    public function markRead(Notification $notification)
+    public function markRead($id)
     {
-        // Only allow the owner
-        if ($notification->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $notification = Notification::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
 
         $notification->markAsRead();
-        $url = $notification->url ?? route('dashboard');
 
         if (request()->expectsJson()) {
-            return response()->json(['success' => true, 'url' => $url]);
+            return response()->json(['success' => true]);
         }
 
-        return redirect($url);
+        // Notification page click — just go back to notifications list
+        return redirect()->route('notifications.index');
     }
 
     /**

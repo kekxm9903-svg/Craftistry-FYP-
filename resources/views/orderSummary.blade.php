@@ -4,9 +4,47 @@
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/orderSummary.css') }}">
+<style>
+    .period-tabs { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+    .month-selectors {
+        display: {{ $period === 'month' || $period === 'year' ? 'flex' : 'none' }};
+        gap: 6px;
+        align-items: center;
+        margin-top: 8px;
+    }
+    .month-selectors select {
+        padding: 5px 10px;
+        border: 1.5px solid var(--border, #e2e8f0);
+        border-radius: 8px;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        color: var(--ink, #1a202c);
+        background: #fff;
+        cursor: pointer;
+    }
+    .month-selectors select:focus { outline: none; border-color: #667eea; }
+</style>
 @endsection
 
 @section('content')
+@php
+    $revenueChange     = $revenueChange     ?? null;
+    $orderCountChange  = $orderCountChange  ?? null;
+    $currentRevenue    = $currentRevenue    ?? 0;
+    $currentOrderCount = $currentOrderCount ?? 0;
+    $totalOrders       = $totalOrders       ?? 0;
+    $totalRevenue      = $totalRevenue      ?? 0;
+    $completedOrders   = $completedOrders   ?? 0;
+    $avgOrderValue     = $avgOrderValue     ?? 0;
+    $period            = $period            ?? 'month';
+    $month             = $month             ?? now()->month;
+    $year              = $year              ?? now()->year;
+    $monthOptions      = $monthOptions      ?? [];
+    $chartData         = $chartData         ?? [];
+    $statusCounts      = $statusCounts      ?? [];
+    $topArtworks       = $topArtworks       ?? collect();
+    $completedOrderHistory = $completedOrderHistory ?? collect();
+@endphp
 
 {{-- Breadcrumb --}}
 <div class="bc-bar">
@@ -42,15 +80,23 @@
         <div class="metric-card">
             <div class="metric-label">Total Orders</div>
             <div class="metric-value">{{ number_format($totalOrders) }}</div>
-            <div class="metric-sub {{ $orderCountChange >= 0 ? 'up' : 'down' }}">
-                {{ $orderCountChange >= 0 ? '↑' : '↓' }} {{ abs($orderCountChange) }}% vs last period
+            <div class="metric-sub {{ is_null($orderCountChange) ? 'neutral' : ($orderCountChange >= 0 ? 'up' : 'down') }}">
+                @if(is_null($orderCountChange))
+                    No previous data
+                @else
+                    {{ $orderCountChange >= 0 ? '↑' : '↓' }} {{ abs($orderCountChange) }}% vs last period
+                @endif
             </div>
         </div>
         <div class="metric-card">
             <div class="metric-label">Total Revenue</div>
             <div class="metric-value">RM {{ number_format($totalRevenue, 2) }}</div>
-            <div class="metric-sub {{ $revenueChange >= 0 ? 'up' : 'down' }}">
-                {{ $revenueChange >= 0 ? '↑' : '↓' }} {{ abs($revenueChange) }}% vs last period
+            <div class="metric-sub {{ is_null($revenueChange) ? 'neutral' : ($revenueChange >= 0 ? 'up' : 'down') }}">
+                @if(is_null($revenueChange))
+                    No previous data
+                @else
+                    {{ $revenueChange >= 0 ? '↑' : '↓' }} {{ abs($revenueChange) }}% vs last period
+                @endif
             </div>
         </div>
         <div class="metric-card">
@@ -78,23 +124,43 @@
                 <div class="hline"></div>
                 Revenue Overview
             </div>
-            <div class="period-tabs" id="periodTabs">
-                <button class="period-tab {{ $period === 'day'   ? 'active' : '' }}" data-period="day">Day</button>
-                <button class="period-tab {{ $period === 'month' ? 'active' : '' }}" data-period="month">Month</button>
-                <button class="period-tab {{ $period === 'year'  ? 'active' : '' }}" data-period="year">Year</button>
+            <div>
+                <div class="period-tabs" id="periodTabs">
+                    <button class="period-tab {{ $period === 'day'   ? 'active' : '' }}" data-period="day">Day</button>
+                    <button class="period-tab {{ $period === 'week'  ? 'active' : '' }}" data-period="week">Week</button>
+                    <button class="period-tab {{ $period === 'month' ? 'active' : '' }}" data-period="month">Month</button>
+                    <button class="period-tab {{ $period === 'year'  ? 'active' : '' }}" data-period="year">Year</button>
+                </div>
+                <div class="month-selectors" id="monthSelectors">
+                    <select id="monthSelect">
+                        @foreach($monthOptions as $m => $name)
+                            <option value="{{ $m }}" {{ $m == $month ? 'selected' : '' }}>{{ $name }}</option>
+                        @endforeach
+                    </select>
+                    <select id="yearSelect">
+                        @for($y = now()->year; $y >= now()->year - 4; $y--)
+                            <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>{{ $y }}</option>
+                        @endfor
+                    </select>
+                </div>
             </div>
         </div>
         <div class="sp-card-body">
             <div class="revenue-strip">
                 <span class="revenue-big" id="revTotal">RM {{ number_format($currentRevenue, 2) }}</span>
-                <span class="revenue-change-badge {{ $revenueChange >= 0 ? 'up' : 'down' }}" id="revChange">
-                    {{ $revenueChange >= 0 ? '↑' : '↓' }} {{ abs($revenueChange) }}%
+                <span class="revenue-change-badge {{ is_null($revenueChange) ? '' : ($revenueChange >= 0 ? 'up' : 'down') }}" id="revChange">
+                    @if(is_null($revenueChange))
+                        — New
+                    @else
+                        {{ $revenueChange >= 0 ? '↑' : '↓' }} {{ abs($revenueChange) }}%
+                    @endif
                 </span>
             </div>
             <div class="revenue-sub" id="revSub">
-                @if($period === 'day') Total revenue today
-                @elseif($period === 'year') Total revenue this year
-                @else Total revenue this month
+                @if($period === 'day') Revenue today
+                @elseif($period === 'week') Revenue this week
+                @elseif($period === 'year') Revenue in {{ $year }}
+                @else Revenue in {{ Carbon\Carbon::create($year, $month)->format('F Y') }}
                 @endif
             </div>
 
@@ -314,6 +380,17 @@
         cancelled:       '#fc8181',
     };
 
+    const subLabels = {
+        day:   'Revenue today',
+        week:  'Revenue this week',
+        month: 'Revenue for selected month',
+        year:  'Revenue for selected year',
+    };
+
+    let currentPeriod = '{{ $period }}';
+    let currentMonth  = {{ $month }};
+    let currentYear   = {{ $year }};
+
     /* ── Revenue Chart ── */
     let revenueChart;
 
@@ -367,7 +444,7 @@
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { color: '#bbb', font: { size: 11 }, maxRotation: 45, autoSkip: false }
+                        ticks: { color: '#bbb', font: { size: 11 }, maxRotation: 45, autoSkip: true }
                     },
                     y: {
                         position: 'left',
@@ -389,38 +466,71 @@
 
     buildRevenueChart(initialData);
 
-    /* ── Period tab AJAX ── */
-    const subLabels = {
-        day:   'Total revenue today',
-        month: 'Total revenue this month',
-        year:  'Total revenue this year',
-    };
+    /* ── Fetch chart data ── */
+    function fetchChartData() {
+        const url = `{{ route('artist.order.summary.chart') }}?period=${currentPeriod}&month=${currentMonth}&year=${currentYear}`;
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(data => {
+                buildRevenueChart(data.chart);
+                document.getElementById('revTotal').textContent =
+                    'RM ' + Number(data.currentRevenue).toLocaleString('en-MY', { minimumFractionDigits: 2 });
 
+                const badge = document.getElementById('revChange');
+                if (data.revenueChange === null) {
+                    badge.textContent = '— New';
+                    badge.className = 'revenue-change-badge';
+                } else {
+                    const up = data.revenueChange >= 0;
+                    badge.textContent = (up ? '↑ ' : '↓ ') + Math.abs(data.revenueChange) + '%';
+                    badge.className = 'revenue-change-badge ' + (up ? 'up' : 'down');
+                }
+
+                // Update sub label
+                const monthNames = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                const sub = document.getElementById('revSub');
+                if (currentPeriod === 'day')        sub.textContent = 'Revenue today';
+                else if (currentPeriod === 'week')  sub.textContent = 'Revenue this week';
+                else if (currentPeriod === 'year')  sub.textContent = 'Revenue in ' + currentYear;
+                else                                sub.textContent = 'Revenue in ' + monthNames[currentMonth] + ' ' + currentYear;
+            })
+            .catch(err => console.error('Chart fetch error:', err));
+    }
+
+    /* ── Period tabs ── */
     document.getElementById('periodTabs').addEventListener('click', function (e) {
         const btn = e.target.closest('.period-tab');
         if (!btn) return;
 
         document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
         btn.classList.add('active');
+        currentPeriod = btn.dataset.period;
 
-        const period = btn.dataset.period;
-        document.getElementById('revSub').textContent = subLabels[period];
+        // Show/hide month selectors
+        const sel = document.getElementById('monthSelectors');
+        sel.style.display = (currentPeriod === 'month' || currentPeriod === 'year') ? 'flex' : 'none';
 
-        fetch(`{{ route('artist.order.summary.chart') }}?period=${period}`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(r => r.json())
-        .then(data => {
-            buildRevenueChart(data.chart);
-            document.getElementById('revTotal').textContent =
-                'RM ' + Number(data.currentRevenue).toLocaleString('en-MY', { minimumFractionDigits: 2 });
-            const badge = document.getElementById('revChange');
-            const up    = data.revenueChange >= 0;
-            badge.textContent = (up ? '↑ ' : '↓ ') + Math.abs(data.revenueChange) + '%';
-            badge.className   = 'revenue-change-badge ' + (up ? 'up' : 'down');
-        })
-        .catch(err => console.error('Chart fetch error:', err));
+        // Hide month dropdown for year view
+        document.getElementById('monthSelect').style.display = currentPeriod === 'year' ? 'none' : '';
+
+        fetchChartData();
     });
+
+    /* ── Month / Year selectors ── */
+    document.getElementById('monthSelect').addEventListener('change', function () {
+        currentMonth = parseInt(this.value);
+        fetchChartData();
+    });
+
+    document.getElementById('yearSelect').addEventListener('change', function () {
+        currentYear = parseInt(this.value);
+        fetchChartData();
+    });
+
+    // Init selector visibility
+    const sel = document.getElementById('monthSelectors');
+    sel.style.display = (currentPeriod === 'month' || currentPeriod === 'year') ? 'flex' : 'none';
+    document.getElementById('monthSelect').style.display = currentPeriod === 'year' ? 'none' : '';
 
     /* ── Donut Chart ── */
     const donutLabels = Object.keys(statusCounts);

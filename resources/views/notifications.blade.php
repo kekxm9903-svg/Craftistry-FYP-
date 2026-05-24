@@ -5,7 +5,6 @@
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/notification.css') }}">
 <style>
-    /* ── Breadcrumb ── */
     .bc-bar {
         background: #ffffff;
         border-bottom: 1px solid #e0e0ee;
@@ -47,26 +46,28 @@
     <div class="noti-page-header">
         <div>
             <div class="noti-page-title">Notifications</div>
-            <div class="noti-page-sub">
+            <div class="noti-page-sub" id="noti-page-sub">
                 @php $unread = $notifications->where('read_at', null)->count(); @endphp
                 {{ $unread > 0 ? $unread . ' unread' : 'All caught up!' }}
             </div>
         </div>
         @if($unread > 0)
-        <form action="{{ route('notifications.read-all') }}" method="POST">
-            @csrf
-            <button type="submit" class="noti-mark-all" style="font-size:13px;padding:8px 14px;border-radius:8px;border:1.5px solid #667eea;">
-                <i class="fas fa-check-double"></i> Mark all as read
-            </button>
-        </form>
+        <button type="button" id="markAllReadBtn"
+                class="noti-mark-all"
+                style="font-size:13px;padding:8px 14px;border-radius:8px;border:1.5px solid #667eea;cursor:pointer;background:#fff;color:#667eea;font-family:inherit;font-weight:600;">
+            <i class="fas fa-check-double"></i> Mark all as read
+        </button>
         @endif
     </div>
 
     {{-- List --}}
     <div class="noti-page-card">
         @forelse($notifications as $noti)
-        <a href="{{ route('notifications.read', $noti->id) }}"
-           class="noti-page-item {{ $noti->isUnread() ? 'unread' : '' }}">
+        <div class="noti-page-item {{ $noti->isUnread() ? 'unread' : '' }}"
+             id="noti-item-{{ $noti->id }}"
+             data-read-url="{{ route('notifications.read', $noti->id) }}"
+             onclick="markNotiRead(this)"
+             style="cursor:pointer;">
 
             <div class="noti-page-icon" style="background:{{ $noti->color }}">
                 <i class="{{ $noti->icon }}"></i>
@@ -81,7 +82,7 @@
                 </div>
             </div>
 
-        </a>
+        </div>
         @empty
         <div class="noti-page-empty">
             <i class="fas fa-bell-slash"></i>
@@ -100,4 +101,63 @@
 
 </div>
 
+@endsection
+
+@section('scripts')
+<script>
+const NOTI_CSRF         = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+const MARK_ALL_READ_URL = '{{ route('notifications.read-all') }}';
+
+async function markNotiRead(el) {
+    if (!el.classList.contains('unread')) return;
+
+    const url = el.dataset.readUrl;
+    el.classList.remove('unread');
+
+    try {
+        await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': NOTI_CSRF,
+            },
+        });
+        updateSubText();
+    } catch (err) {
+        el.classList.add('unread');
+    }
+}
+
+function updateSubText() {
+    const remaining = document.querySelectorAll('.noti-page-item.unread').length;
+    const sub = document.getElementById('noti-page-sub');
+    if (sub) sub.textContent = remaining > 0 ? remaining + ' unread' : 'All caught up!';
+
+    const btn = document.getElementById('markAllReadBtn');
+    if (btn && remaining === 0) btn.style.display = 'none';
+}
+
+const markAllBtn = document.getElementById('markAllReadBtn');
+if (markAllBtn) {
+    markAllBtn.addEventListener('click', async function () {
+        // Mark all as read in UI immediately
+        document.querySelectorAll('.noti-page-item.unread').forEach(el => {
+            el.classList.remove('unread');
+        });
+        updateSubText();
+
+        try {
+            await fetch(MARK_ALL_READ_URL, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': NOTI_CSRF,
+                },
+            });
+        } catch (err) {
+            // Silent fail — UI already updated
+        }
+    });
+}
+</script>
 @endsection

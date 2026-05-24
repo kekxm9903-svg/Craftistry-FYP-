@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
@@ -462,7 +462,6 @@
             // ── Logout confirm modal ──
             function openLogoutConfirm() {
                 document.getElementById('logoutConfirmModal')?.classList.add('open');
-                // also close the dropdown
                 document.getElementById('userDropdown')?.classList.remove('open');
             }
             function closeLogoutConfirm() {
@@ -503,6 +502,13 @@
                 badge.textContent = count > 99 ? '99+' : count;
                 count > 0 ? badge.classList.add('has-items') : badge.classList.remove('has-items');
             };
+
+            // ── Prevent bfcache stale state on browser back button ──
+            window.addEventListener('pageshow', function (e) {
+                if (e.persisted) {
+                    window.location.reload();
+                }
+            });
         </script>
 
         @if(auth()->check())

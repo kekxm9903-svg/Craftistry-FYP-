@@ -5,7 +5,7 @@
 
     const DROPDOWN_URL  = window.NOTI_DROPDOWN_URL;
     const MARK_ALL_URL  = window.NOTI_MARK_ALL_URL;
-    const READ_URL_BASE = window.NOTI_READ_URL_BASE;  // e.g. /notifications/{id}/read
+    const READ_URL_BASE = window.NOTI_READ_URL_BASE;  // e.g. /notifications/__ID__/read
     const CSRF          = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
     let pollTimer  = null;
@@ -19,7 +19,7 @@
     const list     = document.getElementById('noti-list');
     const markAll  = document.getElementById('noti-mark-all');
 
-    if (!btn || !panel) return; // not logged in or nav not rendered
+    if (!btn || !panel) return;
 
     // ── Toggle dropdown ───────────────────────────────────────────
 
@@ -81,7 +81,7 @@
         }
     }
 
-    // ── Poll for unread count every 30s ──────────────────────────
+    // ── Poll for unread count every 5s ────────────────────────────
 
     async function pollUnreadCount() {
         try {
@@ -95,8 +95,8 @@
         }
     }
 
-    pollUnreadCount(); // Run once on page load
-    pollTimer = setInterval(pollUnreadCount, 5000); // Poll every 5s — near real-time
+    pollUnreadCount();
+    pollTimer = setInterval(pollUnreadCount, 5000);
 
     // ── Update badge ──────────────────────────────────────────────
 
@@ -127,7 +127,6 @@
         list.innerHTML = notifications.map(n => `
             <div class="noti-item ${n.is_unread ? 'unread' : ''}"
                  data-id="${n.id}"
-                 data-url="${n.url || ''}"
                  onclick="handleNotiClick(this)">
                 <div class="noti-icon" style="background:${n.color}">
                     <i class="${n.icon}"></i>
@@ -142,11 +141,10 @@
         `).join('');
     }
 
-    // ── Handle notification click ─────────────────────────────────
+    // ── Handle notification click — mark as read only, no redirect ─
 
     window.handleNotiClick = async function (el) {
-        const id  = el.dataset.id;
-        const url = el.dataset.url;
+        const id = el.dataset.id;
 
         // Optimistically mark as read in UI
         el.classList.remove('unread');
@@ -155,7 +153,7 @@
 
         try {
             await fetch(READ_URL_BASE.replace('__ID__', id), {
-                method: 'POST',
+                method: 'GET',
                 headers: {
                     'Accept':       'application/json',
                     'X-CSRF-TOKEN': CSRF(),
@@ -165,13 +163,8 @@
             // Silent fail
         }
 
-        // Refresh badge count
         pollUnreadCount();
-
-        // Navigate
-        if (url) {
-            window.location.href = url;
-        }
+        // No navigation — just marks as read
     };
 
     // ── Mark all as read ──────────────────────────────────────────
@@ -186,7 +179,6 @@
                         'X-CSRF-TOKEN': CSRF(),
                     },
                 });
-                // Re-fetch to update UI
                 fetchNotifications();
                 updateBadge(0);
             } catch (err) {

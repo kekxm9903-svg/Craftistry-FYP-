@@ -52,14 +52,57 @@
         line-height: 1;
         padding: 0 4px;
     }
-    .tnc-modal-close:hover {
-        opacity: 0.7;
-    }
+    .tnc-modal-close:hover { opacity: 0.7; }
     .tnc-modal iframe {
         flex: 1;
         width: 100%;
         border: none;
     }
+
+    /* Phone input with prefix */
+    .phone-input-wrap {
+        display: flex;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .phone-input-wrap:focus-within {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102,126,234,.1);
+    }
+    .phone-prefix {
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        background: #f3f4f6;
+        border-right: 2px solid #e2e8f0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #4a5568;
+        white-space: nowrap;
+        user-select: none;
+        flex-shrink: 0;
+    }
+    .phone-input-wrap input {
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        flex: 1;
+        min-width: 0;
+        padding: 12px 16px;
+    }
+    .phone-input-wrap input:focus {
+        outline: none;
+        box-shadow: none !important;
+    }
+    .phone-error {
+        font-size: 12px;
+        color: #e53e3e;
+        margin-top: 5px;
+        display: none;
+    }
+    .phone-error.show { display: block; }
 </style>
 @endsection
 
@@ -96,7 +139,18 @@
 
             <div class="form-group">
                 <label>Phone</label>
-                <input type="tel" name="phone" value="{{ old('phone') }}" placeholder="Enter your phone number" required>
+                {{-- Hidden field that stores the full number (+60...) sent to server --}}
+                <input type="hidden" name="phone" id="phoneFull">
+                <div class="phone-input-wrap">
+                    <span class="phone-prefix">🇲🇾 +60</span>
+                    <input type="tel"
+                           id="phoneLocal"
+                           placeholder="123456789"
+                           maxlength="10"
+                           autocomplete="tel"
+                           inputmode="numeric">
+                </div>
+                <span class="phone-error" id="phoneError">Please enter a valid Malaysian phone number (e.g. 12-3456789).</span>
             </div>
 
             <div class="form-group">
@@ -150,24 +204,17 @@
 @section('scripts')
 <script src="{{ asset('js/register.js') }}"></script>
 <script>
-    const tncModal   = document.getElementById('tncModal');
-    const openTnc    = document.getElementById('openTnc');
-    const closeTnc   = document.getElementById('closeTnc');
-
-    openTnc.addEventListener('click', function (e) {
+    // ── T&C Modal ──
+    const tncModal = document.getElementById('tncModal');
+    document.getElementById('openTnc').addEventListener('click', function (e) {
         e.preventDefault();
         tncModal.classList.add('active');
     });
-
-    closeTnc.addEventListener('click', function () {
+    document.getElementById('closeTnc').addEventListener('click', function () {
         tncModal.classList.remove('active');
     });
-
-    // Close when clicking outside the modal box
     tncModal.addEventListener('click', function (e) {
-        if (e.target === tncModal) {
-            tncModal.classList.remove('active');
-        }
+        if (e.target === tncModal) tncModal.classList.remove('active');
     });
 </script>
 @endsection

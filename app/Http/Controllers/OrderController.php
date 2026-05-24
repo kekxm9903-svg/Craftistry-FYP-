@@ -4,18 +4,40 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Review;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class OrderController extends Controller
 {
+    /**
+     * Auto-cancel any pending_payment orders older than 24 hours for this user.
+     * Called on index/show as a fallback when scheduler isn't running.
+     */
+    private function cancelExpiredOrders(int $userId): void
+    {
+        Order::where('user_id', $userId)
+            ->where('status', 'pending_payment')
+            ->where('created_at', '<', Carbon::now()->subHours(24))
+            ->each(function (Order $order) {
+                $order->update([
+                    'status'              => 'cancelled',
+                    'cancellation_reason' => 'Payment not received within 24 hours. Order automatically cancelled.',
+                ]);
+            });
+    }
+
     public function index(Request $request)
     {
         $userId = Auth::id();
+
+        // Auto-cancel expired orders before showing the list
+        $this->cancelExpiredOrders($userId);
+
         $cat    = $request->input('cat', '');
         $status = $request->input('status', '');
-        $refund = $request->input('refund', ''); // '1' when Refunds pill is active
+        $refund = $request->input('refund', '');
 
         // ── Badge counts for quick-tabs ──────────────────────────────────────
         $base = fn() => Order::where('user_id', $userId);
@@ -35,11 +57,9 @@ class OrderController extends Controller
             ->with(['artist.user', 'items.artwork.artist.user'])
             ->latest();
 
-        // Refund pill filter — takes priority over cat/status
         if ($refund === '1') {
             $query->whereIn('refund_status', ['requested', 'refunded', 'rejected']);
         } else {
-            // Category tab filter
             if ($cat) {
                 match ($cat) {
                     'to-pay'     => $query->where('status', 'pending_payment'),
@@ -50,7 +70,6 @@ class OrderController extends Controller
                 };
             }
 
-            // Status pill filter
             if ($status) {
                 $query->where('status', $status);
             }
@@ -64,6 +83,16 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         abort_if($order->user_id !== Auth::id(), 403);
+
+        // Auto-cancel if this specific order has expired
+        if ($order->status === 'pending_payment' &&
+            $order->created_at->lt(Carbon::now()->subHours(24))) {
+            $order->update([
+                'status'              => 'cancelled',
+                'cancellation_reason' => 'Payment not received within 24 hours. Order automatically cancelled.',
+            ]);
+        }
+
         $order->load(['artist.user', 'items.artwork.artist.user']);
         return view('myOrderDetail', compact('order'));
     }

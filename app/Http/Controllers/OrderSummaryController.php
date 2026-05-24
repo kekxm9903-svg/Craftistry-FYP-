@@ -14,6 +14,8 @@ class OrderSummaryController extends Controller
     {
         $artistId = Auth::user()->artist?->id;
         $period   = $request->get('period', 'month');
+        $month    = (int) $request->get('month', now()->month);
+        $year     = (int) $request->get('year',  now()->year);
 
         $totalOrders = Order::forArtist($artistId)->count();
 
@@ -30,7 +32,7 @@ class OrderSummaryController extends Controller
             ? round($totalRevenue / $completedOrders, 2)
             : 0;
 
-        [$currentStart, $currentEnd, $prevStart, $prevEnd] = $this->getPeriodBounds($period);
+        [$currentStart, $currentEnd, $prevStart, $prevEnd] = $this->getPeriodBounds($period, $month, $year);
 
         $currentRevenue = Order::forArtist($artistId)
             ->where('status', 'completed')
@@ -46,7 +48,7 @@ class OrderSummaryController extends Controller
 
         $revenueChange = $prevRevenue > 0
             ? round((($currentRevenue - $prevRevenue) / $prevRevenue) * 100, 1)
-            : 0;
+            : ($currentRevenue > 0 ? 100 : null);
 
         $currentOrderCount = Order::forArtist($artistId)
             ->whereBetween('created_at', [$currentStart, $currentEnd])
@@ -58,9 +60,9 @@ class OrderSummaryController extends Controller
 
         $orderCountChange = $prevOrderCount > 0
             ? round((($currentOrderCount - $prevOrderCount) / $prevOrderCount) * 100, 1)
-            : 0;
+            : ($currentOrderCount > 0 ? 100 : null);
 
-        $chartData = $this->buildChartData($artistId, $period);
+        $chartData = $this->buildChartData($artistId, $period, $month, $year);
 
         $statusCounts = Order::forArtist($artistId)
             ->selectRaw('status, COUNT(*) as count')
@@ -95,10 +97,17 @@ class OrderSummaryController extends Controller
             ->orderByDesc('created_at')
             ->paginate(10);
 
+        // Build month options for the month selector (current year)
+        $monthOptions = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $monthOptions[$m] = Carbon::create($year, $m)->format('F');
+        }
+
         return view('orderSummary', compact(
             'totalOrders', 'totalRevenue', 'completedOrders', 'avgOrderValue',
             'currentRevenue', 'revenueChange', 'currentOrderCount', 'orderCountChange',
-            'chartData', 'statusCounts', 'topArtworks', 'completedOrderHistory', 'period'
+            'chartData', 'statusCounts', 'topArtworks', 'completedOrderHistory',
+            'period', 'month', 'year', 'monthOptions'
         ));
     }
 
@@ -106,8 +115,10 @@ class OrderSummaryController extends Controller
     {
         $artistId = Auth::user()->artist?->id;
         $period   = $request->get('period', 'month');
+        $month    = (int) $request->get('month', now()->month);
+        $year     = (int) $request->get('year',  now()->year);
 
-        [$currentStart, $currentEnd, $prevStart, $prevEnd] = $this->getPeriodBounds($period);
+        [$currentStart, $currentEnd, $prevStart, $prevEnd] = $this->getPeriodBounds($period, $month, $year);
 
         $currentRevenue = Order::forArtist($artistId)
             ->where('status', 'completed')
@@ -123,37 +134,59 @@ class OrderSummaryController extends Controller
 
         $revenueChange = $prevRevenue > 0
             ? round((($currentRevenue - $prevRevenue) / $prevRevenue) * 100, 1)
-            : 0;
+            : ($currentRevenue > 0 ? 100 : null);
 
         $currentOrderCount = Order::forArtist($artistId)
             ->whereBetween('created_at', [$currentStart, $currentEnd])
             ->count();
 
         return response()->json([
-            'chart'          => $this->buildChartData($artistId, $period),
+            'chart'          => $this->buildChartData($artistId, $period, $month, $year),
             'currentRevenue' => $currentRevenue,
             'revenueChange'  => $revenueChange,
             'orderCount'     => $currentOrderCount,
         ]);
     }
 
-    private function getPeriodBounds(string $period): array
+    private function getPeriodBounds(string $period, int $month, int $year): array
     {
         $now = Carbon::now();
         return match ($period) {
-            'day'  => [$now->copy()->startOfDay(), $now->copy()->endOfDay(), $now->copy()->subDay()->startOfDay(), $now->copy()->subDay()->endOfDay()],
-            'year' => [$now->copy()->startOfYear(), $now->copy()->endOfYear(), $now->copy()->subYear()->startOfYear(), $now->copy()->subYear()->endOfYear()],
-            default => [$now->copy()->startOfMonth(), $now->copy()->endOfMonth(), $now->copy()->subMonth()->startOfMonth(), $now->copy()->subMonth()->endOfMonth()],
+            'day'   => [
+                $now->copy()->startOfDay(),
+                $now->copy()->endOfDay(),
+                $now->copy()->subDay()->startOfDay(),
+                $now->copy()->subDay()->endOfDay(),
+            ],
+            'week'  => [
+                $now->copy()->startOfWeek(),
+                $now->copy()->endOfWeek(),
+                $now->copy()->subWeek()->startOfWeek(),
+                $now->copy()->subWeek()->endOfWeek(),
+            ],
+            'year'  => [
+                Carbon::create($year)->startOfYear(),
+                Carbon::create($year)->endOfYear(),
+                Carbon::create($year - 1)->startOfYear(),
+                Carbon::create($year - 1)->endOfYear(),
+            ],
+            default => [ // month
+                Carbon::create($year, $month)->startOfMonth(),
+                Carbon::create($year, $month)->endOfMonth(),
+                Carbon::create($year, $month)->subMonth()->startOfMonth(),
+                Carbon::create($year, $month)->subMonth()->endOfMonth(),
+            ],
         };
     }
 
-    private function buildChartData(int $artistId, string $period): array
+    private function buildChartData(int $artistId, string $period, int $month, int $year): array
     {
         $now = Carbon::now();
         return match ($period) {
-            'day'  => $this->buildDayChart($artistId, $now),
-            'year' => $this->buildYearChart($artistId, $now),
-            default => $this->buildMonthChart($artistId, $now),
+            'day'   => $this->buildDayChart($artistId, $now),
+            'week'  => $this->buildWeekChart($artistId, $now),
+            'year'  => $this->buildYearChart($artistId, $year),
+            default => $this->buildMonthChart($artistId, $month, $year),
         };
     }
 
@@ -162,35 +195,51 @@ class OrderSummaryController extends Controller
         $days = collect(range(6, 0))->map(fn($i) => $now->copy()->subDays($i));
         $labels = $revenues = $orders = [];
         foreach ($days as $day) {
-            $labels[]   = $day->format('D');
+            $labels[]   = $day->format('D d/m');
             $revenues[] = (float) Order::forArtist($artistId)->where('status', 'completed')->where('payment_status', 'paid')->whereDate('created_at', $day->toDateString())->sum('total');
-            $orders[]   = (int) Order::forArtist($artistId)->whereDate('created_at', $day->toDateString())->count();
+            $orders[]   = (int)   Order::forArtist($artistId)->whereDate('created_at', $day->toDateString())->count();
         }
         return compact('labels', 'revenues', 'orders');
     }
 
-    private function buildMonthChart(int $artistId, Carbon $now): array
+    private function buildWeekChart(int $artistId, Carbon $now): array
+    {
+        // Last 8 weeks
+        $labels = $revenues = $orders = [];
+        for ($i = 7; $i >= 0; $i--) {
+            $start = $now->copy()->subWeeks($i)->startOfWeek();
+            $end   = $start->copy()->endOfWeek();
+            $labels[]   = $start->format('d M');
+            $revenues[] = (float) Order::forArtist($artistId)->where('status', 'completed')->where('payment_status', 'paid')->whereBetween('created_at', [$start, $end])->sum('total');
+            $orders[]   = (int)   Order::forArtist($artistId)->whereBetween('created_at', [$start, $end])->count();
+        }
+        return compact('labels', 'revenues', 'orders');
+    }
+
+    private function buildMonthChart(int $artistId, int $month, int $year): array
+    {
+        // Show all days in the selected month
+        $start      = Carbon::create($year, $month)->startOfMonth();
+        $daysInMonth = $start->daysInMonth;
+        $labels = $revenues = $orders = [];
+        for ($d = 1; $d <= $daysInMonth; $d++) {
+            $date = Carbon::create($year, $month, $d);
+            $labels[]   = (string) $d;
+            $revenues[] = (float) Order::forArtist($artistId)->where('status', 'completed')->where('payment_status', 'paid')->whereDate('created_at', $date->toDateString())->sum('total');
+            $orders[]   = (int)   Order::forArtist($artistId)->whereDate('created_at', $date->toDateString())->count();
+        }
+        return compact('labels', 'revenues', 'orders');
+    }
+
+    private function buildYearChart(int $artistId, int $year): array
     {
         $labels = $revenues = $orders = [];
         for ($m = 1; $m <= 12; $m++) {
-            $start = Carbon::create($now->year, $m)->startOfMonth();
+            $start = Carbon::create($year, $m)->startOfMonth();
             $end   = $start->copy()->endOfMonth();
-            $labels[]   = Carbon::create($now->year, $m)->format('M');
+            $labels[]   = Carbon::create($year, $m)->format('M');
             $revenues[] = (float) Order::forArtist($artistId)->where('status', 'completed')->where('payment_status', 'paid')->whereBetween('created_at', [$start, $end])->sum('total');
-            $orders[]   = (int) Order::forArtist($artistId)->whereBetween('created_at', [$start, $end])->count();
-        }
-        return compact('labels', 'revenues', 'orders');
-    }
-
-    private function buildYearChart(int $artistId, Carbon $now): array
-    {
-        $labels = $revenues = $orders = [];
-        for ($y = $now->year - 4; $y <= $now->year; $y++) {
-            $start = Carbon::create($y)->startOfYear();
-            $end   = $start->copy()->endOfYear();
-            $labels[]   = (string) $y;
-            $revenues[] = (float) Order::forArtist($artistId)->where('status', 'completed')->where('payment_status', 'paid')->whereBetween('created_at', [$start, $end])->sum('total');
-            $orders[]   = (int) Order::forArtist($artistId)->whereBetween('created_at', [$start, $end])->count();
+            $orders[]   = (int)   Order::forArtist($artistId)->whereBetween('created_at', [$start, $end])->count();
         }
         return compact('labels', 'revenues', 'orders');
     }

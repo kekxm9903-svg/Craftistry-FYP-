@@ -18,6 +18,7 @@
         <div class="sidebar-logo">
             <img src="{{ asset('images/Logo.png') }}" alt="Craftistry" class="sidebar-logo-img">
             <div class="logo-text">
+                Craftistry
                 <em>Admin Panel</em>
             </div>
         </div>
@@ -27,22 +28,34 @@
                 <i class="fas fa-th-large"></i>
                 <span>Dashboard</span>
             </a>
+
+            @if(auth()->user()->canAccessAdminModule('users'))
             <a href="{{ route('admin.users') }}" class="snav-item">
                 <i class="fas fa-users"></i>
                 <span>Users</span>
             </a>
+            @endif
+
+            @if(auth()->user()->canAccessAdminModule('feedbacks'))
             <a href="{{ route('admin.feedbacks') }}" class="snav-item active">
                 <i class="fas fa-comment-alt"></i>
                 <span>Feedbacks</span>
             </a>
+            @endif
+
+            @if(auth()->user()->canAccessAdminModule('reports'))
             <a href="{{ route('admin.reports') }}" class="snav-item">
                 <i class="fas fa-flag"></i>
                 <span>Reports</span>
             </a>
+            @endif
+
+            @if(auth()->user()->canAccessAdminModule('admins'))
             <a href="{{ route('admin.admins') }}" class="snav-item">
                 <i class="fas fa-user-shield"></i>
                 <span>Admins</span>
             </a>
+            @endif
         </nav>
 
         <div class="sidebar-footer">
@@ -52,7 +65,7 @@
                 </div>
                 <div class="sf-info">
                     <p class="sf-name">{{ auth()->user()->fullname }}</p>
-                    <p class="sf-role">Administrator</p>
+                    <p class="sf-role">{{ auth()->user()->isSuperAdmin() ? 'Super Admin' : 'Administrator' }}</p>
                 </div>
             </div>
             <form method="POST" action="{{ route('logout') }}">
