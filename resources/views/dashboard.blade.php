@@ -181,6 +181,62 @@
     </div>
     @endif
 
+    {{-- ══ ON SALE ══ --}}
+    @if(isset($onSaleProducts) && $onSaleProducts->count() > 0)
+    <div class="sp-card">
+        <div class="sp-card-header">
+            <div class="sp-card-header-left">
+                <div class="hline"></div>
+                🏷️ On Sale
+            </div>
+            <a href="{{ route('artist.browse') }}" class="see-all">See All <i class="bi bi-chevron-right"></i></a>
+        </div>
+        <div class="sp-card-body">
+            <div class="product-grid">
+                @foreach($onSaleProducts as $product)
+                @php
+                    $pArtist = $product->artist?->user;
+                    $pName   = $pArtist?->fullname ?? 'Artist';
+                    $pImg    = $pArtist?->profile_image ?? null;
+                    $pInit   = strtoupper(substr($pName, 0, 1));
+                    $pPromo  = $product->promotion_price;
+                @endphp
+                <a href="{{ $product->artist?->user_id === auth()->id() ? route('artist.artwork.preview', $product->id) : route('product.show', $product->id) }}" class="product-card">
+                    <div class="product-img">
+                        @if($product->image_path)
+                            <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->product_name }}">
+                        @else
+                            <div class="product-img-empty"><i class="bi bi-palette"></i></div>
+                        @endif
+                        @if($product->artwork_type)
+                            <span class="product-type-badge {{ strtolower($product->artwork_type) }}">
+                                {{ ucfirst($product->artwork_type) }}
+                            </span>
+                        @endif
+                        <span class="product-promo-badge">-{{ number_format($product->promotion_discount, 0) }}%</span>
+                    </div>
+                    <div class="product-info">
+                        <div class="product-name">{{ Str::limit($product->product_name ?? 'Artwork', 28) }}</div>
+                        <div class="product-artist-row">
+                            <div class="product-artist-ava">
+                                @if($pImg)
+                                    <img src="{{ asset('storage/' . $pImg) }}" alt="{{ $pName }}">
+                                @else
+                                    {{ $pInit }}
+                                @endif
+                            </div>
+                            <span class="product-artist-name">{{ Str::limit($pName, 14) }}</span>
+                        </div>
+                        <div class="product-price-promo">RM {{ number_format($pPromo, 2) }}</div>
+                        <div class="product-price-original">RM {{ number_format($product->product_price, 2) }}</div>
+                    </div>
+                </a>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- ══ HOT ARTISTS ══ --}}
     @if(isset($hotArtists) && $hotArtists->count() > 0)
     <div class="sp-card">

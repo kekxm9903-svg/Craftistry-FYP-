@@ -44,7 +44,7 @@ class DashboardController extends Controller
                                 ->whereNull('buyer_response')
                                 ->count();
 
-        // ── Hot Artworks — ranked by total units sold in completed orders ──
+        // ── Hot Artworks — top 18, sorted by total sold desc then newest ──
         $hotProducts = ArtworkSell::with(['artist.user'])
             ->whereHas('artist.user')
             ->whereNotNull('image_path')
@@ -60,26 +60,20 @@ class DashboardController extends Controller
                 ) as total_sold'),
             ])
             ->orderByDesc('total_sold')
-            ->take(8)
+            ->orderByDesc('created_at')
+            ->take(18)
             ->get();
 
-        // If not enough sold artworks, pad with latest unsold ones
-        if ($hotProducts->count() < 4) {
-            $existingIds = $hotProducts->pluck('id')->toArray();
-            $padding = ArtworkSell::with(['artist.user'])
-                ->whereHas('artist.user')
-                ->whereNotNull('image_path')
-                ->whereNotIn('status', ['sold', 'sold_out'])
-                ->whereNotIn('id', $existingIds)
-                ->latest()
-                ->take(8 - $hotProducts->count())
-                ->get()
-                ->map(function ($item) {
-                    $item->total_sold = 0;
-                    return $item;
-                });
-            $hotProducts = $hotProducts->merge($padding);
-        }
+        // ── On Sale — artworks with active promotion ──
+        $onSaleProducts = ArtworkSell::with(['artist.user'])
+            ->whereHas('artist.user')
+            ->whereNotNull('image_path')
+            ->whereNotIn('status', ['sold', 'sold_out'])
+            ->where('promotion_enabled', true)
+            ->whereNotNull('promotion_discount')
+            ->orderByDesc('created_at')
+            ->take(18)
+            ->get();
 
         // ── Hot Artists — ranked by total units sold across all their artworks ──
         $hotArtists = Artist::with(['user', 'artworkSells' => function ($q) {
@@ -120,6 +114,7 @@ class DashboardController extends Controller
             'customOrdersPending',
             'hotArtists',
             'hotProducts',
+            'onSaleProducts',
             'upcomingClasses'
         ));
     }

@@ -345,12 +345,12 @@ body {
 
 /* ── Action footer ── */
 .od-actions {
-    display: flex; align-items: center; gap: var(--sp-sm);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--sp-sm);
     flex-wrap: wrap;
     padding: var(--sp-md);
-    background: var(--divider);
-    border-top: 1px solid var(--border);
-    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 .btn-accept {
     display: inline-flex; align-items: center; gap: var(--sp-xs);
@@ -926,7 +926,6 @@ body {
     @endif
 
     {{-- ── Actions footer ── --}}
-    <div class="od-card">
         <div class="od-actions">
             @if($order->status === 'pending_payment')
                 <span class="status-note">
