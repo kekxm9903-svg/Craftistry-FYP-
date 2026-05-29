@@ -15,6 +15,7 @@ class Order extends Model
         'shipping_fee', 'status', 'tracking_number', 'courier', 'has_review',
         'refund_status', 'refund_reason', 'refund_reject_reason',
         'stripe_refund_id', 'refund_amount', 'refund_requested_at', 'refunded_at',
+        'cancellation_reason',
     ];
 
     protected $casts = [
@@ -35,6 +36,11 @@ class Order extends Model
             ArtworkSell::class, OrderItem::class,
             'order_id', 'id', 'id', 'artwork_sell_id'
         );
+    }
+
+    public function customOrderRequest()
+    {
+        return $this->hasOne(CustomOrderRequest::class, 'order_id');
     }
 
     // ── Scopes ─────────────────────────────────────────────────────────────────

@@ -32,14 +32,12 @@ class OrderController extends Controller
     {
         $userId = Auth::id();
 
-        // Auto-cancel expired orders before showing the list
         $this->cancelExpiredOrders($userId);
 
         $cat    = $request->input('cat', '');
         $status = $request->input('status', '');
         $refund = $request->input('refund', '');
 
-        // ── Badge counts for quick-tabs ──────────────────────────────────────
         $base = fn() => Order::where('user_id', $userId);
 
         $totalCounts = [
@@ -52,9 +50,8 @@ class OrderController extends Controller
             'cancelled'       => $base()->where('status', 'cancelled')->count(),
         ];
 
-        // ── Main query ───────────────────────────────────────────────────────
         $query = Order::where('user_id', $userId)
-            ->with(['artist.user', 'items.artwork.artist.user'])
+            ->with(['artist.user', 'items.artwork.artist.user', 'customOrderRequest'])
             ->latest();
 
         if ($refund === '1') {
@@ -69,7 +66,6 @@ class OrderController extends Controller
                     default      => null,
                 };
             }
-
             if ($status) {
                 $query->where('status', $status);
             }
@@ -84,7 +80,6 @@ class OrderController extends Controller
     {
         abort_if($order->user_id !== Auth::id(), 403);
 
-        // Auto-cancel if this specific order has expired
         if ($order->status === 'pending_payment' &&
             $order->created_at->lt(Carbon::now()->subHours(24))) {
             $order->update([
@@ -93,7 +88,12 @@ class OrderController extends Controller
             ]);
         }
 
-        $order->load(['artist.user', 'items.artwork.artist.user']);
+        $order->load([
+            'artist.user',
+            'items.artwork.artist.user',
+            'customOrderRequest',
+        ]);
+
         return view('myOrderDetail', compact('order'));
     }
 
@@ -115,7 +115,7 @@ class OrderController extends Controller
             return back()->with('error', 'Receipt is only available for completed orders.');
         }
 
-        $order->load(['artist.user', 'items.artwork.artist.user']);
+        $order->load(['artist.user', 'items.artwork.artist.user', 'customOrderRequest']);
 
         $firstArtwork = $order->items->first()?->artwork;
         $artistUser   = $order->artist?->user ?? $firstArtwork?->artist?->user;

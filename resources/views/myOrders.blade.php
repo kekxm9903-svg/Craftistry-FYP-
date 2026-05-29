@@ -102,14 +102,13 @@
         $allCount       = $totalCounts['all']              ?? $orders->total();
 
         $quickTabs = [
-            ['cat' => '',           'status' => '',                'label' => 'All Orders',  'icon' => 'fa-shopping-bag', 'count' => $allCount],
-            ['cat' => 'to-pay',     'status' => 'pending_payment', 'label' => 'To Pay',      'icon' => 'fa-credit-card',  'count' => $payCount],
-            ['cat' => 'to-ship',    'status' => 'processing',       'label' => 'To Ship',     'icon' => 'fa-box',          'count' => $shipCount],
-            ['cat' => 'to-receive', 'status' => 'shipped',         'label' => 'To Receive',  'icon' => 'fa-truck',        'count' => $receiveCount],
-            ['cat' => 'completed',  'status' => 'completed',       'label' => 'Completed',   'icon' => 'fa-check-circle', 'count' => $completedCount],
+            ['cat' => '',           'status' => '',          'label' => 'All Orders',  'icon' => 'fa-shopping-bag', 'count' => $allCount],
+            ['cat' => 'to-pay',     'status' => 'pending_payment', 'label' => 'To Pay', 'icon' => 'fa-credit-card', 'count' => $payCount],
+            ['cat' => 'to-ship',    'status' => 'processing', 'label' => 'To Ship',    'icon' => 'fa-box',          'count' => $shipCount],
+            ['cat' => 'to-receive', 'status' => 'shipped',   'label' => 'To Receive',  'icon' => 'fa-truck',        'count' => $receiveCount],
+            ['cat' => 'completed',  'status' => 'completed', 'label' => 'Completed',   'icon' => 'fa-check-circle', 'count' => $completedCount],
         ];
 
-        // Status pills shown per tab — tabs with only 1 status skip pills entirely
         $tabStatusPills = [
             '' => [
                 ''                => 'All',
@@ -160,7 +159,7 @@
         </div>
     </div>
 
-    {{-- ══ Status Pills (only when tab has multiple statuses) ══ --}}
+    {{-- ══ Status Pills ══ --}}
     @if(count($activePills) >= 1)
     <div class="status-pills-card">
         <div class="status-row">
@@ -170,18 +169,14 @@
                         $pillActive = $currentRefund === '1';
                         $pillHref   = route('orders.index', array_filter(['refund' => '1', 'cat' => $currentCat ?: null]));
                     @endphp
-                    <a href="{{ $pillHref }}" class="status-pill {{ $pillActive ? 'active' : '' }}">
-                        {{ $label }}
-                    </a>
+                    <a href="{{ $pillHref }}" class="status-pill {{ $pillActive ? 'active' : '' }}">{{ $label }}</a>
                 @else
                     @php
                         $pillActive = $currentStatus === $val && !$currentRefund;
                         $params     = array_filter(['status' => $val ?: null, 'cat' => $currentCat ?: null]);
                         $pillHref   = route('orders.index', $params);
                     @endphp
-                    <a href="{{ $pillHref }}" class="status-pill {{ $pillActive ? 'active' : '' }}">
-                        {{ $label }}
-                    </a>
+                    <a href="{{ $pillHref }}" class="status-pill {{ $pillActive ? 'active' : '' }}">{{ $label }}</a>
                 @endif
             @endforeach
         </div>
@@ -197,12 +192,9 @@
                 @if($currentRefund === '1')
                     You have no refund requests at the moment.
                 @elseif($currentStatus || $currentCat)
-                    You have no
-                    <strong>{{ str_replace(['_', '-'], ' ', $currentStatus ?: $currentCat) }}</strong>
-                    orders at the moment.
+                    You have no <strong>{{ str_replace(['_', '-'], ' ', $currentStatus ?: $currentCat) }}</strong> orders at the moment.
                 @else
-                    You haven't placed any orders yet.<br>
-                    Browse artworks and find something you love!
+                    You haven't placed any orders yet.<br>Browse artworks and find something you love!
                 @endif
             </p>
             <a href="{{ route('artist.browse') }}" class="btn-craft btn-craft-primary">
@@ -233,7 +225,7 @@
                              ?? ucfirst(str_replace('_', ' ', $order->status));
 
                 $firstItem  = $order->items?->first();
-                $extraCount = max(0, ($order->items?->count() ?? 0) - 1);
+                $extraItems = $order->items?->slice(1) ?? collect();
 
                 $trackingSteps = [
                     ['label' => 'Paid',    'doneWhen' => ['processing','preparing','shipped','completed']],
@@ -257,6 +249,17 @@
                                    && $order->payment_status === 'paid'
                                    && in_array($order->status, ['preparing','shipped','completed'])
                                    && ($order->status !== 'completed' || now()->diffInDays($order->updated_at) <= 7);
+
+                $orderShipping = (float) ($order->shipping_fee ?? 0);
+                $orderTotal    = (float) ($order->total ?? $order->price ?? 0);
+                $orderSubtotal = $orderTotal - $orderShipping;
+
+                // Auto-cancel countdown
+                $expiresAt  = $order->created_at->addHours(24);
+                $hoursLeft  = (int) now()->diffInHours($expiresAt, false);
+                $minsLeft   = (int) now()->diffInMinutes($expiresAt, false);
+                $isUrgent   = $hoursLeft < 2 && $hoursLeft >= 0;
+                $isExpiring = $hoursLeft >= 2 && $hoursLeft < 6;
             @endphp
 
             <div class="order-card">
@@ -284,17 +287,29 @@
                 </div>
 
                 <div class="oc-body">
+
+                    {{-- First item --}}
                     <div class="oc-item-row">
                         <div class="oc-thumb">
-                            @php
-                                $thumb    = $firstItem?->artwork;
-                                $isCustom = $firstItem?->artwork_sell_id === null;
-                                $imgSrc   = $thumb?->image_path
-                                    ? asset('storage/' . $thumb->image_path)
-                                    : ($isCustom && $firstItem?->image_path
-                                        ? asset('storage/' . $firstItem->image_path)
-                                        : null);
-                            @endphp
+                    @php
+                        $thumb    = $firstItem?->artwork;
+                        $isCustom = $firstItem?->artwork_sell_id === null;
+
+                        // For custom orders, try to find the original request's reference image
+                        $customRefImage = null;
+                        if ($isCustom) {
+                            $customRefImage = \App\Models\CustomOrderRequest::where('order_id', $order->id)
+                                ->value('reference_image');
+                        }
+
+                        $imgSrc = $thumb?->image_path
+                            ? asset('storage/' . $thumb->image_path)
+                            : ($customRefImage
+                                ? asset('storage/' . $customRefImage)
+                                : ($isCustom && $firstItem?->image_path
+                                    ? asset('storage/' . $firstItem->image_path)
+                                    : null));
+                    @endphp
                             @if($imgSrc)
                                 <img src="{{ $imgSrc }}" alt="{{ $firstItem->name ?? 'Artwork' }}">
                             @elseif($isCustom)
@@ -319,12 +334,44 @@
                             RM {{ number_format($order->items->first()?->price ?? $order->price ?? 0, 2) }}
                         </div>
                     </div>
-                    @if($extraCount > 0)
-                        <div class="oc-more-items">
-                            + {{ $extraCount }} more item{{ $extraCount > 1 ? 's' : '' }}
-                            — <a href="{{ route('orders.show', $order->id) }}">View all</a>
+
+                    {{-- Remaining items shown directly --}}
+                    @foreach($extraItems as $extraItem)
+                    @php
+                        $extraThumb  = $extraItem->artwork;
+                        $extraCustom = $extraItem->artwork_sell_id === null;
+                        $extraImgSrc = $extraThumb?->image_path
+                            ? asset('storage/' . $extraThumb->image_path)
+                            : ($extraCustom && $extraItem->image_path
+                                ? asset('storage/' . $extraItem->image_path)
+                                : null);
+                    @endphp
+                    <div class="oc-item-row" style="border-top: 1px solid #f1f0f9; padding-top: 10px; margin-top: 10px;">
+                        <div class="oc-thumb">
+                            @if($extraImgSrc)
+                                <img src="{{ $extraImgSrc }}" alt="{{ $extraItem->name ?? 'Artwork' }}">
+                            @elseif($extraCustom)
+                                <i class="fas fa-paint-brush" style="font-size:22px;color:#b0a8e0;"></i>
+                            @else
+                                <i class="fas fa-palette" style="font-size:22px;color:#b0a8e0;"></i>
+                            @endif
                         </div>
-                    @endif
+                        <div class="oc-item-info">
+                            <p class="oc-item-title">{{ $extraItem->name ?? 'Artwork Order' }}</p>
+                            <p class="oc-item-artist">
+                                <i class="fas fa-palette" style="font-size:10px;"></i> by {{ $artistName }}
+                            </p>
+                            <p class="oc-item-meta">
+                                Qty: {{ $extraItem->quantity ?? 1 }}
+                                @if($extraItem->variant ?? null) &middot; {{ $extraItem->variant }} @endif
+                            </p>
+                        </div>
+                        <div class="oc-item-price">
+                            RM {{ number_format($extraItem->price ?? 0, 2) }}
+                        </div>
+                    </div>
+                    @endforeach
+
                 </div>
 
                 @if(in_array($order->status, ['shipped','completed']) && $order->tracking_number)
@@ -357,12 +404,51 @@
                 <div class="oc-footer">
                     <div class="oc-total">
                         Order Total:
-                        <span class="total-amount">RM {{ number_format($order->total ?? $order->price ?? 0, 2) }}</span>
-                        @if(($order->shipping_fee ?? 0) > 0)
-                            <span class="total-note">(incl. shipping)</span>
+                        <span class="total-amount">RM {{ number_format($orderTotal, 2) }}</span>
+                        @if($orderShipping > 0)
+                            <span class="total-note">
+                                (RM {{ number_format($orderSubtotal, 2) }} + RM {{ number_format($orderShipping, 2) }} shipping)
+                            </span>
                         @endif
                     </div>
                     <div class="oc-actions">
+
+                        {{-- ── Pending Payment: expiry disclaimer ── --}}
+                        @if($order->status === 'pending_payment')
+                            <div style="
+                                width: 100%;
+                                background: {{ $hoursLeft <= 0 ? '#fff5f5' : ($isUrgent ? '#fff5f5' : ($isExpiring ? '#fff8f0' : '#f0f4ff')) }};
+                                border: 1.5px solid {{ $hoursLeft <= 0 ? '#fca5a5' : ($isUrgent ? '#fca5a5' : ($isExpiring ? '#fcd34d' : '#c7d2fe')) }};
+                                border-radius: 9px; padding: 10px 14px; margin-bottom: 10px;
+                                display: flex; align-items: flex-start; gap: 9px;">
+                                <i class="fas {{ $hoursLeft <= 0 ? 'fa-exclamation-circle' : ($isUrgent ? 'fa-exclamation-circle' : 'fa-clock') }}"
+                                   style="color: {{ $hoursLeft <= 0 ? '#ef4444' : ($isUrgent ? '#ef4444' : ($isExpiring ? '#d97706' : '#667eea')) }};
+                                          font-size: 13px; margin-top: 2px; flex-shrink: 0;"></i>
+                                <span style="font-size: 12px; line-height: 1.6;
+                                             color: {{ $hoursLeft <= 0 ? '#991b1b' : ($isUrgent ? '#991b1b' : ($isExpiring ? '#92400e' : '#3730a3')) }};">
+                                    @if($hoursLeft <= 0)
+                                        <strong>Payment overdue.</strong>
+                                        This order will be cancelled automatically very soon.
+                                        Please cancel it manually or contact support if you need help.
+                                    @elseif($isUrgent)
+                                        <strong>Expiring soon!</strong>
+                                        This order will be automatically cancelled in
+                                        <strong>{{ $minsLeft }} minute{{ $minsLeft !== 1 ? 's' : '' }}</strong>.
+                                        Complete payment now to secure your order.
+                                    @elseif($isExpiring)
+                                        <strong>Payment due soon.</strong>
+                                        This order expires in <strong>{{ $hoursLeft }} hour{{ $hoursLeft !== 1 ? 's' : '' }}</strong>
+                                        (by {{ $expiresAt->format('d M, g:i A') }}).
+                                        Complete payment to avoid automatic cancellation.
+                                    @else
+                                        Complete payment by <strong>{{ $expiresAt->format('d M Y, g:i A') }}</strong>
+                                        or this order will be automatically cancelled
+                                        ({{ $hoursLeft }} hour{{ $hoursLeft !== 1 ? 's' : '' }} remaining).
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
+
                         <a href="{{ route('orders.show', $order->id) }}" class="btn-craft btn-craft-outline">
                             <i class="fas fa-eye"></i> View Details
                         </a>
@@ -413,13 +499,13 @@
                         @endif
                         @if($autoRefund)
                             <button type="button" class="btn-craft btn-craft-refund"
-                                onclick="openRefundModal({{ $order->id }}, '{{ addslashes($order->items->first()?->name ?? 'this order') }}', 'RM {{ number_format($order->total ?? 0, 2) }}', true)">
+                                onclick="openRefundModal({{ $order->id }}, '{{ addslashes($order->items->first()?->name ?? 'this order') }}', 'RM {{ number_format($orderTotal, 2) }}', true)">
                                 <i class="fas fa-undo-alt"></i> Refund
                             </button>
                         @endif
                         @if($canRefund)
                             <button type="button" class="btn-craft btn-craft-refund"
-                                onclick="openRefundModal({{ $order->id }}, '{{ addslashes($order->items->first()?->name ?? 'this order') }}', 'RM {{ number_format($order->total ?? 0, 2) }}', false)">
+                                onclick="openRefundModal({{ $order->id }}, '{{ addslashes($order->items->first()?->name ?? 'this order') }}', 'RM {{ number_format($orderTotal, 2) }}', false)">
                                 <i class="fas fa-undo-alt"></i> Refund
                             </button>
                         @endif
@@ -595,8 +681,8 @@ window.openRefundModal = function (orderId, orderName, orderAmount, isAuto) {
     subtitle.textContent = '\u201c' + orderName + '\u201d \u2022 ' + orderAmount;
     textarea.value       = '';
     infoText.innerHTML   = isAuto
-        ? 'The seller has not accepted your order yet. Your refund will be processed <strong>automatically</strong> and returned to your original payment method within <strong>3–5 business days</strong>.'
-        : 'The seller will review your request. If approved, the refund returns to your original payment method within <strong>3–5 business days</strong>.';
+        ? 'The seller has not accepted your order yet. Your refund will be processed <strong>automatically</strong> and returned to your original payment method within <strong>3\u20135 business days</strong>.'
+        : 'The seller will review your request. If approved, the refund returns to your original payment method within <strong>3\u20135 business days</strong>.';
     modal.style.display  = 'flex';
     inner.style.animation = 'none'; void inner.offsetWidth; inner.style.animation = 'cancelModalIn .22s cubic-bezier(.34,1.56,.64,1)';
 };

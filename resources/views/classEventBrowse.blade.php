@@ -268,52 +268,6 @@ body {
     box-shadow: 0 5px 16px rgba(102, 126, 234, .38);
 }
 
-/* Filter label */
-.filter-label {
-    font-size: var(--fs-sm);
-    font-weight: 600;
-    color: var(--muted);
-    white-space: nowrap;
-}
-
-.filter-divider {
-    width: 1px;
-    height: 20px;
-    background: var(--border);
-    flex-shrink: 0;
-}
-
-/* Filter toggle buttons */
-.filter-btn {
-    padding: 6px var(--sp-sm);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: var(--fs-sm);
-    font-family: 'Inter', sans-serif;
-    background: var(--white);
-    cursor: pointer;
-    transition: all .15s;
-    font-weight: 500;
-    color: var(--muted);
-    white-space: nowrap;
-}
-
-.filter-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
-.filter-btn.active {
-    background: linear-gradient(135deg, var(--primary), var(--primary-2));
-    color: #fff;
-    border-color: transparent;
-}
-
-.filter-btn.status-active.active   { background: linear-gradient(135deg, #10b981, #059669); }
-.filter-btn.status-upcoming.active { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.filter-btn.status-expired.active  { background: linear-gradient(135deg, #94a3b8, #64748b); }
-.filter-btn.status-full.active     { background: linear-gradient(135deg, #ef4444, #dc2626); }
-
 
 /* ── Results meta ── */
 
@@ -327,13 +281,6 @@ body {
 }
 
 .results-meta strong { color: var(--ink); }
-
-.results-meta a {
-    color: var(--primary);
-    font-weight: 600;
-    text-decoration: none;
-    font-size: var(--fs-sm);
-}
 
 
 /* ── Classes grid ── */
@@ -437,10 +384,12 @@ body {
     font-weight: 700;
 }
 
-.tag-status.active   { background: #dcfce7; color: #16a34a; }
-.tag-status.upcoming { background: #fef9c3; color: #ca8a04; }
-.tag-status.expired  { background: #f1f5f9; color: #64748b; }
-.tag-status.full     { background: #fee2e2; color: #dc2626; }
+/* ── Status colours (new set) ── */
+.tag-status.open    { background: #dcfce7; color: #16a34a; }       /* green  */
+.tag-status.closed  { background: #dbeafe; color: #2563eb; }       /* blue   */
+.tag-status.ongoing { background: #ede9fe; color: #7c3aed; }       /* purple */
+.tag-status.ended   { background: #f1f5f9; color: #64748b; }       /* grey   */
+.tag-status.full    { background: #fee2e2; color: #dc2626; }       /* red    */
 
 /* Title */
 .class-title {
@@ -628,9 +577,12 @@ body {
     margin-top: auto;
 }
 
-.class-btn:hover { opacity: .88; }
-.class-btn.expired { background: linear-gradient(135deg, #94a3b8, #64748b); }
-.class-btn.full    { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.class-btn:hover        { opacity: .88; }
+.class-btn.ended        { background: linear-gradient(135deg, #94a3b8, #64748b); }
+.class-btn.full         { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.class-btn.closed       { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.class-btn.ongoing      { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+.class-btn.enrolled     { background: linear-gradient(135deg, #16a34a, #15803d); }
 
 
 /* ── Pagination ── */
@@ -642,15 +594,6 @@ body {
     border-top: 1px solid var(--divider);
 }
 
-.pagination-nav {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-xs);
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-/* Override Laravel default pagination */
 .pagination-row nav {
     display: flex;
     justify-content: center;
@@ -787,20 +730,28 @@ body {
             <input type="hidden" name="type"   id="tab-type"   value="{{ request('type', 'all') }}">
             <input type="hidden" name="status" id="tab-status" value="{{ request('status', 'all') }}">
 
+            {{-- Type tabs --}}
             <button type="button" class="cat-pill {{ request('type', 'all') == 'all' && request('status', 'all') == 'all' ? 'active' : '' }}"
                     onclick="setTab('all','all')">All</button>
             <button type="button" class="cat-pill {{ request('type') == 'online' ? 'active' : '' }}"
                     onclick="setTab('online','all')">💻 Online</button>
             <button type="button" class="cat-pill {{ request('type') == 'physical' ? 'active' : '' }}"
                     onclick="setTab('physical','all')">📍 Physical</button>
-            <button type="button" class="cat-pill {{ request('status') == 'active' ? 'active' : '' }}"
-                    onclick="setTab('all','active')">🟢 Active</button>
-            <button type="button" class="cat-pill {{ request('status') == 'upcoming' ? 'active' : '' }}"
-                    onclick="setTab('all','upcoming')">🟡 Upcoming</button>
+
+            {{-- Divider --}}
+            <span style="width:1px;height:20px;background:var(--border);margin:0 4px;flex-shrink:0;"></span>
+
+            {{-- Status tabs --}}
+            <button type="button" class="cat-pill {{ request('status') == 'open' ? 'active' : '' }}"
+                    onclick="setTab('all','open')">🟢 Open</button>
+            <button type="button" class="cat-pill {{ request('status') == 'closed' ? 'active' : '' }}"
+                    onclick="setTab('all','closed')">🔵 Closed</button>
+            <button type="button" class="cat-pill {{ request('status') == 'ongoing' ? 'active' : '' }}"
+                    onclick="setTab('all','ongoing')">🟣 Ongoing</button>
+            <button type="button" class="cat-pill {{ request('status') == 'ended' ? 'active' : '' }}"
+                    onclick="setTab('all','ended')">⚫ Ended</button>
             <button type="button" class="cat-pill {{ request('status') == 'full' ? 'active' : '' }}"
                     onclick="setTab('all','full')">🔴 Full</button>
-            <button type="button" class="cat-pill {{ request('status') == 'expired' ? 'active' : '' }}"
-                    onclick="setTab('all','expired')">⚫ Expired</button>
         </form>
     </div>
 </div>
@@ -843,7 +794,7 @@ body {
                 Browse Classes & Events
             </div>
             @if($classEvents->total() > 0)
-                <span class="section-count">{{ $classEvents->total() }} event{{ $classEvents->total() !== 1 ? 'es' : '' }}</span>
+                <span class="section-count">{{ $classEvents->total() }} event{{ $classEvents->total() !== 1 ? 's' : '' }}</span>
             @endif
         </div>
 
@@ -865,30 +816,40 @@ body {
             <div class="classes-grid">
                 @foreach($classEvents as $class)
                 @php
-                    $now          = \Carbon\Carbon::now();
-                    $startDate    = \Carbon\Carbon::parse($class->start_date);
-                    $endDate      = $class->end_date ? \Carbon\Carbon::parse($class->end_date) : null;
-                    $maxSlots     = $class->max_participants ?? null;
-                    $enrolled     = $class->bookings_count ?? 0;
-                    $spotsLeft    = $maxSlots ? max(0, $maxSlots - $enrolled) : null;
-                    $isFull       = $maxSlots && $enrolled >= $maxSlots;
-                    $deadlineDate = $class->enrollment_deadline ? \Carbon\Carbon::parse($class->enrollment_deadline) : null;
-                    $isExpired    = $deadlineDate ? $now->gt($deadlineDate) : ($endDate ? $now->gt($endDate) : $startDate->lt($now->subDays(1)));
-                    $isUpcoming   = $startDate->gt($now);
-                    $fillPct      = $maxSlots > 0 ? min(100, round(($enrolled / $maxSlots) * 100)) : 0;
+                    $now              = \Carbon\Carbon::now();
+                    $today            = $now->toDateString();
+                    $startDate        = \Carbon\Carbon::parse($class->start_date);
+                    $endDate          = $class->end_date ? \Carbon\Carbon::parse($class->end_date) : null;
+                    $enrollDeadline   = $class->enrollment_deadline ? \Carbon\Carbon::parse($class->enrollment_deadline) : null;
+                    $maxSlots         = $class->max_participants ?? null;
+                    $enrolled         = $class->bookings_count ?? 0;
+                    $spotsLeft        = $maxSlots ? max(0, $maxSlots - $enrolled) : null;
 
-                    if ($isFull)         $statusKey = 'full';
-                    elseif ($isExpired)  $statusKey = 'expired';
-                    elseif ($isUpcoming) $statusKey = 'upcoming';
-                    else                 $statusKey = 'active';
+                    // ── Status logic ──────────────────────────────────
+                    // Priority: full > ended > ongoing > closed > open
+                    $isFull    = $maxSlots && $enrolled >= $maxSlots;
+                    $isEnded   = $endDate && $now->gt($endDate);
+                    $isOngoing = $now->gte($startDate) && (!$endDate || $now->lte($endDate));
+                    $isClosed  = $enrollDeadline && $now->gt($enrollDeadline) && $now->lt($startDate);
+                    // open = enrollment deadline not passed yet (or no deadline set)
+                    // isOpen is the fallthrough
+
+                    if ($isFull)        $statusKey = 'full';
+                    elseif ($isEnded)   $statusKey = 'ended';
+                    elseif ($isOngoing) $statusKey = 'ongoing';
+                    elseif ($isClosed)  $statusKey = 'closed';
+                    else                $statusKey = 'open';
 
                     $statusLabels = [
-                        'active'   => '🟢 Active',
-                        'upcoming' => '🟡 Upcoming',
-                        'expired'  => '⚫ Expired',
-                        'full'     => '🔴 Full',
+                        'open'    => '🟢 Open',
+                        'closed'  => '🔵 Closed',
+                        'ongoing' => '🟣 Ongoing',
+                        'ended'   => '⚫ Ended',
+                        'full'    => '🔴 Full',
                     ];
 
+                    // Progress bar colour
+                    $fillPct  = $maxSlots > 0 ? min(100, round(($enrolled / $maxSlots) * 100)) : 0;
                     if ($fillPct >= 100)    $barClass = 'full';
                     elseif ($fillPct >= 75) $barClass = 'high';
                     elseif ($fillPct >= 40) $barClass = 'mid';
@@ -902,8 +863,10 @@ body {
                         <img src="{{ $class->poster_image ? asset('storage/' . $class->poster_image) : asset('images/placeholder-class.jpg') }}"
                              alt="{{ $class->title }}"
                              onerror="this.style.display='none'">
-                        @if($isExpired)
+                        @if($statusKey === 'ended')
                             <div class="ended-overlay">ENDED</div>
+                        @elseif($statusKey === 'ongoing')
+                            <div class="ended-overlay" style="background:rgba(109,40,217,.55);">ONGOING</div>
                         @endif
                     </div>
 
@@ -961,11 +924,11 @@ body {
                                     <span>{{ $class->location }}</span>
                                 </div>
                             @endif
-                            @if($class->enrollment_deadline)
+                            @if($enrollDeadline)
                                 <div class="detail-row">
                                     <span class="di">⏳</span>
-                                    <span style="{{ $isExpired ? 'color:#ef4444;font-weight:600;' : '' }}">
-                                        Enroll by {{ \Carbon\Carbon::parse($class->enrollment_deadline)->format('d M Y') }}
+                                    <span style="{{ in_array($statusKey, ['closed','ended']) ? 'color:#ef4444;font-weight:600;' : '' }}">
+                                        Enroll by {{ $enrollDeadline->format('d M Y') }}
                                     </span>
                                 </div>
                             @endif
@@ -1014,15 +977,20 @@ body {
                         @endif
 
                         {{-- CTA --}}
-                        <button class="class-btn {{ $isExpired ? 'expired' : ($isFull ? 'full' : '') }}">
-                            @if($isExpired)
+                        @php $isEnrolled = in_array($class->id, $enrolledIds); @endphp
+                        <button class="class-btn {{ $isEnrolled ? 'enrolled' : $statusKey }}">
+                            @if($isEnrolled)
+                                <i class="fas fa-check-circle"></i> Enrolled
+                            @elseif($statusKey === 'ended')
                                 <i class="fas fa-eye"></i> View Summary
-                            @elseif($isFull)
+                            @elseif($statusKey === 'full')
                                 <i class="fas fa-ban"></i> Class Full
-                            @elseif($isUpcoming)
-                                <i class="fas fa-bell"></i> View & Enroll
+                            @elseif($statusKey === 'closed')
+                                <i class="fas fa-lock"></i> Enrollment Closed
+                            @elseif($statusKey === 'ongoing')
+                                <i class="fas fa-play-circle"></i> View Details
                             @else
-                                <i class="fas fa-arrow-right"></i> View Details
+                                <i class="fas fa-arrow-right"></i> View & Enroll
                             @endif
                         </button>
 
@@ -1045,10 +1013,14 @@ body {
                 <p>
                     @if(request('search'))
                         No results for "{{ request('search') }}". Try a different keyword.
-                    @elseif(request('status') == 'active')
-                        No active classes right now.
-                    @elseif(request('status') == 'upcoming')
-                        No upcoming classes scheduled yet.
+                    @elseif(request('status') == 'open')
+                        No classes open for enrollment right now.
+                    @elseif(request('status') == 'closed')
+                        No classes with closed enrollment.
+                    @elseif(request('status') == 'ongoing')
+                        No classes currently ongoing.
+                    @elseif(request('status') == 'ended')
+                        No ended classes yet.
                     @else
                         No classes or events available at the moment.
                     @endif

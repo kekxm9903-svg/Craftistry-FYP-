@@ -32,19 +32,42 @@ class DashboardController extends Controller
         $enrolledClasses   = Booking::where('user_id', $user->id)->count();
         $customOrdersCount = CustomOrderRequest::where('buyer_id', $user->id)->count();
 
-        // ── Badge counts ──
+        // ── Badge: Orders (shipped = awaiting receipt confirmation) ──
         $activeOrdersPending = Order::where('user_id', $user->id)
                                     ->where('payment_status', 'paid')
-                                    ->where('status', 'shipped')
+                                     ->whereIn('status', ['processing', 'preparing', 'shipped'])
                                     ->count();
 
+        // ── Badge: Custom Orders ──
+        // Show noti when:
+        //   1. pending   — waiting for seller to respond
+        //   2. refused + counter_price + no buyer_response — seller sent counter-offer
+        //   3. accepted + no order_id — seller accepted, buyer hasn't paid yet
+        // No noti when:
+        //   - refused with no counter (outright rejected)
+        //   - completed (paid, order created)
+        //   - cancelled
         $customOrdersPending = CustomOrderRequest::where('buyer_id', $user->id)
-                                ->where('status', 'refused')
-                                ->whereNotNull('counter_price')
-                                ->whereNull('buyer_response')
-                                ->count();
+            ->where(function ($q) {
+                // Waiting for seller to respond
+                $q->where('status', 'pending');
+            })
+            ->orWhere(function ($q) use ($user) {
+                // Seller sent counter-offer, buyer hasn't responded
+                $q->where('buyer_id', $user->id)
+                  ->where('status', 'refused')
+                  ->whereNotNull('counter_price')
+                  ->whereNull('buyer_response');
+            })
+            ->orWhere(function ($q) use ($user) {
+                // Seller accepted, buyer hasn't paid yet
+                $q->where('buyer_id', $user->id)
+                  ->where('status', 'accepted')
+                  ->whereNull('order_id');
+            })
+            ->count();
 
-        // ── Hot Artworks — top 18, sorted by total sold desc then newest ──
+        // ── Hot Artworks ──
         $hotProducts = ArtworkSell::with(['artist.user'])
             ->whereHas('artist.user')
             ->whereNotNull('image_path')
@@ -64,7 +87,7 @@ class DashboardController extends Controller
             ->take(18)
             ->get();
 
-        // ── On Sale — artworks with active promotion ──
+        // ── On Sale ──
         $onSaleProducts = ArtworkSell::with(['artist.user'])
             ->whereHas('artist.user')
             ->whereNotNull('image_path')
@@ -75,7 +98,7 @@ class DashboardController extends Controller
             ->take(18)
             ->get();
 
-        // ── Hot Artists — ranked by total units sold across all their artworks ──
+        // ── Hot Artists ──
         $hotArtists = Artist::with(['user', 'artworkSells' => function ($q) {
                                 $q->whereNotIn('status', ['sold', 'sold_out'])
                                   ->whereNotNull('image_path');

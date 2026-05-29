@@ -255,7 +255,17 @@
     .sp-promo-original { align-self: flex-end; margin-bottom: 3px; font-size: var(--fs-base); color: var(--muted); text-decoration: line-through; margin-left: var(--sp-xs); }
     .sp-promo-badge-strip { align-self: flex-end; margin-bottom: 3px; margin-left: var(--sp-xs); background: #ef4444; color: #fff; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 20px; letter-spacing: .4px; }
     .sp-promo-ends { width: 100%; font-size: var(--fs-sm); color: #dc2626; margin-top: 2px; padding-left: var(--label-w); display: flex; align-items: center; gap: 4px; }
-    .sp-total-price.promo { background: linear-gradient(135deg, #ef4444, #dc2626); -webkit-background-clip: text; background-clip: text; }
+
+    .sp-shipping-strip {
+        background: #f9fafb;
+        padding: var(--sp-sm) var(--sp-xl); margin: 0 calc(-1 * var(--sp-xl));
+        display: flex; align-items: center; gap: var(--sp-xs);
+        border-bottom: 1px solid #ece8ff;
+        font-size: var(--fs-base);
+    }
+    .sp-shipping-strip .sp-price-label { font-size: var(--fs-sm); color: var(--muted); width: var(--label-w); flex-shrink: 0; }
+    .sp-shipping-val { font-weight: 600; color: var(--ink); }
+    .sp-shipping-free { font-weight: 700; color: #16a34a; }
 
     .sp-bulk-banner {
         display: flex; align-items: center; gap: var(--sp-sm);
@@ -273,7 +283,6 @@
     .sp-row-val .in-stock { color: var(--success); font-weight: 600; }
     .sp-row-val .sold-out { color: #c62828; font-weight: 600; }
 
-    /* ── stock count pill ── */
     .sp-stock-count {
         display: inline-flex; align-items: center; gap: 4px;
         font-size: var(--fs-sm); color: var(--muted); font-weight: 500;
@@ -297,11 +306,11 @@
     .sp-qty-num::-webkit-inner-spin-button, .sp-qty-num::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     .sp-qty-note { font-size: var(--fs-sm); color: var(--muted); margin-left: var(--sp-sm); }
 
-    /* ── stock hint line under stepper ── */
     .sp-stock-hint { font-size: var(--fs-sm); color: var(--muted); padding-left: var(--label-w); margin-top: 2px; }
     .sp-stock-hint.at-max { color: #c2410c; font-weight: 600; }
 
     .sp-total-price { font-size: var(--fs-xl); font-weight: 800; line-height: 1; background: linear-gradient(135deg, var(--primary), var(--primary-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .sp-total-price.promo { background: linear-gradient(135deg, #ef4444, #dc2626); -webkit-background-clip: text; background-clip: text; }
     .sp-total-hint { font-size: var(--fs-sm); color: var(--muted); margin-left: var(--sp-sm); font-weight: 400; }
 
     .sp-cta-row { display: flex; gap: var(--sp-sm); padding-top: var(--sp-md); align-items: stretch; }
@@ -385,7 +394,7 @@
     @media (max-width: 860px) {
         .sp-product-card { grid-template-columns: 1fr; }
         .sp-img-pane { border-right: none; border-bottom: 1px solid var(--divider); }
-        .sp-price-strip, .sp-bulk-banner { margin: 0 calc(-1 * var(--sp-xl)); }
+        .sp-price-strip, .sp-shipping-strip, .sp-bulk-banner { margin: 0 calc(-1 * var(--sp-xl)); }
     }
     @media (max-width: 600px) {
         .sp-page { padding: var(--sp-sm) var(--sp-sm) 48px; }
@@ -425,7 +434,6 @@
 @php
     $isSoldOut      = in_array(strtolower($artwork->status ?? ''), ['sold', 'sold_out']);
     $availableStock = (int) ($artwork->available_stock ?? 0);
-    // Treat as sold out if status is available but stock is 0
     if (!$isSoldOut && $availableStock === 0) { $isSoldOut = true; }
 
     $isFavorited = auth()->check() && auth()->user()->favoriteProducts->contains($artwork->id);
@@ -443,6 +451,7 @@
                      && (!$promoEnds   || $now->lte(\Carbon\Carbon::parse($promoEnds)));
     $promoPrice    = $promoActive ? round($origPrice * (1 - $promoDiscount / 100), 2) : null;
     $unitPrice     = $promoPrice ?? $origPrice;
+    $shippingFee   = (float) ($artwork->shipping_fee ?? 0);
 @endphp
 
 <div class="sp-page">
@@ -578,6 +587,16 @@
                 </div>
             @endif
 
+            {{-- Shipping fee strip --}}
+            <div class="sp-shipping-strip">
+                <span class="sp-price-label">Shipping</span>
+                @if($shippingFee > 0)
+                    <span class="sp-shipping-val">RM {{ number_format($shippingFee, 2) }}</span>
+                @else
+                    <span class="sp-shipping-free"><i class="fas fa-truck" style="font-size:11px;margin-right:4px;"></i>Free Shipping</span>
+                @endif
+            </div>
+
             {{-- Bulk deal banner --}}
             @if($artwork->bulk_sell_enabled && $artwork->bulk_sell_min_qty && $artwork->bulk_sell_discount)
             <div class="sp-bulk-banner">
@@ -588,18 +607,7 @@
 
             {{-- Meta rows --}}
             <div class="sp-meta-section">
-                <div class="sp-row">
-                    <span class="sp-row-key">Shipping</span>
-                    <span class="sp-row-val">
-                        @if($artwork->shipping_fee && $artwork->shipping_fee > 0)
-                            RM {{ number_format($artwork->shipping_fee, 2) }}
-                        @else
-                            Free Shipping
-                        @endif
-                    </span>
-                </div>
-
-                {{-- ── Availability + stock count ── --}}
+                {{-- Availability + stock count --}}
                 <div class="sp-row">
                     <span class="sp-row-key">Availability</span>
                     <span class="sp-row-val">
@@ -648,20 +656,17 @@
                             <span class="sp-qty-note">/ {{ $availableStock }}</span>
                         </div>
                     </div>
-                    {{-- stock hint shown when near/at max --}}
                     <div class="sp-stock-hint" id="stock-hint"></div>
                 </div>
                 @endif
 
                 <div class="sp-row" style="align-items:center;">
                     <span class="sp-row-key">Total</span>
-                    <div style="display:flex;align-items:baseline;gap:var(--sp-xs);">
+                    <div style="display:flex;align-items:baseline;gap:var(--sp-xs);flex-wrap:wrap;">
                         <span class="sp-total-price{{ $promoPrice !== null ? ' promo' : '' }}" id="total-price">
-                            RM {{ number_format($unitPrice, 2) }}
+                            RM {{ number_format($unitPrice + $shippingFee, 2) }}
                         </span>
-                        <span class="sp-total-hint" id="total-hint" style="display:none;">
-                            (RM {{ number_format($unitPrice, 2) }} × <span id="qty-hint-val">1</span>)
-                        </span>
+                        <span class="sp-total-hint" id="total-hint" style="display:none;"></span>
                         @if($artwork->bulk_sell_enabled && $artwork->bulk_sell_min_qty && $artwork->bulk_sell_discount)
                         <span id="bulk-discount-note" style="display:none;font-size:var(--fs-sm);color:var(--primary-2);font-weight:600;">
                             — {{ $artwork->bulk_sell_discount }}% bulk discount applied
@@ -746,7 +751,6 @@
                     </span>
                 </div>
                 @endif
-                {{-- Stock shown in specs card too --}}
                 <div class="sp-spec-cell">
                     <span class="sp-spec-key">Stock</span>
                     <span class="sp-spec-val">
@@ -878,15 +882,15 @@
 
 <script>
     const UNIT_PRICE    = {{ (float) $unitPrice }};
+    const SHIPPING_FEE  = {{ (float) $shippingFee }};
     const BULK_ENABLED  = {{ $artwork->bulk_sell_enabled ? 'true' : 'false' }};
     const BULK_MIN_QTY  = {{ $artwork->bulk_sell_min_qty ?? 0 }};
     const BULK_DISCOUNT = {{ $artwork->bulk_sell_discount ?? 0 }};
-    const MAX_STOCK     = {{ $availableStock }};   // hard ceiling from DB
+    const MAX_STOCK     = {{ $availableStock }};
 
     let qty = 1;
 
     function updateQtyDisplay() {
-        // Clamp to [1, MAX_STOCK]
         qty = Math.min(Math.max(1, qty), MAX_STOCK);
 
         const input    = document.getElementById('qty-value');
@@ -899,7 +903,6 @@
         minusBtn.disabled = qty <= 1;
         plusBtn.disabled  = qty >= MAX_STOCK;
 
-        // Hint below stepper: show when at max or within 5 of max
         if (hintEl) {
             if (qty >= MAX_STOCK) {
                 hintEl.textContent = 'Maximum stock reached';
@@ -913,7 +916,7 @@
             }
         }
 
-        // Bulk discount: applies when qty >= BULK_MIN_QTY (stock cap already applied above)
+        // Bulk discount
         let effectiveUnit = UNIT_PRICE;
         const bulkActive  = BULK_ENABLED && BULK_MIN_QTY > 0 && qty >= BULK_MIN_QTY;
         if (bulkActive) {
@@ -923,16 +926,27 @@
             if (bulkNote) bulkNote.style.display = 'none';
         }
 
-        const total = effectiveUnit * qty;
+        // Total = (unit price × qty) + shipping fee
+        const subtotal = effectiveUnit * qty;
+        const total    = subtotal + SHIPPING_FEE;
+
         document.getElementById('total-price').textContent =
             'RM ' + total.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-        const hint = document.getElementById('total-hint');
-        if (qty > 1) {
-            hint.style.display = 'inline';
-            document.getElementById('qty-hint-val').textContent = qty;
+        // Hint breakdown
+        const hintSpan = document.getElementById('total-hint');
+        if (qty > 1 || SHIPPING_FEE > 0) {
+            hintSpan.style.display = 'inline';
+            let parts = [];
+            if (qty > 1) {
+                parts.push('RM ' + effectiveUnit.toFixed(2) + ' × ' + qty);
+            }
+            if (SHIPPING_FEE > 0) {
+                parts.push('RM ' + SHIPPING_FEE.toFixed(2) + ' shipping');
+            }
+            hintSpan.textContent = '(' + parts.join(' + ') + ')';
         } else {
-            hint.style.display = 'none';
+            hintSpan.style.display = 'none';
         }
     }
 

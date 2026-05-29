@@ -6,7 +6,6 @@
 <link rel="stylesheet" href="{{ asset('css/artistOrders.css') }}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <style>
-/* ── Refund banner (replaces the old small panel) ───────────────── */
 .refund-banner {
     margin: 0 var(--sp-md) var(--sp-sm);
     border-radius: var(--radius-md);
@@ -14,107 +13,115 @@
     border: 1.5px solid #fed7aa;
 }
 .refund-banner-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 10px var(--sp-md);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px; padding: 10px var(--sp-md);
     background: linear-gradient(135deg, #fff8f0, #fef3c7);
 }
 .refund-banner.refunded { border-color: #bbf7d0; }
 .refund-banner.refunded .refund-banner-header { background: linear-gradient(135deg, #f0fdf4, #dcfce7); }
 .refund-banner.rejected  { border-color: #fecaca; }
 .refund-banner.rejected  .refund-banner-header { background: linear-gradient(135deg, #fef2f2, #fee2e2); }
-
 .refund-banner-left { display: flex; align-items: center; gap: 10px; }
-.refund-banner-icon {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: #fff; display: flex; align-items: center; justify-content: center;
-    font-size: 16px; color: #d97706; flex-shrink: 0;
-    border: 1.5px solid #fcd34d;
-    box-shadow: 0 2px 6px rgba(252,211,77,.25);
-}
+.refund-banner-icon { width: 36px; height: 36px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #d97706; flex-shrink: 0; border: 1.5px solid #fcd34d; box-shadow: 0 2px 6px rgba(252,211,77,.25); }
 .refund-banner.refunded .refund-banner-icon { color: #166534; border-color: #bbf7d0; }
 .refund-banner.rejected  .refund-banner-icon { color: #991b1b; border-color: #fecaca; }
-
 .refund-banner-title { font-size: 13px; font-weight: 800; color: #92400e; }
 .refund-banner.refunded .refund-banner-title { color: #166534; }
 .refund-banner.rejected  .refund-banner-title { color: #991b1b; }
 .refund-banner-sub   { font-size: 11px; color: #b45309; margin-top: 1px; }
 .refund-banner.refunded .refund-banner-sub { color: #15803d; }
 .refund-banner.rejected  .refund-banner-sub { color: #dc2626; }
-
-.refund-banner-body {
-    padding: var(--sp-sm) var(--sp-md);
-    background: #fff;
-    display: flex;
-    align-items: flex-start;
-    gap: var(--sp-md);
-    flex-wrap: wrap;
-}
-.refund-reason-box {
-    flex: 1;
-    min-width: 180px;
-    background: #fff8f0;
-    border: 1px solid #fed7aa;
-    border-radius: var(--radius-sm);
-    padding: 8px 12px;
-}
+.refund-banner-body { padding: var(--sp-sm) var(--sp-md); background: #fff; display: flex; align-items: flex-start; gap: var(--sp-md); flex-wrap: wrap; }
+.refund-reason-box { flex: 1; min-width: 180px; background: #fff8f0; border: 1px solid #fed7aa; border-radius: var(--radius-sm); padding: 8px 12px; }
 .refund-reason-label { font-size: 11px; color: #b45309; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
 .refund-reason-text  { font-size: 13px; color: #374151; font-style: italic; line-height: 1.5; }
 .refund-banner-actions { display: flex; flex-direction: column; gap: 7px; flex-shrink: 0; }
 .refund-action-row { display: flex; gap: 7px; }
-
-.rp-btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-    padding: 8px 16px; border-radius: 7px; font-size: 12px; font-weight: 700;
-    border: none; cursor: pointer; font-family: inherit; transition: opacity .15s;
-    white-space: nowrap;
-}
+.rp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 8px 16px; border-radius: 7px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; transition: opacity .15s; white-space: nowrap; }
 .rp-btn:hover { opacity: .85; }
 .rp-btn.approve { background: #22c55e; color: #fff; box-shadow: 0 2px 8px rgba(34,197,94,.3); }
 .rp-btn.reject  { background: #ef4444; color: #fff; box-shadow: 0 2px 8px rgba(239,68,68,.25); }
 .rp-btn.cancel  { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
 .rp-btn.confirm { background: #ef4444; color: #fff; }
-
 .rp-reject-form { display: none; width: 100%; }
-.rp-reject-textarea {
-    width: 100%; border: 1.5px solid #fca5a5; border-radius: 7px;
-    padding: 8px 10px; font-size: 12px; font-family: inherit;
-    resize: vertical; outline: none; box-sizing: border-box;
-}
+.rp-reject-textarea { width: 100%; border: 1.5px solid #fca5a5; border-radius: 7px; padding: 8px 10px; font-size: 12px; font-family: inherit; resize: vertical; outline: none; box-sizing: border-box; }
 .rp-reject-textarea:focus { border-color: #ef4444; }
 .rp-reject-actions { display: flex; gap: 7px; margin-top: 7px; justify-content: flex-end; }
 
-/* Badge in header */
-.refund-header-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
-}
+.refund-header-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
 .refund-header-badge.requested { background: #fff3cd; color: #92400e; }
 .refund-header-badge.refunded  { background: #dcfce7; color: #166534; }
 .refund-header-badge.rejected  { background: #fee2e2; color: #991b1b; }
 
-/* ── View Details button ── */
-.btn-view-details {
-    display: inline-flex; align-items: center; gap: var(--sp-xs);
-    padding: 7px var(--sp-md); border-radius: var(--radius-sm);
-    background: var(--lavender); color: var(--primary-2);
-    font-weight: 700; font-size: var(--fs-base);
-    text-decoration: none; border: 1.5px solid #ddd8f8;
-    transition: all .15s; white-space: nowrap;
+.btn-view-details { display: inline-flex; align-items: center; gap: var(--sp-xs); padding: 7px var(--sp-md); border-radius: var(--radius-sm); background: var(--lavender); color: var(--primary-2); font-weight: 700; font-size: var(--fs-base); text-decoration: none; border: 1.5px solid #ddd8f8; transition: all .15s; white-space: nowrap; }
+.btn-view-details:hover { background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: #fff; border-color: transparent; }
+
+/* ── Digital Deliver Modal — matches logout modal style ── */
+#deliverConfirmModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
 }
-.btn-view-details:hover {
-    background: linear-gradient(135deg, var(--primary), var(--primary-2));
-    color: #fff; border-color: transparent;
+#deliverConfirmModal.open { display: flex; }
+#deliverConfirmBackdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.48);
+    backdrop-filter: blur(3px);
 }
+#deliverConfirmBox {
+    position: relative;
+    background: #fff;
+    border-radius: 16px;
+    padding: 36px 32px 28px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 24px 64px rgba(102,126,234,.22), 0 4px 16px rgba(0,0,0,.08);
+    text-align: center;
+    z-index: 1;
+    animation: deliverModalIn .22s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes deliverModalIn {
+    from { opacity: 0; transform: scale(.88) translateY(16px); }
+    to   { opacity: 1; transform: scale(1)  translateY(0); }
+}
+.deliver-modal-icon {
+    width: 60px; height: 60px;
+    background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 18px;
+    border: 2px solid #c4b5fd;
+    box-shadow: 0 4px 12px rgba(102,126,234,.15);
+}
+.deliver-modal-icon i { color: #667eea; font-size: 1.45rem; }
+.deliver-modal-title { font-size: 1.15rem; font-weight: 800; color: #1a202c; margin-bottom: 8px; }
+.deliver-modal-msg   { font-size: 0.84rem; color: #718096; line-height: 1.65; margin-bottom: 28px; }
+.deliver-modal-btns  { display: flex; gap: 10px; }
+.deliver-btn-cancel {
+    flex: 1; padding: 12px; border-radius: 8px;
+    border: 1.5px solid #e2e8f0; background: #fff;
+    color: #4a5568; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s;
+}
+.deliver-btn-cancel:hover { background: #f7fafc; border-color: #cbd5e0; }
+.deliver-btn-confirm {
+    flex: 1; padding: 12px; border-radius: 8px; border: none;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff; font-size: 0.88rem; font-weight: 700;
+    cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s;
+    box-shadow: 0 4px 14px rgba(102,126,234,.35);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.deliver-btn-confirm:hover { opacity: .88; transform: translateY(-1px); }
 </style>
 @endsection
 
 @section('content')
 
-{{-- Breadcrumb --}}
 <div class="bc-bar">
     <div class="bc-inner">
         <a href="{{ route('dashboard') }}">Home</a>
@@ -125,7 +132,6 @@
     </div>
 </div>
 
-{{-- Status tab bar --}}
 <div class="order-tab-bar">
     <div class="order-tab-inner">
         @php
@@ -150,9 +156,8 @@
                 @endif
             </a>
         @endforeach
-        {{-- Refund tab --}}
         <a href="{{ route('artist.orders', ['refund' => '1']) }}"
-        class="tab {{ request('refund') === '1' ? 'active' : '' }}">
+           class="tab {{ request('refund') === '1' ? 'active' : '' }}">
             Refunds
             @if($refundCount > 0)
                 <span class="tab-dot" style="background:#d97706;"></span>
@@ -169,7 +174,6 @@
 
 <main class="artist-orders-main">
 
-    {{-- Page header --}}
     <div class="page-header">
         <div class="page-header-left">
             <div class="page-title">Order List</div>
@@ -193,7 +197,6 @@
         </div>
     </div>
 
-    {{-- Results card --}}
     <div class="sp-card">
         <div class="sp-card-header">
             <div class="sp-card-header-left">
@@ -248,19 +251,15 @@
                             'cancelled'       => 'red',
                             default           => 'gray',
                         };
-
                         $isAllDigital = $order->items && $order->items->count() > 0
-                            && $order->items->every(
-                                fn($i) => $i->artwork?->artwork_type === 'digital'
-                            );
-
+                            && $order->items->every(fn($i) => $i->artwork?->artwork_type === 'digital');
                         $refundStatus = $order->refund_status ?? 'none';
                     @endphp
 
                     <div class="order-card {{ $order->status === 'processing' ? 'order-card--new' : '' }}"
                          style="{{ $refundStatus === 'requested' ? 'border-color:#fed7aa;' : '' }}">
 
-                        {{-- ── Card Header ── --}}
+                        {{-- Card Header --}}
                         <div class="order-header">
                             <div class="order-meta">
                                 @if($order->status === 'processing')
@@ -303,7 +302,7 @@
                             </div>
                         </div>
 
-                        {{-- ── Buyer Row ── --}}
+                        {{-- Buyer Row --}}
                         <div class="buyer-section">
                             <div class="buyer-row">
                                 <div class="buyer-avatar">
@@ -333,7 +332,7 @@
                             </div>
                         </div>
 
-                        {{-- ── Products ── --}}
+                        {{-- Products --}}
                         <div class="products-section">
                             <div class="products-section-label">
                                 <i class="bi bi-bag-check-fill"></i> Items to Prepare
@@ -344,9 +343,12 @@
                                 @foreach($order->items as $item)
                                 @php
                                     $artwork       = $item->artwork;
-                                    $imgPath       = $artwork?->image_path ?? $item->image_path ?? null;
                                     $isCustom      = is_null($item->artwork_sell_id);
+                                    $imgPath       = $artwork?->image_path ?? $item->image_path ?? null;
                                     $isDigitalItem = $artwork?->artwork_type === 'digital';
+                                    if ($isCustom && !$imgPath) {
+                                        $imgPath = $order->customOrderRequest?->reference_image ?? null;
+                                    }
                                 @endphp
                                 <div class="product-row">
                                     <div class="product-thumb">
@@ -402,7 +404,7 @@
                             @endif
                         </div>
 
-                        {{-- ── Order Info Strip ── --}}
+                        {{-- Order Info Strip --}}
                         <div class="order-info-strip">
                             <div class="info-chip"><i class="bi bi-receipt"></i> Order #{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</div>
                             <div class="info-chip"><i class="bi bi-credit-card"></i> {{ $order->payment_status === 'paid' ? 'Paid' : 'Unpaid' }}</div>
@@ -418,7 +420,7 @@
                             @endif
                         </div>
 
-                        {{-- ── Refund Banner ── --}}
+                        {{-- Refund Banner --}}
                         @if($refundStatus === 'requested')
                         <div class="refund-banner">
                             <div class="refund-banner-header">
@@ -502,12 +504,10 @@
                         </div>
                         @endif
 
-                        {{-- ── Card Footer (Actions) ── --}}
+                        {{-- Card Footer (Actions) --}}
                         <div class="order-footer">
 
-                            {{-- View Details — always first ── --}}
-                            <a href="{{ route('artist.orders.show', $order->id) }}"
-                               class="btn-view-details">
+                            <a href="{{ route('artist.orders.show', $order->id) }}" class="btn-view-details">
                                 <i class="bi bi-eye"></i> View Details
                             </a>
 
@@ -526,14 +526,16 @@
 
                             @elseif($order->status === 'preparing')
                                 @if($isAllDigital)
-                                    <form action="{{ route('artist.orders.ship', $order->id) }}" method="POST"
-                                          onsubmit="return confirm('Mark this digital order as delivered to buyer?')">
+                                    <button type="button" class="btn-ship"
+                                            onclick="openDeliverConfirm({{ $order->id }})">
+                                        <i class="bi bi-cloud-check-fill"></i> Mark as Delivered
+                                    </button>
+                                    <form id="deliverForm-{{ $order->id }}"
+                                          action="{{ route('artist.orders.ship', $order->id) }}"
+                                          method="POST" style="display:none;">
                                         @csrf
                                         <input type="hidden" name="courier" value="digital">
                                         <input type="hidden" name="tracking_number" value="DIGITAL-DELIVERY">
-                                        <button type="submit" class="btn-ship">
-                                            <i class="bi bi-cloud-check-fill"></i> Mark as Delivered
-                                        </button>
                                     </form>
                                 @else
                                     <button class="btn-ship" onclick="openShipModal({{ $order->id }})">
@@ -616,32 +618,80 @@
     </form>
 </div>
 
+{{-- Digital Deliver Confirm Modal — matches logout modal style --}}
+<div id="deliverConfirmModal" role="dialog" aria-modal="true">
+    <div id="deliverConfirmBackdrop" onclick="closeDeliverConfirm()"></div>
+    <div id="deliverConfirmBox">
+        <div class="deliver-modal-icon">
+            <i class="bi bi-cloud-check-fill"></i>
+        </div>
+        <div class="deliver-modal-title">Mark as Delivered?</div>
+        <div class="deliver-modal-msg">
+            This will mark the order as delivered and notify the buyer.<br>
+            Make sure you have already sent the digital files before confirming.
+        </div>
+        <div class="deliver-modal-btns">
+            <button class="deliver-btn-cancel" onclick="closeDeliverConfirm()">
+                Cancel
+            </button>
+            <button class="deliver-btn-confirm" onclick="confirmDeliver()">
+                <i class="bi bi-cloud-check-fill"></i> Yes, Mark as Delivered
+            </button>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @section('scripts')
 <script>
+// ── Ship Modal ──
 function openShipModal(orderId) {
     document.getElementById('shipForm').action = `/artist/orders/${orderId}/ship`;
-    document.getElementById('courierGroup').style.display  = '';
-    document.getElementById('trackingGroup').style.display = '';
-    document.querySelector('[name="courier"]').required    = true;
+    document.getElementById('courierGroup').style.display   = '';
+    document.getElementById('trackingGroup').style.display  = '';
+    document.querySelector('[name="courier"]').required     = true;
     document.querySelector('[name="tracking_number"]').required = true;
-    document.querySelector('[name="courier"]').value       = '';
+    document.querySelector('[name="courier"]').value        = '';
     document.querySelector('[name="tracking_number"]').value = '';
     document.getElementById('shipBackdrop').classList.add('show');
     document.getElementById('shipModal').classList.add('open');
     document.body.style.overflow = 'hidden';
 }
-
 function closeShipModal() {
     document.getElementById('shipBackdrop').classList.remove('show');
     document.getElementById('shipModal').classList.remove('open');
     document.body.style.overflow = '';
 }
 
+// ── Digital Deliver Confirm Modal ──
+var _deliverOrderId = null;
+
+function openDeliverConfirm(orderId) {
+    _deliverOrderId = orderId;
+    document.getElementById('deliverConfirmModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeDeliverConfirm() {
+    document.getElementById('deliverConfirmModal').classList.remove('open');
+    document.body.style.overflow = '';
+    _deliverOrderId = null;
+}
+function confirmDeliver() {
+    if (_deliverOrderId) {
+        document.getElementById('deliverForm-' + _deliverOrderId).submit();
+    }
+}
+
+// ── Reject Form Toggle ──
 function toggleRejectForm(orderId) {
     var f = document.getElementById('rejectForm-' + orderId);
     f.style.display = f.style.display === 'none' || f.style.display === '' ? 'block' : 'none';
 }
+
+// ── Close on Escape ──
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { closeShipModal(); closeDeliverConfirm(); }
+});
 </script>
 @endsection

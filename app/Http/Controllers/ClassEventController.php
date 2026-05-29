@@ -47,46 +47,68 @@ class ClassEventController extends Controller
 
     /**
      * Display all classes and events from all artists (public browse page)
+     *
+     * Status flow:
+     *   open    → enrollment deadline not passed, class not started yet
+     *   closed  → enrollment deadline passed, class not started yet
+     *   ongoing → between start_date and end_date
+     *   ended   → past end_date
+     *   full    → max_participants reached (overrides all above)
      */
     public function browse(Request $request)
     {
         $today = Carbon::today()->toDateString();
-        $now   = Carbon::now();
 
         $query = ClassEvent::with('user')->withCount('bookings');
 
+        // ── Type filter ──────────────────────────────────────────────
         if ($request->filled('type') && $request->type !== 'all') {
             $query->where('media_type', $request->type);
         }
 
+        // ── Status filter ────────────────────────────────────────────
         if ($request->filled('status') && $request->status !== 'all') {
             switch ($request->status) {
-                case 'upcoming':
-                    $query->where('start_date', '>', $today);
-                    break;
-                case 'active':
-                    $query->where('start_date', '<=', $today)
-                          ->where('end_date', '>=', $today)
+
+                case 'open':
+                    // Enrollment deadline not passed AND class hasn't started yet
+                    $query->where('start_date', '>', $today)
                           ->where(function ($q) use ($today) {
                               $q->whereNull('enrollment_deadline')
                                 ->orWhere('enrollment_deadline', '>=', $today);
                           });
                     break;
-                case 'expired':
-                    $query->where(function ($q) use ($today) {
-                        $q->where('end_date', '<', $today)
-                          ->orWhere(function ($q2) use ($today) {
-                              $q2->whereNotNull('enrollment_deadline')
-                                 ->where('enrollment_deadline', '<', $today);
-                          });
-                    });
+
+                case 'closed':
+                    // Enrollment deadline passed, but class hasn't started yet
+                    $query->whereNotNull('enrollment_deadline')
+                          ->where('enrollment_deadline', '<', $today)
+                          ->where('start_date', '>', $today);
                     break;
+
+                case 'ongoing':
+                    // Class has started and not yet ended
+                    $query->where('start_date', '<=', $today)
+                          ->where(function ($q) use ($today) {
+                              $q->whereNull('end_date')
+                                ->orWhere('end_date', '>=', $today);
+                          });
+                    break;
+
+                case 'ended':
+                    // Past end date
+                    $query->whereNotNull('end_date')
+                          ->where('end_date', '<', $today);
+                    break;
+
                 case 'full':
+                    // Has a participant limit (post-filter will check if actually full)
                     $query->whereNotNull('max_participants');
                     break;
             }
         }
 
+        // ── Search filter ─────────────────────────────────────────────
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -101,6 +123,7 @@ class ClassEventController extends Controller
 
         $classEvents = $query->latest()->paginate(12)->withQueryString();
 
+        // ── Post-filter for 'full' (needs bookings_count vs max_participants) ──
         if ($request->filled('status') && $request->status === 'full') {
             $filtered = $classEvents->getCollection()->filter(function ($class) {
                 return $class->max_participants &&
@@ -109,7 +132,16 @@ class ClassEventController extends Controller
             $classEvents->setCollection($filtered);
         }
 
-        return view('classEventBrowse', compact('classEvents'));
+        // Get enrolled class IDs for the current user
+        $enrolledIds = [];
+        if (Auth::check()) {
+            $enrolledIds = Booking::where('user_id', Auth::id())
+                ->whereIn('payment_status', ['paid', 'free'])
+                ->pluck('class_event_id')
+                ->toArray();
+        }
+
+        return view('classEventBrowse', compact('classEvents', 'enrolledIds'));
     }
 
     /**

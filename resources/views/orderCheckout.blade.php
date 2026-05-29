@@ -22,7 +22,6 @@
 
     .checkout-container { max-width: 960px; margin: 40px auto; padding: 0 20px; }
 
-    /* Steps */
     .steps { display: flex; align-items: center; gap: 0; margin-bottom: 36px; font-size: 0.85rem; font-weight: 600; }
     .step  { display: flex; align-items: center; gap: 8px; color: var(--text-gray); }
     .step.active { color: var(--primary); }
@@ -38,17 +37,14 @@
     .step-divider { width: 40px; height: 2px; background: var(--border-light); margin: 0 8px; }
     .step-divider.done { background: var(--green); }
 
-    /* Page title */
     .page-title    { font-size: 1.8rem; font-weight: 800; color: var(--text-dark); margin-bottom: 6px; }
     .page-subtitle { color: var(--text-gray); font-size: 0.95rem; margin-bottom: 32px; }
 
-    /* Grid */
     .checkout-grid {
         display: grid; grid-template-columns: 1fr 360px;
         gap: 24px; align-items: start;
     }
 
-    /* Cards */
     .card {
         background: white; border-radius: 16px; padding: 28px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 20px;
@@ -63,7 +59,6 @@
     .card-title-left { display: flex; align-items: center; gap: 8px; }
     .card-title i { color: var(--primary); }
 
-    /* Order items */
     .order-item {
         display: flex; gap: 16px; align-items: center;
         padding: 14px 0; border-bottom: 1px solid var(--border-light);
@@ -84,20 +79,14 @@
     .item-meta  { font-size: 0.8rem; color: var(--text-gray); }
     .item-subtotal { font-weight: 700; font-size: 1rem; color: var(--primary); white-space: nowrap; }
 
-    /* Address card */
     .address-block {
-        background: #f8fafc;
-        border: 1px solid var(--border-light);
-        border-radius: 10px;
-        padding: 14px 16px;
-        font-size: 0.88rem;
-        color: var(--text-dark);
-        line-height: 1.7;
+        background: #f8fafc; border: 1px solid var(--border-light);
+        border-radius: 10px; padding: 14px 16px;
+        font-size: 0.88rem; color: var(--text-dark); line-height: 1.7;
     }
     .address-block .addr-name  { font-weight: 700; font-size: 0.93rem; margin-bottom: 2px; }
     .address-block .addr-line  { color: var(--text-gray); }
 
-    /* Missing address warning */
     .address-warning {
         display: flex; align-items: flex-start; gap: 12px;
         background: #fffbeb; border: 1.5px solid #fde68a;
@@ -105,12 +94,9 @@
         font-size: 0.88rem; color: #92400e;
     }
     .address-warning i { font-size: 1.1rem; color: var(--orange); flex-shrink: 0; margin-top: 1px; }
-    .address-warning a {
-        color: var(--primary); font-weight: 700; text-decoration: none;
-    }
+    .address-warning a { color: var(--primary); font-weight: 700; text-decoration: none; }
     .address-warning a:hover { text-decoration: underline; }
 
-    /* Summary */
     .summary-row {
         display: flex; justify-content: space-between; align-items: center;
         font-size: 0.9rem; padding: 10px 0;
@@ -118,15 +104,23 @@
     }
     .summary-row:last-of-type { border-bottom: none; }
     .summary-row .val { font-weight: 600; color: var(--text-dark); }
+    .summary-row.shipping-row .val { color: #718096; }
+    .summary-row.free-ship .val { color: var(--green); font-weight: 700; }
+    .summary-divider { border: none; border-top: 1px solid var(--border-light); margin: 4px 0; }
+    .summary-subtotal {
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 0.9rem; padding: 10px 0 6px;
+        color: var(--text-gray);
+    }
+    .summary-subtotal .val { font-weight: 600; color: var(--text-dark); }
     .summary-total {
         display: flex; justify-content: space-between; align-items: center;
         font-size: 1.15rem; font-weight: 800;
-        padding: 18px 0 0; margin-top: 6px;
+        padding: 14px 0 0; margin-top: 4px;
         border-top: 2px solid var(--text-dark);
     }
     .summary-total .val { color: var(--primary); font-size: 1.4rem; }
 
-    /* Pay button */
     .btn-pay {
         width: 100%; padding: 16px;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -136,10 +130,7 @@
         justify-content: center; gap: 10px; transition: all 0.2s;
     }
     .btn-pay:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.4); }
-    .btn-pay:disabled {
-        background: #d1d5db; cursor: not-allowed;
-        transform: none; box-shadow: none;
-    }
+    .btn-pay:disabled { background: #d1d5db; cursor: not-allowed; transform: none; box-shadow: none; }
 
     .secure-note {
         display: flex; align-items: center; justify-content: center;
@@ -233,7 +224,7 @@
                         <div class="item-meta">
                             Qty: {{ $item['quantity'] }}
                             &nbsp;·&nbsp;
-                            RM {{ number_format($item['artwork']->product_price ?? $item['artwork']->price ?? 0, 2) }} each
+                            RM {{ number_format($item['price'], 2) }} each
                             @if(in_array($item['artwork']->artwork_type ?? '', ['physical', 'both']))
                                 &nbsp;·&nbsp;
                                 <span style="color:#667eea;font-weight:600;">
@@ -243,6 +234,17 @@
                                 &nbsp;·&nbsp;
                                 <span style="color:#48bb78;font-weight:600;">
                                     <i class="fas fa-download"></i> Digital
+                                </span>
+                            @endif
+                            @if(($item['shipping_fee'] ?? 0) > 0)
+                                &nbsp;·&nbsp;
+                                <span style="color:var(--text-gray);">
+                                    <i class="fas fa-truck"></i> +RM {{ number_format($item['shipping_fee'], 2) }} shipping
+                                </span>
+                            @else
+                                &nbsp;·&nbsp;
+                                <span style="color:#48bb78;font-weight:600;">
+                                    <i class="fas fa-truck"></i> Free Shipping
                                 </span>
                             @endif
                         </div>
@@ -297,7 +299,7 @@
             </div>
             @endif
 
-            {{-- Delivery note (digital only or when address set) --}}
+            {{-- Delivery note --}}
             @if(!$needsAddress || $hasAddress)
             <div class="card">
                 <div class="card-title">
@@ -327,13 +329,33 @@
                     </div>
                 </div>
 
+                @php
+                    $subtotalOnly = collect($cartItems)->sum(fn($i) => $i['subtotal']);
+                    $shippingOnly = collect($cartItems)->sum(fn($i) => $i['shipping_fee'] ?? 0);
+                @endphp
+
+                {{-- Item rows --}}
                 @foreach($cartItems as $item)
                 <div class="summary-row">
-                    <span>{{ $item['artwork']->product_name ?? 'Artwork' }} × {{ $item['quantity'] }}</span>
+                    <span>{{ Str::limit($item['artwork']->product_name ?? 'Artwork', 24) }} × {{ $item['quantity'] }}</span>
                     <span class="val">RM {{ number_format($item['subtotal'], 2) }}</span>
                 </div>
                 @endforeach
 
+                {{-- Shipping row --}}
+                @if($shippingOnly > 0)
+                <div class="summary-row shipping-row">
+                    <span><i class="fas fa-truck" style="font-size:0.75rem;margin-right:4px;"></i>Shipping Fee</span>
+                    <span class="val">RM {{ number_format($shippingOnly, 2) }}</span>
+                </div>
+                @else
+                <div class="summary-row free-ship">
+                    <span><i class="fas fa-truck" style="font-size:0.75rem;margin-right:4px;"></i>Shipping Fee</span>
+                    <span class="val">Free</span>
+                </div>
+                @endif
+
+                {{-- Total --}}
                 <div class="summary-total">
                     <span>Total</span>
                     <span class="val">RM {{ number_format($total, 2) }}</span>

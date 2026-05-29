@@ -49,7 +49,7 @@
 .ce-input::placeholder, .ce-textarea::placeholder { color: #bbb; }
 .ce-textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
 .ce-hint { font-size: var(--fs-sm); color: var(--muted); margin-top: 4px; display: block; }
-.ce-err  { font-size: var(--fs-sm); color: var(--danger); margin-top: 4px; display: block; }
+.ce-err  { font-size: var(--fs-sm); color: var(--danger, #ef4444); margin-top: 4px; display: block; }
 
 .ce-price-wrap {
     display: flex;
@@ -119,7 +119,6 @@
 .ce-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-md); }
 @media (max-width: 600px) { .ce-two-col { grid-template-columns: 1fr; } }
 
-/* ── Social link input with prefix icon ── */
 .ce-social-wrap {
     display: flex;
     border: 1.5px solid var(--border);
@@ -193,7 +192,7 @@
             <form action="{{ route('class.event.store') }}" method="POST" enctype="multipart/form-data" class="ce-form-wrap">
                 @csrf
 
-                {{-- ── Image ── --}}
+                {{-- Image --}}
                 <div class="ce-section-title"><i class="bi bi-image-fill"></i> Poster Image</div>
                 <div style="margin-bottom:var(--sp-lg);">
                     <label class="ce-label">Image <span class="required">*</span></label>
@@ -218,7 +217,7 @@
 
                 <hr class="ce-divider">
 
-                {{-- ── Basic Info ── --}}
+                {{-- Basic Info --}}
                 <div class="ce-section-title"><i class="bi bi-info-circle-fill"></i> Basic Info</div>
 
                 <div style="margin-bottom:var(--sp-lg);">
@@ -239,7 +238,7 @@
 
                 <hr class="ce-divider">
 
-                {{-- ── Fee ── --}}
+                {{-- Fee --}}
                 <div class="ce-section-title"><i class="bi bi-cash-coin"></i> Fee</div>
 
                 <div style="margin-bottom:var(--sp-lg);">
@@ -269,7 +268,7 @@
 
                 <hr class="ce-divider">
 
-                {{-- ── Media ── --}}
+                {{-- Media --}}
                 <div class="ce-section-title"><i class="bi bi-display-fill"></i> Media</div>
 
                 <div style="margin-bottom:var(--sp-lg);">
@@ -303,7 +302,7 @@
 
                 <hr class="ce-divider">
 
-                {{-- ── Schedule ── --}}
+                {{-- Schedule --}}
                 <div class="ce-section-title"><i class="bi bi-calendar-event-fill"></i> Schedule</div>
 
                 <div class="ce-two-col" style="margin-bottom:var(--sp-lg);">
@@ -315,8 +314,9 @@
                     </div>
                     <div>
                         <label class="ce-label">End Date <span class="required">*</span></label>
+                        {{-- min = start date, set dynamically --}}
                         <input type="date" id="endDate" name="end_date" class="ce-input"
-                               min="{{ date('Y-m-d') }}" required value="{{ old('end_date') }}">
+                               min="{{ old('start_date', date('Y-m-d')) }}" required value="{{ old('end_date') }}">
                         @error('end_date')<span class="ce-err">{{ $message }}</span>@enderror
                     </div>
                 </div>
@@ -339,26 +339,41 @@
                 <div class="ce-two-col" style="margin-bottom:var(--sp-lg);">
                     <div>
                         <label class="ce-label">Enrollment Deadline <span class="required">*</span></label>
-                        <input type="date" name="enrollment_deadline" class="ce-input"
-                               min="{{ date('Y-m-d') }}" required value="{{ old('enrollment_deadline') }}">
+                        {{--
+                            min = today
+                            max = start date (can't enroll after event starts)
+                            set dynamically
+                        --}}
+                        <input type="date" id="enrollmentDeadline" name="enrollment_deadline" class="ce-input"
+                               min="{{ date('Y-m-d') }}"
+                               max="{{ old('start_date') ?: '' }}"
+                               required value="{{ old('enrollment_deadline') }}">
+                        <span class="ce-hint">Must be on or before the start date.</span>
                         @error('enrollment_deadline')<span class="ce-err">{{ $message }}</span>@enderror
                     </div>
                     <div>
                         <label class="ce-label">Cancellation Deadline <span class="required">*</span></label>
-                        <input type="date" name="cancellation_deadline" class="ce-input"
-                               min="{{ date('Y-m-d') }}" required value="{{ old('cancellation_deadline') }}">
+                        {{--
+                            min = enrollment deadline (must be AFTER enrollment)
+                            max = start date (must be BEFORE start)
+                            set dynamically
+                        --}}
+                        <input type="date" id="cancellationDeadline" name="cancellation_deadline" class="ce-input"
+                               min="{{ old('enrollment_deadline') ?: date('Y-m-d') }}"
+                               max="{{ old('start_date') ?: '' }}"
+                               required value="{{ old('cancellation_deadline') }}">
+                        <span class="ce-hint">Must be after the enrollment deadline and before the start date.</span>
                         @error('cancellation_deadline')<span class="ce-err">{{ $message }}</span>@enderror
                     </div>
                 </div>
 
-                {{-- Hidden auto-calculated fields --}}
                 <input type="hidden" id="durationWeeks"   name="duration_weeks">
                 <input type="hidden" id="durationHours"   name="duration_hours">
                 <input type="hidden" id="durationMinutes" name="duration_minutes">
 
                 <hr class="ce-divider">
 
-                {{-- ── Settings ── --}}
+                {{-- Settings --}}
                 <div class="ce-section-title"><i class="bi bi-gear-fill"></i> Settings</div>
 
                 <div style="margin-bottom:var(--sp-lg);">
@@ -394,7 +409,7 @@
 
                 <hr class="ce-divider">
 
-                {{-- ── Social Links ── --}}
+                {{-- Social Links --}}
                 <div class="ce-section-title"><i class="bi bi-share-fill"></i> Social Links <span style="font-weight:400; color:var(--muted); font-size:.85em;">(optional)</span></div>
 
                 <div style="margin-bottom:var(--sp-lg);">
@@ -446,7 +461,7 @@
 
 @section('scripts')
 <script>
-    // Fee toggle
+    // ── Fee toggle ──
     document.querySelectorAll('input[name="is_paid"]').forEach(r => {
         r.addEventListener('change', function () {
             const show = this.value === '1';
@@ -456,7 +471,7 @@
         });
     });
 
-    // Media toggle
+    // ── Media toggle ──
     document.querySelectorAll('input[name="media_type"]').forEach(r => {
         r.addEventListener('change', function () {
             const online = this.value === 'online';
@@ -467,7 +482,7 @@
         });
     });
 
-    // Enrollment form toggle
+    // ── Enrollment form toggle ──
     document.querySelectorAll('input[name="require_form"]').forEach(r => {
         r.addEventListener('change', function () {
             const show = this.value === '1';
@@ -476,7 +491,7 @@
         });
     });
 
-    // Auto-calc weeks
+    // ── Auto-calc duration weeks ──
     function calcWeeks() {
         const s = document.getElementById('startDate').value;
         const e = document.getElementById('endDate').value;
@@ -485,10 +500,8 @@
             document.getElementById('durationWeeks').value = diff >= 0 ? Math.round(diff) : '';
         }
     }
-    document.getElementById('startDate').addEventListener('change', calcWeeks);
-    document.getElementById('endDate').addEventListener('change', calcWeeks);
 
-    // Auto-calc time
+    // ── Auto-calc duration time ──
     function calcTime() {
         const s = document.getElementById('startTime').value;
         const e = document.getElementById('endTime').value;
@@ -501,15 +514,13 @@
             document.getElementById('durationMinutes').value = mins%60;
         }
     }
-    document.getElementById('startTime').addEventListener('change', calcTime);
-    document.getElementById('endTime').addEventListener('change', calcTime);
 
-    // Description counter
+    // ── Description counter ──
     document.getElementById('eventDescription').addEventListener('input', function () {
         document.getElementById('descCount').textContent = this.value.length + ' / 1000 characters';
     });
 
-    // Image preview
+    // ── Image preview ──
     const fileInput   = document.getElementById('posterImage');
     const uploadArea  = document.getElementById('uploadArea');
     const filePreview = document.getElementById('filePreview');
@@ -536,5 +547,83 @@
         filePreview.classList.add('active');
         uploadArea.style.display = 'none';
     }
+
+    // ════════════════════════════════════════════
+    // DYNAMIC min/max constraints
+    //
+    // Timeline:  enrollment deadline < cancellation deadline < start date <= end date
+    //
+    // start date change:
+    //   → end date min            = start date
+    //   → enrollment deadline max = start date
+    //   → cancellation max        = start date
+    //   → clear values that fall outside new range
+    //
+    // enrollment deadline change:
+    //   → cancellation min        = enrollment deadline  (must be AFTER)
+    //   → clear cancellation if now before new min
+    // ════════════════════════════════════════════
+
+    const startDate            = document.getElementById('startDate');
+    const endDate              = document.getElementById('endDate');
+    const enrollmentDeadline   = document.getElementById('enrollmentDeadline');
+    const cancellationDeadline = document.getElementById('cancellationDeadline');
+
+    startDate.addEventListener('change', function () {
+        const val = this.value;
+
+        // End date: must be >= start date
+        endDate.min = val;
+        if (endDate.value && endDate.value < val) endDate.value = '';
+
+        // Enrollment deadline: must be <= start date
+        enrollmentDeadline.max = val;
+        if (enrollmentDeadline.value && enrollmentDeadline.value > val) {
+            enrollmentDeadline.value    = '';
+            cancellationDeadline.min    = '';
+            cancellationDeadline.value  = '';
+        }
+
+        // Cancellation deadline: must also be <= start date
+        cancellationDeadline.max = val;
+        if (cancellationDeadline.value && cancellationDeadline.value > val) {
+            cancellationDeadline.value = '';
+        }
+
+        calcWeeks();
+    });
+
+    endDate.addEventListener('change', calcWeeks);
+
+    enrollmentDeadline.addEventListener('change', function () {
+        const val = this.value;
+
+        // Cancellation deadline min = enrollment deadline (must be AFTER enrollment)
+        cancellationDeadline.min = val;
+        if (cancellationDeadline.value && cancellationDeadline.value < val) {
+            cancellationDeadline.value = '';
+        }
+    });
+
+    document.getElementById('startTime').addEventListener('change', calcTime);
+    document.getElementById('endTime').addEventListener('change', calcTime);
+
+    // ── Init: apply constraints on page load (handles old() repopulation) ──
+    (function init() {
+        const s = startDate.value;
+        const e = enrollmentDeadline.value;
+
+        if (s) {
+            endDate.min              = s;
+            enrollmentDeadline.max   = s;
+            cancellationDeadline.max = s;
+        }
+        if (e) {
+            cancellationDeadline.min = e;
+        }
+
+        calcWeeks();
+        calcTime();
+    })();
 </script>
 @endsection

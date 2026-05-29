@@ -6,25 +6,22 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ArtworkSell;
+use App\Models\CartItem;
 use App\Services\NotificationService;
 use Stripe\Stripe;
 use Stripe\Checkout\Session;
 
 class OrderCheckoutController extends Controller
 {
-    // ── Helper: check if any item in a cart array is physical ────────────────
     private function hasPhysicalItem(array $cartItems): bool
     {
         foreach ($cartItems as $item) {
             $type = $item['artwork']->artwork_type ?? '';
-            if (in_array($type, ['physical', 'both'])) {
-                return true;
-            }
+            if (in_array($type, ['physical', 'both'])) return true;
         }
         return false;
     }
 
-    // ── Helper: check if user has a complete shipping address ────────────────
     private function userHasAddress($user): bool
     {
         return !empty($user->address)
@@ -33,35 +30,30 @@ class OrderCheckoutController extends Controller
             && !empty($user->postcode);
     }
 
-    // Show checkout page — summary of cart items OR buy now item
     public function show(Request $request)
     {
         $user = auth()->user();
 
-        // ── Buy Now: single item bypassing cart ──────────────────────────────
         if ($request->filled('buy_now') && $request->filled('artwork_id')) {
             $artwork = ArtworkSell::find($request->artwork_id);
-
             if (!$artwork) {
-                return redirect()->route('artist.browse')
-                                 ->with('error', 'Artwork not found.');
+                return redirect()->route('artist.browse')->with('error', 'Artwork not found.');
             }
 
-            $qty   = max(1, (int) $request->get('qty', 1));
-            $price = $artwork->resolveUnitPrice($qty); // ← bulk-aware
+            $qty         = max(1, (int) $request->get('qty', 1));
+            $price       = $artwork->resolveUnitPrice($qty);
+            $shippingFee = (float) ($artwork->shipping_fee ?? 0);
 
             $cartItems = [[
-                'artwork'  => $artwork,
-                'price'    => $price,
-                'quantity' => $qty,
-                'subtotal' => $price * $qty,
+                'artwork'      => $artwork,
+                'price'        => $price,
+                'quantity'     => $qty,
+                'subtotal'     => $price * $qty,
+                'shipping_fee' => $shippingFee,
             ]];
-            $total = $price * $qty;
+            $total = ($price * $qty) + $shippingFee;
 
-            session(['buy_now' => [
-                'artwork_id' => $artwork->id,
-                'qty'        => $qty,
-            ]]);
+            session(['buy_now' => ['artwork_id' => $artwork->id, 'qty' => $qty]]);
 
             $needsAddress = $this->hasPhysicalItem($cartItems);
             $hasAddress   = $this->userHasAddress($user);
@@ -69,14 +61,11 @@ class OrderCheckoutController extends Controller
             return view('orderCheckout', compact('cartItems', 'total', 'user', 'needsAddress', 'hasAddress'));
         }
 
-        // ── Normal cart checkout ─────────────────────────────────────────────
         session()->forget('buy_now');
-
         $cart = session('cart', []);
 
         if (empty($cart)) {
-            return redirect()->route('cart.index')
-                             ->with('error', 'Your cart is empty.');
+            return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
         $cartItems = [];
@@ -86,14 +75,17 @@ class OrderCheckoutController extends Controller
             $artwork = ArtworkSell::find($id);
             if ($artwork) {
                 $qty         = (int) ($item['quantity'] ?? 1);
-                $price       = $artwork->resolveUnitPrice($qty); // ← bulk-aware
+                $price       = $artwork->resolveUnitPrice($qty);
+                $shippingFee = (float) ($artwork->shipping_fee ?? 0);
+
                 $cartItems[] = [
-                    'artwork'  => $artwork,
-                    'price'    => $price,
-                    'quantity' => $qty,
-                    'subtotal' => $price * $qty,
+                    'artwork'      => $artwork,
+                    'price'        => $price,
+                    'quantity'     => $qty,
+                    'subtotal'     => $price * $qty,
+                    'shipping_fee' => $shippingFee,
                 ];
-                $total += $price * $qty;
+                $total += ($price * $qty) + $shippingFee;
             }
         }
 
@@ -103,20 +95,15 @@ class OrderCheckoutController extends Controller
         return view('orderCheckout', compact('cartItems', 'total', 'user', 'needsAddress', 'hasAddress'));
     }
 
-    // Process payment — redirect to Stripe
     public function process(Request $request)
     {
-        $user = auth()->user();
+        $user   = auth()->user();
+        $buyNow = session('buy_now');
 
-        // ── Block physical orders with no address ────────────────────────────
-        $buyNow    = session('buy_now');
         $cartItems = [];
-
         if ($buyNow) {
             $artwork = ArtworkSell::find($buyNow['artwork_id']);
-            if ($artwork) {
-                $cartItems[] = ['artwork' => $artwork];
-            }
+            if ($artwork) $cartItems[] = ['artwork' => $artwork];
         } else {
             foreach (session('cart', []) as $id => $item) {
                 $artwork = ArtworkSell::find($id);
@@ -135,83 +122,96 @@ class OrderCheckoutController extends Controller
         $total           = 0;
         $groupedByArtist = [];
 
-        // ── Buy Now flow ─────────────────────────────────────────────────────
         if ($buyNow) {
             $artwork = ArtworkSell::with('artist')->find($buyNow['artwork_id']);
-
             if (!$artwork) {
-                return redirect()->route('artist.browse')
-                                 ->with('error', 'Artwork not found.');
+                return redirect()->route('artist.browse')->with('error', 'Artwork not found.');
             }
 
-            $qty      = (int) ($buyNow['qty'] ?? 1);
-            $price    = $artwork->resolveUnitPrice($qty); // ← bulk-aware
-            $name     = $artwork->product_name ?? 'Artwork';
-            $artistId = $artwork->artist_id;
+            $qty         = (int) ($buyNow['qty'] ?? 1);
+            $price       = $artwork->resolveUnitPrice($qty);
+            $shippingFee = (float) ($artwork->shipping_fee ?? 0);
+            $name        = $artwork->product_name ?? 'Artwork';
+            $artistId    = $artwork->artist_id;
 
             $lineItems[] = [
                 'price_data' => [
                     'currency'     => 'myr',
                     'unit_amount'  => (int) round($price * 100),
-                    'product_data' => [
-                        'name'        => $name,
-                        'description' => 'Craftistry Artwork Purchase',
-                    ],
+                    'product_data' => ['name' => $name, 'description' => 'Craftistry Artwork Purchase'],
                 ],
                 'quantity' => $qty,
             ];
-            $total = $price * $qty;
 
+            if ($shippingFee > 0) {
+                $lineItems[] = [
+                    'price_data' => [
+                        'currency'     => 'myr',
+                        'unit_amount'  => (int) round($shippingFee * 100),
+                        'product_data' => ['name' => 'Shipping Fee', 'description' => 'Shipping for ' . $name],
+                    ],
+                    'quantity' => 1,
+                ];
+            }
+
+            $total = ($price * $qty) + $shippingFee;
             $groupedByArtist[$artistId][] = [
-                'artwork' => $artwork,
-                'name'    => $name,
-                'price'   => $price,
-                'qty'     => $qty,
+                'artwork'      => $artwork,
+                'name'         => $name,
+                'price'        => $price,
+                'qty'          => $qty,
+                'shipping_fee' => $shippingFee,
             ];
 
         } else {
-            // ── Normal cart flow ─────────────────────────────────────────────
             $cart = session('cart', []);
-
             if (empty($cart)) {
-                return redirect()->route('cart.index')
-                                 ->with('error', 'Your cart is empty.');
+                return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
             }
 
             foreach ($cart as $id => $item) {
                 $artwork = ArtworkSell::with('artist')->find($id);
                 if (!$artwork) continue;
 
-                $qty      = (int) ($item['quantity'] ?? 1);
-                $price    = $artwork->resolveUnitPrice($qty); // ← bulk-aware
-                $name     = $artwork->product_name ?? 'Artwork';
-                $artistId = $artwork->artist_id;
+                $qty         = (int) ($item['quantity'] ?? 1);
+                $price       = $artwork->resolveUnitPrice($qty);
+                $shippingFee = (float) ($artwork->shipping_fee ?? 0);
+                $name        = $artwork->product_name ?? 'Artwork';
+                $artistId    = $artwork->artist_id;
 
                 $lineItems[] = [
                     'price_data' => [
                         'currency'     => 'myr',
                         'unit_amount'  => (int) round($price * 100),
-                        'product_data' => [
-                            'name'        => $name,
-                            'description' => 'Craftistry Artwork Purchase',
-                        ],
+                        'product_data' => ['name' => $name, 'description' => 'Craftistry Artwork Purchase'],
                     ],
                     'quantity' => $qty,
                 ];
-                $total += $price * $qty;
 
+                if ($shippingFee > 0) {
+                    $lineItems[] = [
+                        'price_data' => [
+                            'currency'     => 'myr',
+                            'unit_amount'  => (int) round($shippingFee * 100),
+                            'product_data' => ['name' => 'Shipping Fee', 'description' => 'Shipping for ' . $name],
+                        ],
+                        'quantity' => 1,
+                    ];
+                }
+
+                $total += ($price * $qty) + $shippingFee;
                 $groupedByArtist[$artistId][] = [
-                    'artwork' => $artwork,
-                    'name'    => $name,
-                    'price'   => $price,
-                    'qty'     => $qty,
+                    'artwork'      => $artwork,
+                    'name'         => $name,
+                    'price'        => $price,
+                    'qty'          => $qty,
+                    'shipping_fee' => $shippingFee,
                 ];
             }
         }
 
         if (empty($lineItems)) {
-            return redirect()->route('cart.index')
-                             ->with('error', 'No valid items found.');
+            return redirect()->route('cart.index')->with('error', 'No valid items found.');
         }
 
         $stripeSession = Session::create([
@@ -224,13 +224,16 @@ class OrderCheckoutController extends Controller
         ]);
 
         foreach ($groupedByArtist as $artistId => $items) {
-            $artistTotal = collect($items)->sum(fn($i) => $i['price'] * $i['qty']);
+            $artistSubtotal  = collect($items)->sum(fn($i) => $i['price'] * $i['qty']);
+            $artistShipping  = collect($items)->sum(fn($i) => $i['shipping_fee']);
+            $artistTotal     = $artistSubtotal + $artistShipping;
 
             $order = Order::create([
                 'user_id'           => $user->id,
                 'artist_id'         => $artistId,
                 'type'              => 'product',
                 'total'             => $artistTotal,
+                'shipping_fee'      => $artistShipping,
                 'payment_status'    => 'pending',
                 'status'            => 'pending_payment',
                 'stripe_session_id' => $stripeSession->id,
@@ -254,7 +257,6 @@ class OrderCheckoutController extends Controller
         return redirect($stripeSession->url);
     }
 
-    // Repay an existing pending order
     public function repay(Order $order)
     {
         abort_if($order->user_id !== auth()->id(), 403);
@@ -268,22 +270,32 @@ class OrderCheckoutController extends Controller
                 if ($stripeSession->status === 'open') {
                     return redirect($stripeSession->url);
                 }
-            } catch (\Exception $e) {
-                // Session expired — create a new one below
-            }
+            } catch (\Exception $e) {}
         }
 
-        $lineItems = $order->items->map(fn($item) => [
-            'price_data' => [
-                'currency'     => 'myr',
-                'unit_amount'  => (int) round($item->price * 100),
-                'product_data' => [
-                    'name'        => $item->name ?? 'Artwork',
-                    'description' => 'Craftistry Artwork Purchase',
+        $lineItems = [];
+
+        foreach ($order->items as $item) {
+            $lineItems[] = [
+                'price_data' => [
+                    'currency'     => 'myr',
+                    'unit_amount'  => (int) round($item->price * 100),
+                    'product_data' => ['name' => $item->name ?? 'Artwork', 'description' => 'Craftistry Artwork Purchase'],
                 ],
-            ],
-            'quantity' => $item->quantity,
-        ])->toArray();
+                'quantity' => $item->quantity,
+            ];
+        }
+
+        if (($order->shipping_fee ?? 0) > 0) {
+            $lineItems[] = [
+                'price_data' => [
+                    'currency'     => 'myr',
+                    'unit_amount'  => (int) round($order->shipping_fee * 100),
+                    'product_data' => ['name' => 'Shipping Fee', 'description' => 'Shipping fee'],
+                ],
+                'quantity' => 1,
+            ];
+        }
 
         $stripeSession = Session::create([
             'payment_method_types' => ['card', 'fpx', 'grabpay'],
@@ -299,64 +311,19 @@ class OrderCheckoutController extends Controller
         return redirect($stripeSession->url);
     }
 
-    // Cancel order — only when status is 'processing' (paid, seller not yet accepted)
     public function cancelOrder(Order $order)
     {
         abort_if($order->user_id !== auth()->id(), 403);
 
-        if ($order->status !== 'processing') {
+        if ($order->status !== 'pending_payment') {
             return back()->with('error', 'This order can no longer be cancelled.');
         }
 
-        // Stripe refund
-        if ($order->stripe_session_id) {
-            Stripe::setApiKey(config('services.stripe.secret'));
+        $order->update(['status' => 'cancelled']);
 
-            try {
-                $session = Session::retrieve($order->stripe_session_id);
-
-                if ($session->payment_intent) {
-                    \Stripe\Refund::create([
-                        'payment_intent' => $session->payment_intent,
-                    ]);
-                }
-            } catch (\Exception $e) {
-                return back()->with('error', 'Refund failed: ' . $e->getMessage());
-            }
-        }
-
-        // Restore stock
-        foreach ($order->items as $item) {
-            if ($item->artworkSell) {
-                $item->artworkSell->increment('stock', $item->quantity);
-            }
-        }
-
-        $order->update([
-            'status'         => 'cancelled',
-            'payment_status' => 'refunded',
-        ]);
-
-        // Notify seller
-        $sellerUserId = $order->artist->user_id ?? null;
-        if ($sellerUserId) {
-            $buyer       = auth()->user();
-            $firstItem   = $order->items->first();
-            $productName = $firstItem->name ?? 'Artwork';
-            $buyerName   = $buyer->fullname ?? $buyer->name ?? 'A buyer';
-
-            NotificationService::newOrder(
-                $sellerUserId,
-                $order->id,
-                $buyerName . ' cancelled their order for',
-                $productName
-            );
-        }
-
-        return back()->with('success', 'Order cancelled. Your refund has been initiated and will appear within 5–10 business days.');
+        return back()->with('success', 'Order cancelled successfully.');
     }
 
-    // Payment success
     public function success(Request $request)
     {
         try {
@@ -396,8 +363,12 @@ class OrderCheckoutController extends Controller
                     }
                 }
 
-                session()->forget('cart');
-                session()->forget('buy_now');
+                if (session('buy_now')) {
+                    session()->forget('buy_now');
+                } else {
+                    session()->forget('cart');
+                    CartItem::where('user_id', auth()->id())->delete();
+                }
             }
 
             $order = $orders->first();
@@ -414,13 +385,11 @@ class OrderCheckoutController extends Controller
         }
     }
 
-    // Payment cancelled
     public function cancel()
     {
         if (session('buy_now')) {
             session()->forget('buy_now');
-            return redirect()->back()
-                             ->with('error', 'Payment was cancelled.');
+            return redirect()->back()->with('error', 'Payment was cancelled.');
         }
 
         return redirect()->route('cart.index')

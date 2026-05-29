@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <style>
 /* ═══════════════════════════════════════════
-   ARTIST ORDER DETAIL — matches artistOrders
+   BUYER ORDER DETAIL — mirrors artistOrderDetail
 ═══════════════════════════════════════════ */
 :root {
     --primary:   #667eea;
@@ -74,13 +74,11 @@ body {
     display: flex; align-items: center; justify-content: space-between;
     flex-wrap: wrap; gap: var(--sp-sm);
 }
-.od-title {
-    display: flex; align-items: center; gap: var(--sp-sm);
-}
+.od-title { display: flex; align-items: center; gap: var(--sp-sm); }
 .od-title h1 { font-size: var(--fs-lg); font-weight: 800; color: var(--ink); }
 .od-title .order-num { font-size: var(--fs-md); color: var(--primary); font-weight: 700; }
 
-/* ── Status badge (reuse from list) ── */
+/* ── Status badges ── */
 .status-badge {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 4px var(--sp-sm); border-radius: 20px;
@@ -120,7 +118,7 @@ body {
 }
 @media (max-width: 680px) { .od-grid { grid-template-columns: 1fr; } }
 
-/* ── Info rows inside cards ── */
+/* ── Info rows ── */
 .info-row {
     display: flex; align-items: flex-start;
     gap: var(--sp-sm);
@@ -136,37 +134,38 @@ body {
     padding-top: 1px;
 }
 .info-val { flex: 1; color: var(--ink); font-weight: 500; word-break: break-word; }
-.info-val.mono { font-family: 'Courier New', monospace; font-size: var(--fs-sm); background: var(--divider); padding: 2px 8px; border-radius: var(--radius-sm); display: inline-block; }
+.info-val.mono {
+    font-family: 'Courier New', monospace; font-size: var(--fs-sm);
+    background: var(--divider); padding: 2px 8px; border-radius: var(--radius-sm);
+    display: inline-block;
+}
 
-/* ── Buyer card ── */
-.buyer-block {
+/* ── Artist card ── */
+.artist-block {
     display: flex; align-items: center; gap: var(--sp-md);
     padding: var(--sp-md);
 }
-.buyer-avatar {
+.artist-avatar {
     width: 52px; height: 52px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
     background: var(--lavender); display: flex; align-items: center; justify-content: center;
     border: 2px solid var(--border);
 }
-.buyer-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.artist-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .avatar-placeholder { font-size: var(--fs-lg); font-weight: 800; color: var(--primary); }
-.buyer-details { flex: 1; }
-.buyer-name-lg { font-size: var(--fs-md); font-weight: 800; color: var(--ink); }
-.buyer-meta { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
-.buyer-meta-item {
+.artist-details { flex: 1; }
+.artist-name-lg { font-size: var(--fs-md); font-weight: 800; color: var(--ink); }
+.artist-meta { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
+.artist-meta-item {
     display: flex; align-items: center; gap: 5px;
     font-size: var(--fs-sm); color: var(--muted);
 }
-.buyer-meta-item .bi { color: var(--primary); font-size: 11px; }
+.artist-meta-item .bi { color: var(--primary); font-size: 11px; }
 
 /* ── Address block ── */
 .address-block {
-    background: var(--lavender);
-    border: 1px solid #ddd8f8;
-    border-radius: var(--radius-md);
-    padding: var(--sp-md);
-    display: flex; gap: var(--sp-sm);
-    align-items: flex-start;
+    background: var(--lavender); border: 1px solid #ddd8f8;
+    border-radius: var(--radius-md); padding: var(--sp-md);
+    display: flex; gap: var(--sp-sm); align-items: flex-start;
 }
 .address-icon {
     width: 34px; height: 34px; border-radius: 50%;
@@ -204,12 +203,6 @@ body {
 .ptag-custom  { background: #fdf4ff; color: #7e22ce; }
 .ptag-mat     { background: #f0fdf4; color: #166534; }
 .ptag-size    { background: #fff7ed; color: #c2410c; }
-.product-notes-box {
-    background: var(--divider); border-radius: var(--radius-sm);
-    padding: 6px var(--sp-sm); font-size: var(--fs-sm); color: var(--muted);
-    display: flex; gap: 5px; align-items: flex-start; line-height: 1.5;
-}
-.product-notes-box .bi { flex-shrink: 0; margin-top: 1px; color: var(--primary); }
 .product-price-col {
     flex-shrink: 0; display: flex; flex-direction: column;
     align-items: flex-end; gap: 4px; min-width: 90px;
@@ -227,7 +220,7 @@ body {
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 
-/* ── Order summary totals ── */
+/* ── Totals ── */
 .totals-block { display: flex; flex-direction: column; gap: 0; }
 .total-row {
     display: flex; justify-content: space-between; align-items: center;
@@ -246,7 +239,7 @@ body {
     font-size: var(--fs-lg); font-weight: 800;
 }
 
-/* ── Tracking timeline ── */
+/* ── Tracking ── */
 .track-steps {
     display: flex; align-items: flex-start; justify-content: space-between;
     padding: var(--sp-md) var(--sp-lg);
@@ -275,11 +268,9 @@ body {
     background: linear-gradient(135deg, var(--primary), var(--primary-2));
     border-color: transparent; color: #fff;
 }
-.track-step.step-current .track-dot {
-    box-shadow: 0 0 0 4px rgba(102,126,234,.2);
-}
+.track-step.step-current .track-dot { box-shadow: 0 0 0 4px rgba(102,126,234,.2); }
 .track-label { font-size: 11px; font-weight: 600; color: var(--muted); }
-.track-step.step-done .track-label { color: var(--primary); }
+.track-step.step-done .track-label    { color: var(--primary); }
 .track-step.step-current .track-label { color: var(--primary-2); font-weight: 800; }
 .tracking-courier-row {
     display: flex; align-items: center; gap: var(--sp-sm);
@@ -289,7 +280,15 @@ body {
 }
 .tracking-courier-row .bi { color: var(--primary); }
 
-/* ── Refund banner (reuse from list) ── */
+/* ── Expiry disclaimer ── */
+.expiry-banner {
+    border-radius: var(--radius-md);
+    padding: 11px 14px;
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: var(--fs-sm); line-height: 1.6;
+}
+
+/* ── Refund banner ── */
 .refund-banner { border-radius: var(--radius-md); overflow: hidden; border: 1.5px solid #fed7aa; }
 .refund-banner-header {
     display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
@@ -322,37 +321,24 @@ body {
 .refund-reason-box { flex: 1; min-width: 180px; background: #fff8f0; border: 1px solid #fed7aa; border-radius: var(--radius-sm); padding: 8px 12px; }
 .refund-reason-label { font-size: 11px; color: #b45309; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
 .refund-reason-text  { font-size: 13px; color: #374151; font-style: italic; line-height: 1.5; }
-.refund-banner-actions { display: flex; flex-direction: column; gap: 7px; flex-shrink: 0; }
-.refund-action-row { display: flex; gap: 7px; }
-.rp-btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-    padding: 8px 16px; border-radius: 7px; font-size: 12px; font-weight: 700;
-    border: none; cursor: pointer; font-family: inherit; transition: opacity .15s; white-space: nowrap;
-}
-.rp-btn:hover { opacity: .85; }
-.rp-btn.approve { background: #22c55e; color: #fff; box-shadow: 0 2px 8px rgba(34,197,94,.3); }
-.rp-btn.reject  { background: #ef4444; color: #fff; box-shadow: 0 2px 8px rgba(239,68,68,.25); }
-.rp-btn.cancel  { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
-.rp-btn.confirm { background: #ef4444; color: #fff; }
-.rp-reject-form { display: none; width: 100%; }
-.rp-reject-textarea {
-    width: 100%; border: 1.5px solid #fca5a5; border-radius: 7px;
-    padding: 8px 10px; font-size: 12px; font-family: inherit;
-    resize: vertical; outline: none; box-sizing: border-box;
-}
-.rp-reject-textarea:focus { border-color: #ef4444; }
-.rp-reject-actions { display: flex; gap: 7px; margin-top: 7px; justify-content: flex-end; }
 
-/* ── Action footer ── */
+/* ── Actions footer ── */
 .od-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--sp-sm);
-    flex-wrap: wrap;
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: var(--sp-sm); flex-wrap: wrap;
     padding: var(--sp-md);
 }
-.btn-accept {
+.btn-primary {
+    display: inline-flex; align-items: center; gap: var(--sp-xs);
+    padding: 9px var(--sp-lg); border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    color: #fff; font-weight: 700; font-size: var(--fs-base);
+    border: none; cursor: pointer; text-decoration: none;
+    box-shadow: 0 3px 10px rgba(102,126,234,.28);
+    transition: opacity .15s; font-family: 'Inter', sans-serif;
+}
+.btn-primary:hover { opacity: .88; }
+.btn-success {
     display: inline-flex; align-items: center; gap: var(--sp-xs);
     padding: 9px var(--sp-lg); border-radius: var(--radius-sm);
     background: linear-gradient(135deg, #48bb78, #38a169);
@@ -361,87 +347,64 @@ body {
     box-shadow: 0 3px 10px rgba(72,187,120,.3);
     transition: opacity .15s; font-family: 'Inter', sans-serif;
 }
-.btn-accept:hover { opacity: .88; }
-.btn-ship {
+.btn-success:hover { opacity: .88; }
+.btn-outline {
     display: inline-flex; align-items: center; gap: var(--sp-xs);
     padding: 9px var(--sp-lg); border-radius: var(--radius-sm);
-    background: linear-gradient(135deg, var(--primary), var(--primary-2));
-    color: #fff; font-weight: 700; font-size: var(--fs-base);
-    border: none; cursor: pointer;
-    box-shadow: 0 3px 10px rgba(102,126,234,.28);
-    transition: opacity .15s; font-family: 'Inter', sans-serif;
-}
-.btn-ship:hover { opacity: .88; }
-.btn-track {
-    display: inline-flex; align-items: center; gap: var(--sp-xs);
-    padding: 9px var(--sp-lg); border-radius: var(--radius-sm);
-    background: var(--lavender); color: var(--primary-2);
+    background: var(--white); color: var(--primary-2);
     font-weight: 700; font-size: var(--fs-base);
-    text-decoration: none; border: 1.5px solid #ddd8f8; transition: all .15s;
+    border: 1.5px solid #ddd8f8; text-decoration: none; transition: all .15s;
 }
-.btn-track:hover { background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: #fff; border-color: transparent; }
+.btn-outline:hover { background: var(--lavender); }
+.btn-danger {
+    display: inline-flex; align-items: center; gap: var(--sp-xs);
+    padding: 9px var(--sp-lg); border-radius: var(--radius-sm);
+    background: #fff5f5; color: #c62828;
+    font-weight: 700; font-size: var(--fs-base);
+    border: 1.5px solid #fca5a5; cursor: pointer;
+    transition: all .15s; font-family: 'Inter', sans-serif;
+}
+.btn-danger:hover { background: #fee2e2; }
 .status-note {
     font-size: var(--fs-sm); color: var(--muted);
     display: flex; align-items: center; gap: var(--sp-xs);
 }
 .status-note--green { color: #2e7d32; }
 
-/* ── Ship Modal ── */
+/* ── Cancel Modal ── */
 .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(3px); z-index: 200; }
 .modal-backdrop.show { display: block; }
-.ship-modal {
-    position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%);
-    width: 100%; max-width: 460px;
-    background: var(--white); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    z-index: 201; transition: bottom .3s cubic-bezier(.34,1.2,.64,1); overflow: hidden;
+.cancel-modal {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(.9);
+    opacity: 0; pointer-events: none;
+    width: 92%; max-width: 420px;
+    background: var(--white); border-radius: var(--radius-lg);
+    z-index: 201;
+    transition: all .22s cubic-bezier(.34,1.56,.64,1);
+    overflow: hidden; text-align: center;
+    box-shadow: 0 24px 64px rgba(102,126,234,.22), 0 4px 16px rgba(0,0,0,.08);
 }
-.ship-modal.open { bottom: 0; }
-.ship-modal-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: var(--sp-lg) var(--sp-xl) var(--sp-md);
-    border-bottom: 1px solid var(--divider);
+.cancel-modal.open { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; }
+.cancel-modal-body { padding: 36px 28px 28px; }
+.cancel-modal-icon {
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, #fff5f5, #fed7d7);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 18px; border: 2px solid #fca5a5;
+    box-shadow: 0 4px 12px rgba(239,68,68,.15);
 }
-.ship-modal-header h3 { font-size: var(--fs-md); font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: var(--sp-xs); }
-.ship-modal-header h3 .bi { color: var(--primary); }
-.modal-close-btn {
-    background: var(--divider); border: none; width: 28px; height: 28px;
-    border-radius: var(--radius-sm); font-size: var(--fs-sm); color: var(--muted);
-    cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s;
-}
-.modal-close-btn:hover { background: #fee2e2; color: #dc2626; }
-.ship-modal-body { padding: var(--sp-lg) var(--sp-xl); display: flex; flex-direction: column; gap: var(--sp-md); }
-.form-group { display: flex; flex-direction: column; gap: var(--sp-xs); }
-.form-group label { font-size: var(--fs-base); font-weight: 600; color: var(--ink); }
-.req { color: #dc2626; }
-.form-group select,
-.form-group input[type="text"] {
-    padding: 9px var(--sp-md); border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm); font-size: var(--fs-base);
-    font-family: 'Inter', sans-serif; color: var(--ink); background: var(--white);
-    transition: border-color .15s; outline: none;
-}
-.form-group select:focus,
-.form-group input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(102,126,234,.1); }
-.ship-modal-footer { display: flex; gap: var(--sp-sm); padding: var(--sp-md) var(--sp-xl) var(--sp-xl); border-top: 1px solid var(--divider); }
-.ship-modal-footer .btn-ship,
-.ship-modal-footer .btn-cancel { flex: 1; justify-content: center; }
-.btn-cancel {
-    padding: 9px var(--sp-lg); border-radius: var(--radius-sm);
-    border: 1.5px solid var(--border); background: var(--white);
-    color: var(--muted); font-weight: 600; font-size: var(--fs-base);
-    cursor: pointer; transition: all .15s; font-family: 'Inter', sans-serif;
-}
-.btn-cancel:hover { border-color: var(--primary); color: var(--primary); }
+.cancel-modal-footer { display: flex; gap: var(--sp-sm); padding: 0 28px 28px; }
+.cancel-modal-footer button { flex: 1; padding: 12px; border-radius: var(--radius-sm); font-size: var(--fs-base); font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
     .od-main { padding: var(--sp-sm) var(--sp-sm) 80px; }
     .od-title-row { flex-direction: column; align-items: flex-start; }
-    .buyer-block { flex-direction: column; align-items: flex-start; }
+    .artist-block { flex-direction: column; align-items: flex-start; }
     .product-thumb { width: 60px; height: 60px; }
     .product-price-col { min-width: 70px; }
     .track-steps { padding: var(--sp-sm); }
-    .ship-modal { max-width: 100%; }
     .od-actions { flex-direction: column; }
     .od-actions button, .od-actions a { width: 100%; justify-content: center; }
 }
@@ -452,17 +415,25 @@ body {
 
 @php
     $refundStatus = $order->refund_status ?? 'none';
+    $canCancel    = $order->status === 'pending_payment';
+    $autoRefund   = $refundStatus === 'none'
+                 && $order->payment_status === 'paid'
+                 && $order->status === 'processing';
+    $canRefund    = $refundStatus === 'none'
+                 && $order->payment_status === 'paid'
+                 && in_array($order->status, ['preparing','shipped','completed'])
+                 && ($order->status !== 'completed' || now()->diffInDays($order->updated_at) <= 7);
 
-    $sellerLabel = match($order->status) {
-        'pending_payment' => 'Awaiting Payment',
-        'processing'      => 'New Order',
+    $buyerLabel = match($order->status) {
+        'pending_payment' => 'Pending Payment',
+        'processing'      => 'Order Placed',
         'preparing'       => 'Preparing',
         'shipped'         => 'Shipped',
         'completed'       => 'Completed',
         'cancelled'       => 'Cancelled',
         default           => ucfirst($order->status),
     };
-    $sellerClass = match($order->status) {
+    $buyerClass = match($order->status) {
         'pending_payment' => 'yellow',
         'processing'      => 'blue',
         'preparing'       => 'orange',
@@ -483,17 +454,35 @@ body {
         ['label' => 'Done',     'icon' => 'bi-bag-check-fill',    'doneWhen' => ['completed']],
     ];
 
-    // Shipping address fields (adjust field names to match your schema)
-    $buyer           = $order->user;
+    $firstArtwork = $order->items->first()?->artwork;
+    $artistUser   = $order->artist?->user ?? $firstArtwork?->artist?->user;
+    $artistName   = $artistUser?->fullname ?? $artistUser?->name
+                 ?? $order->artist?->name ?? $firstArtwork?->artist?->name
+                 ?? 'Unknown Artist';
+    $artistEmail  = $artistUser?->email ?? null;
+    $artistPhone  = $artistUser?->phone ?? null;
+    $artistAvatar = $artistUser?->profile_image ?? $order->artist?->profile_image ?? null;
+    $artistInitial = strtoupper(substr($artistName, 0, 1));
+
+    $buyer           = auth()->user();
     $shippingName    = $buyer->fullname ?? $buyer->name ?? null;
-    $shippingPhone   = $buyer->phone   ?? null;
+    $shippingPhone   = $buyer->phone ?? null;
     $shippingAddress = $buyer->address ?? null;
-    $shippingCity    = $buyer->city    ?? null;
-    $shippingState   = $buyer->state   ?? null;
+    $shippingCity    = $buyer->city ?? null;
+    $shippingState   = $buyer->state ?? null;
     $shippingPostcode= $buyer->postcode ?? $buyer->postal_code ?? null;
-    $shippingCountry = $buyer->country  ?? 'Malaysia';
+    $shippingCountry = $buyer->country ?? 'Malaysia';
 
     $subtotal = $order->items->sum(fn($i) => ($i->price ?? 0) * ($i->quantity ?? 1));
+    $orderShipping = (float) ($order->shipping_fee ?? 0);
+    $orderTotal    = (float) ($order->total ?? $order->price ?? 0);
+
+    // Auto-cancel countdown
+    $expiresAt  = $order->created_at->addHours(24);
+    $hoursLeft  = (int) now()->diffInHours($expiresAt, false);
+    $minsLeft   = (int) now()->diffInMinutes($expiresAt, false);
+    $isUrgent   = $hoursLeft < 2 && $hoursLeft >= 0;
+    $isExpiring = $hoursLeft >= 2 && $hoursLeft < 6;
 @endphp
 
 {{-- Breadcrumb --}}
@@ -501,9 +490,7 @@ body {
     <div class="bc-inner">
         <a href="{{ route('dashboard') }}">Home</a>
         <span class="sep">/</span>
-        <a href="{{ route('artist.profile') }}">Studio</a>
-        <span class="sep">/</span>
-        <a href="{{ route('artist.orders') }}">Order List</a>
+        <a href="{{ route('orders.index') }}">My Orders</a>
         <span class="sep">/</span>
         <span class="cur">Order #{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</span>
     </div>
@@ -511,8 +498,8 @@ body {
 
 <main class="od-main">
 
-    <a href="{{ route('artist.orders') }}" class="back-btn">
-        <i class="bi bi-arrow-left"></i> Back to Orders
+    <a href="{{ route('orders.index') }}" class="back-btn">
+        <i class="bi bi-arrow-left"></i> Back to My Orders
     </a>
 
     {{-- Title row --}}
@@ -522,7 +509,7 @@ body {
             <span class="order-num">#{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <span class="status-badge status-{{ $sellerClass }}">
+            <span class="status-badge status-{{ $buyerClass }}">
                 @switch($order->status)
                     @case('pending_payment') <i class="bi bi-clock"></i>             @break
                     @case('processing')      <i class="bi bi-bell-fill"></i>         @break
@@ -532,7 +519,7 @@ body {
                     @case('cancelled')       <i class="bi bi-x-circle-fill"></i>     @break
                     @default                 <i class="bi bi-circle"></i>
                 @endswitch
-                {{ $sellerLabel }}
+                {{ $buyerLabel }}
             </span>
             @if($refundStatus === 'requested')
                 <span class="status-badge" style="background:#fff3cd;color:#92400e;">
@@ -554,42 +541,73 @@ body {
         </div>
     </div>
 
-    {{-- ── ROW 1: Buyer + Order Info ── --}}
+    {{-- ── Pending Payment: expiry disclaimer ── --}}
+    @if($order->status === 'pending_payment')
+    <div class="expiry-banner" style="
+        background: {{ $hoursLeft <= 0 ? '#fff5f5' : ($isUrgent ? '#fff5f5' : ($isExpiring ? '#fff8f0' : '#f0f4ff')) }};
+        border: 1.5px solid {{ $hoursLeft <= 0 ? '#fca5a5' : ($isUrgent ? '#fca5a5' : ($isExpiring ? '#fcd34d' : '#c7d2fe')) }};
+        color: {{ $hoursLeft <= 0 ? '#991b1b' : ($isUrgent ? '#991b1b' : ($isExpiring ? '#92400e' : '#3730a3')) }};">
+        <i class="bi {{ $hoursLeft <= 0 ? 'bi-exclamation-circle-fill' : ($isUrgent ? 'bi-exclamation-circle-fill' : 'bi-clock-fill') }}"
+           style="font-size:15px;flex-shrink:0;margin-top:1px;
+                  color:{{ $hoursLeft <= 0 ? '#ef4444' : ($isUrgent ? '#ef4444' : ($isExpiring ? '#d97706' : '#667eea')) }};"></i>
+        <span>
+            @if($hoursLeft <= 0)
+                <strong>Payment overdue.</strong>
+                This order will be cancelled automatically very soon. Cancel it manually or contact support if you need help.
+            @elseif($isUrgent)
+                <strong>Expiring soon!</strong>
+                This order will be automatically cancelled in
+                <strong>{{ $minsLeft }} minute{{ $minsLeft !== 1 ? 's' : '' }}</strong>.
+                Complete payment now to secure your order.
+            @elseif($isExpiring)
+                <strong>Payment due soon.</strong>
+                This order expires in <strong>{{ $hoursLeft }} hour{{ $hoursLeft !== 1 ? 's' : '' }}</strong>
+                (by {{ $expiresAt->format('d M, g:i A') }}).
+                Complete payment to avoid automatic cancellation.
+            @else
+                Complete payment by <strong>{{ $expiresAt->format('d M Y, g:i A') }}</strong>
+                or this order will be automatically cancelled
+                ({{ $hoursLeft }} hour{{ $hoursLeft !== 1 ? 's' : '' }} remaining).
+            @endif
+        </span>
+    </div>
+    @endif
+
+    {{-- ── ROW 1: Artist Info + Order Info ── --}}
     <div class="od-grid">
 
-        {{-- Buyer --}}
+        {{-- Artist --}}
         <div class="od-card">
             <div class="od-card-header">
-                <i class="bi bi-person-fill"></i> Buyer Information
+                <i class="bi bi-palette-fill"></i> Artist / Seller
             </div>
-            <div class="buyer-block">
-                <div class="buyer-avatar">
-                    @if($order->user->profile_image)
-                        <img src="{{ asset('storage/' . $order->user->profile_image) }}"
-                             alt="{{ $order->user->fullname }}">
+            <div class="artist-block">
+                <div class="artist-avatar">
+                    @if($artistAvatar)
+                        <img src="{{ asset('storage/' . $artistAvatar) }}" alt="{{ $artistName }}">
                     @else
-                        <div class="avatar-placeholder">
-                            {{ strtoupper(substr($order->user->fullname ?? '?', 0, 1)) }}
-                        </div>
+                        <div class="avatar-placeholder">{{ $artistInitial }}</div>
                     @endif
                 </div>
-                <div class="buyer-details">
-                    <div class="buyer-name-lg">{{ $order->user->fullname }}</div>
-                    <div class="buyer-meta">
-                        <div class="buyer-meta-item">
-                            <i class="bi bi-envelope"></i>
-                            {{ $order->user->email }}
-                        </div>
-                        @if($order->user->phone)
-                        <div class="buyer-meta-item">
-                            <i class="bi bi-telephone"></i>
-                            {{ $order->user->phone }}
+                <div class="artist-details">
+                    <div class="artist-name-lg">{{ $artistName }}</div>
+                    <div class="artist-meta">
+                        @if($artistEmail)
+                        <div class="artist-meta-item">
+                            <i class="bi bi-envelope"></i> {{ $artistEmail }}
                         </div>
                         @endif
-                        <div class="buyer-meta-item">
-                            <i class="bi bi-calendar-check"></i>
-                            Member since {{ $order->user->created_at->format('M Y') }}
+                        @if($artistPhone)
+                        <div class="artist-meta-item">
+                            <i class="bi bi-telephone"></i> {{ $artistPhone }}
                         </div>
+                        @endif
+                        @if($artistUser?->created_at)
+                        <div class="artist-meta-item">
+                            <i class="bi bi-calendar-check"></i>
+                            Member since {{ $artistUser->created_at->format('M Y') }}
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -654,7 +672,7 @@ body {
 
     </div>
 
-    {{-- ── ROW 2: Shipping Address (skip for all-digital) ── --}}
+    {{-- ── Shipping Address (skip for all-digital) ── --}}
     @if(!$isAllDigital)
     <div class="od-card">
         <div class="od-card-header">
@@ -690,18 +708,18 @@ body {
             @else
                 <div style="color:var(--muted);font-size:var(--fs-sm);padding:var(--sp-sm) 0;display:flex;align-items:center;gap:6px;">
                     <i class="bi bi-info-circle"></i>
-                    No shipping address recorded for this order.
+                    No shipping address recorded. Please update your profile with a delivery address.
                 </div>
             @endif
         </div>
     </div>
     @endif
 
-    {{-- ── Tracking (if applicable) ── --}}
+    {{-- ── Tracking ── --}}
     @if(in_array($order->status, ['shipped','completed']) && $order->tracking_number)
     <div class="od-card">
         <div class="od-card-header">
-            <i class="bi bi-truck"></i> Tracking
+            <i class="bi bi-truck"></i> Parcel Tracking
         </div>
         <div class="tracking-courier-row">
             <i class="bi bi-truck"></i>
@@ -722,7 +740,7 @@ body {
                     $isDone    = in_array($order->status, $step['doneWhen']);
                     $isCurrent = $isDone && (
                         $i === count($trackingSteps) - 1
-                        || !in_array($order->status, $trackingSteps[$i + 1]['doneWhen'] ?? [])
+                        || !in_array($order->status, $trackingSteps[$i+1]['doneWhen'] ?? [])
                     );
                 @endphp
                 <div class="track-step {{ $isDone ? 'step-done' : '' }} {{ $isCurrent ? 'step-current' : '' }}">
@@ -783,11 +801,6 @@ body {
                         @if($artwork?->size ?? null)
                             <span class="ptag ptag-size"><i class="bi bi-aspect-ratio"></i> {{ $artwork->size }}</span>
                         @endif
-                        @if($artwork?->style ?? null)
-                            <span class="ptag ptag-type" style="background:#fdf4ff;color:#7e22ce;">
-                                <i class="bi bi-stars"></i> {{ $artwork->style }}
-                            </span>
-                        @endif
                     @endif
                 </div>
                 @if($item->variant ?? null)
@@ -796,8 +809,8 @@ body {
                     </div>
                 @endif
                 @if($order->notes && $isCustomItem)
-                    <div class="product-notes-box">
-                        <i class="bi bi-chat-left-text"></i>
+                    <div style="background:var(--divider);border-radius:var(--radius-sm);padding:6px 10px;font-size:var(--fs-sm);color:var(--muted);display:flex;gap:5px;align-items:flex-start;line-height:1.5;">
+                        <i class="bi bi-chat-left-text" style="flex-shrink:0;margin-top:1px;color:var(--primary);"></i>
                         {{ $order->notes }}
                     </div>
                 @endif
@@ -827,15 +840,15 @@ body {
                     <span>Subtotal ({{ $order->items->count() }} item{{ $order->items->count() !== 1 ? 's' : '' }})</span>
                     <span>RM {{ number_format($subtotal, 2) }}</span>
                 </div>
-                @if(($order->shipping_fee ?? 0) > 0)
+                @if($orderShipping > 0)
                 <div class="total-row">
                     <span><i class="bi bi-truck"></i> Shipping Fee</span>
-                    <span>RM {{ number_format($order->shipping_fee, 2) }}</span>
+                    <span>RM {{ number_format($orderShipping, 2) }}</span>
                 </div>
                 @endif
                 <div class="total-row grand">
                     <span>Order Total</span>
-                    <span class="grand-amount">RM {{ number_format($order->total ?? $order->price ?? 0, 2) }}</span>
+                    <span class="grand-amount">RM {{ number_format($orderTotal, 2) }}</span>
                 </div>
             </div>
         </div>
@@ -848,49 +861,24 @@ body {
             <div class="refund-banner-left">
                 <div class="refund-banner-icon"><i class="bi bi-arrow-return-left"></i></div>
                 <div>
-                    <div class="refund-banner-title">Buyer Requested a Refund</div>
+                    <div class="refund-banner-title">Refund Request Submitted</div>
                     <div class="refund-banner-sub">
                         <i class="bi bi-clock"></i>
                         {{ \Carbon\Carbon::parse($order->refund_requested_at)->format('d M Y, h:i A') }}
-                        &nbsp;·&nbsp; RM {{ number_format($order->total ?? 0, 2) }}
+                        &nbsp;·&nbsp; RM {{ number_format($orderTotal, 2) }}
+                        &nbsp;·&nbsp; Awaiting seller review
                     </div>
                 </div>
             </div>
         </div>
+        @if($order->refund_reason)
         <div class="refund-banner-body">
             <div class="refund-reason-box">
-                <div class="refund-reason-label"><i class="bi bi-chat-quote"></i> Reason</div>
+                <div class="refund-reason-label"><i class="bi bi-chat-quote"></i> Your Reason</div>
                 <div class="refund-reason-text">"{{ $order->refund_reason }}"</div>
             </div>
-            <div class="refund-banner-actions">
-                <div class="refund-action-row">
-                    <form method="POST" action="{{ route('refund.approve.order', $order->id) }}"
-                          onsubmit="return confirm('Approve refund? Stripe will process immediately.')">
-                        @csrf
-                        <button type="submit" class="rp-btn approve">
-                            <i class="bi bi-check-circle-fill"></i> Approve Refund
-                        </button>
-                    </form>
-                    <button type="button" class="rp-btn reject"
-                            onclick="toggleRejectForm({{ $order->id }})">
-                        <i class="bi bi-x-circle"></i> Reject
-                    </button>
-                </div>
-                <div class="rp-reject-form" id="rejectForm-{{ $order->id }}">
-                    <form method="POST" action="{{ route('refund.reject.order', $order->id) }}">
-                        @csrf
-                        <textarea name="reject_reason" class="rp-reject-textarea" rows="2"
-                            placeholder="Reason for rejection (required)..."
-                            required minlength="5" maxlength="500"></textarea>
-                        <div class="rp-reject-actions">
-                            <button type="button" class="rp-btn cancel"
-                                    onclick="toggleRejectForm({{ $order->id }})">Cancel</button>
-                            <button type="submit" class="rp-btn confirm">Confirm Rejection</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
         </div>
+        @endif
     </div>
 
     @elseif($refundStatus === 'refunded')
@@ -901,7 +889,7 @@ body {
                 <div>
                     <div class="refund-banner-title">Refund Processed</div>
                     <div class="refund-banner-sub">
-                        RM {{ number_format($order->refund_amount, 2) }} returned to buyer
+                        RM {{ number_format($order->refund_amount ?? $orderTotal, 2) }} returned to your original payment method
                         · {{ \Carbon\Carbon::parse($order->refunded_at)->format('d M Y') }}
                     </div>
                 </div>
@@ -926,96 +914,165 @@ body {
     @endif
 
     {{-- ── Actions footer ── --}}
+    <div class="od-card">
         <div class="od-actions">
             @if($order->status === 'pending_payment')
                 <span class="status-note">
-                    <i class="bi bi-clock"></i> Waiting for buyer to complete payment
+                    <i class="bi bi-clock"></i> Awaiting payment
                 </span>
+                <a href="{{ route('order.checkout.repay', $order->id) }}" class="btn-primary">
+                    <i class="bi bi-credit-card-fill"></i> Pay Now
+                </a>
+                <button type="button" class="btn-danger" onclick="openCancelModal()">
+                    <i class="bi bi-x-circle"></i> Cancel Order
+                </button>
 
             @elseif($order->status === 'processing')
-                <form action="{{ route('artist.orders.accept', $order->id) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn-accept">
-                        <i class="bi bi-check-lg"></i> Accept Order
-                    </button>
-                </form>
+                <span class="status-note">
+                    <i class="bi bi-bell-fill"></i> Waiting for seller to accept your order
+                </span>
+                @if($autoRefund)
+                <button type="button" class="btn-outline"
+                    onclick="openRefundModal({{ $order->id }}, '{{ addslashes($order->items->first()?->name ?? 'this order') }}', 'RM {{ number_format($orderTotal, 2) }}', true)">
+                    <i class="bi bi-arrow-return-left"></i> Request Refund
+                </button>
+                @endif
 
             @elseif($order->status === 'preparing')
-                @if($isAllDigital)
-                    <form action="{{ route('artist.orders.ship', $order->id) }}" method="POST"
-                          onsubmit="return confirm('Mark this digital order as delivered to buyer?')">
-                        @csrf
-                        <input type="hidden" name="courier" value="digital">
-                        <input type="hidden" name="tracking_number" value="DIGITAL-DELIVERY">
-                        <button type="submit" class="btn-ship">
-                            <i class="bi bi-cloud-check-fill"></i> Mark as Delivered
-                        </button>
-                    </form>
-                @else
-                    <button class="btn-ship" onclick="openShipModal({{ $order->id }})">
-                        <i class="bi bi-truck"></i> Mark as Shipped
-                    </button>
+                <span class="status-note">
+                    <i class="bi bi-box-seam"></i> Seller is preparing your order
+                </span>
+                @if($canRefund)
+                <button type="button" class="btn-outline"
+                    onclick="openRefundModal({{ $order->id }}, '{{ addslashes($order->items->first()?->name ?? 'this order') }}', 'RM {{ number_format($orderTotal, 2) }}', false)">
+                    <i class="bi bi-arrow-return-left"></i> Request Refund
+                </button>
                 @endif
 
             @elseif($order->status === 'shipped')
                 @if($order->getTrackingUrl())
-                    <a href="{{ $order->getTrackingUrl() }}" target="_blank" class="btn-track">
+                    <a href="{{ $order->getTrackingUrl() }}" target="_blank" class="btn-outline">
                         <i class="bi bi-box-arrow-up-right"></i> Track Parcel
                     </a>
                 @endif
-                <span class="status-note">
-                    <i class="bi bi-info-circle"></i> Waiting for buyer to confirm receipt
-                </span>
+                <form action="{{ route('orders.complete', $order->id) }}" method="POST" style="display:inline;"
+                      onsubmit="return confirm('Confirm that you have received this order?')">
+                    @csrf
+                    <button type="submit" class="btn-success">
+                        <i class="bi bi-check-circle-fill"></i> Order Received
+                    </button>
+                </form>
+                @if($canRefund)
+                <button type="button" class="btn-outline"
+                    onclick="openRefundModal({{ $order->id }}, '{{ addslashes($order->items->first()?->name ?? 'this order') }}', 'RM {{ number_format($orderTotal, 2) }}', false)">
+                    <i class="bi bi-arrow-return-left"></i> Request Refund
+                </button>
+                @endif
 
             @elseif($order->status === 'completed')
-                <span class="status-note status-note--green">
-                    <i class="bi bi-check-circle-fill"></i> Order completed by buyer
-                </span>
+                @if($canRefund)
+                <button type="button" class="btn-outline"
+                    onclick="openRefundModal({{ $order->id }}, '{{ addslashes($order->items->first()?->name ?? 'this order') }}', 'RM {{ number_format($orderTotal, 2) }}', false)">
+                    <i class="bi bi-arrow-return-left"></i> Request Refund
+                </button>
+                @endif
+                @if(!$order->has_review)
+                    <a href="{{ route('reviews.create', $order->id) }}" class="btn-primary">
+                        <i class="bi bi-star-fill"></i> Leave a Review
+                    </a>
+                @else
+                    <span class="status-note status-note--green">
+                        <i class="bi bi-check-circle-fill"></i> You have reviewed this order
+                    </span>
+                @endif
 
             @elseif($order->status === 'cancelled')
                 <span class="status-note" style="color:#c62828;">
                     <i class="bi bi-x-circle-fill"></i> This order was cancelled
                 </span>
             @endif
+
+            @if($order->status === 'completed')
+                <a href="{{ route('orders.receipt', $order->id) }}" class="btn-outline">
+                    <i class="bi bi-file-earmark-arrow-down"></i> Download Receipt
+                </a>
+            @endif
         </div>
     </div>
 
 </main>
 
-{{-- Ship Modal --}}
-<div class="modal-backdrop" id="shipBackdrop" onclick="closeShipModal()"></div>
-<div class="ship-modal" id="shipModal">
-    <div class="ship-modal-header">
-        <h3><i class="bi bi-truck"></i> Shipping Details</h3>
-        <button onclick="closeShipModal()" class="modal-close-btn">
-            <i class="bi bi-x-lg"></i>
+{{-- Cancel Modal --}}
+<div class="modal-backdrop" id="cancelBackdrop" onclick="closeCancelModal()"></div>
+<div class="cancel-modal" id="cancelModal">
+    <div class="cancel-modal-body">
+        <div class="cancel-modal-icon">
+            <i class="bi bi-ban" style="color:#ef4444;font-size:1.6rem;"></i>
+        </div>
+        <h3 style="font-size:1.1rem;font-weight:800;color:var(--ink);margin-bottom:8px;">Cancel Order?</h3>
+        <p style="font-size:var(--fs-sm);color:var(--muted);line-height:1.7;margin-bottom:6px;">
+            You are about to cancel Order <strong style="color:var(--ink);">#{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</strong>.
+        </p>
+        <p style="font-size:var(--fs-sm);color:var(--muted);line-height:1.65;margin-bottom:10px;">
+            This order has not been paid yet. Cancelling will remove the order permanently. This action cannot be undone.
+        </p>
+    </div>
+    <div class="cancel-modal-footer">
+        <button onclick="closeCancelModal()"
+            style="border:1.5px solid var(--border);background:var(--white);color:var(--muted);"
+            onmouseover="this.style.background='var(--divider)';" onmouseout="this.style.background='var(--white)';">
+            Keep Order
+        </button>
+        <button onclick="document.getElementById('cancelOrderForm').submit()"
+            style="border:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 4px 14px rgba(239,68,68,.35);"
+            onmouseover="this.style.opacity='.88';" onmouseout="this.style.opacity='1';">
+            <i class="bi bi-ban" style="margin-right:4px;"></i> Yes, Cancel
         </button>
     </div>
-    <form id="shipForm" method="POST">
-        @csrf
-        <div class="ship-modal-body">
-            <div class="form-group">
-                <label>Courier <span class="req">*</span></label>
-                <select name="courier" required>
-                    <option value="">— Select Courier —</option>
-                    <option value="poslaju">Pos Laju</option>
-                    <option value="jnt">J&T Express</option>
-                    <option value="dhl">DHL</option>
-                    <option value="ninjavan">Ninja Van</option>
-                    <option value="citylink">City-Link</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Tracking Number <span class="req">*</span></label>
-                <input type="text" name="tracking_number"
-                       placeholder="e.g. EF123456789MY" required maxlength="100">
-            </div>
+</div>
+<form id="cancelOrderForm" method="POST" action="{{ route('orders.cancel', $order->id) }}" style="display:none;">@csrf</form>
+
+{{-- Refund Modal --}}
+<div id="refundBackdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);backdrop-filter:blur(3px);z-index:200;" onclick="closeRefundModal()"></div>
+<div id="refundModalEl" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:92%;max-width:480px;background:#fff;border-radius:16px;padding:32px 28px 26px;box-shadow:0 24px 64px rgba(102,126,234,.22);z-index:201;">
+    <div style="text-align:center;margin-bottom:20px;">
+        <div style="width:56px;height:56px;background:linear-gradient(135deg,#fff8f0,#fef3c7);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;border:2px solid #fcd34d;box-shadow:0 4px 12px rgba(252,211,77,.25);">
+            <i class="bi bi-arrow-return-left" style="color:#d97706;font-size:1.3rem;"></i>
         </div>
-        <div class="ship-modal-footer">
-            <button type="button" class="btn-cancel" onclick="closeShipModal()">Cancel</button>
-            <button type="submit" class="btn-ship">
-                <i class="bi bi-truck"></i> Confirm & Ship
+        <h3 style="font-size:1.08rem;font-weight:800;color:var(--ink);margin:0 0 4px;">Request Refund</h3>
+        <p id="refundSubtitle" style="font-size:var(--fs-sm);color:var(--muted);margin:0;"></p>
+    </div>
+    <div id="refundInfoBox" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:11px 14px;margin-bottom:16px;display:flex;align-items:flex-start;gap:9px;">
+        <i class="bi bi-info-circle-fill" style="color:#2563eb;font-size:14px;margin-top:1px;flex-shrink:0;"></i>
+        <span id="refundInfoText" style="font-size:12px;color:#1d4ed8;line-height:1.55;"></span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
+        <button type="button" onclick="pickReason('Item not as described')" style="padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;cursor:pointer;font-family:inherit;">Item not as described</button>
+        <button type="button" onclick="pickReason('Item damaged or defective')" style="padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;cursor:pointer;font-family:inherit;">Item damaged or defective</button>
+        <button type="button" onclick="pickReason('Wrong item received')" style="padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;cursor:pointer;font-family:inherit;">Wrong item received</button>
+        <button type="button" onclick="pickReason('Item not received')" style="padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;cursor:pointer;font-family:inherit;">Item not received</button>
+        <button type="button" onclick="pickReason('Changed my mind')" style="padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;cursor:pointer;font-family:inherit;">Changed my mind</button>
+    </div>
+    <form id="refundFormEl" method="POST">
+        @csrf
+        <input type="hidden" name="auto_refund" id="refundAutoInput" value="0">
+        <label style="font-size:13px;font-weight:600;color:var(--ink);display:block;margin-bottom:7px;">
+            Reason <span style="color:#ef4444;">*</span>
+        </label>
+        <textarea id="refundReasonInput" name="reason" rows="4"
+            placeholder="Describe why you are requesting a refund..."
+            minlength="10" maxlength="1000" required
+            style="width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:11px 13px;font-size:13px;font-family:inherit;color:var(--ink);resize:vertical;outline:none;box-sizing:border-box;"
+            onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
+        <p style="font-size:11px;color:#9ca3af;margin:5px 0 18px;">Minimum 10 characters.</p>
+        <div style="display:flex;gap:10px;">
+            <button type="button" onclick="closeRefundModal()"
+                style="flex:1;padding:11px;border-radius:8px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:var(--fs-base);font-weight:600;cursor:pointer;font-family:inherit;">
+                Cancel
+            </button>
+            <button type="submit"
+                style="flex:2;padding:11px;border-radius:8px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:var(--fs-base);font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 4px 14px rgba(102,126,234,.35);">
+                <i class="bi bi-send-fill"></i> Submit Request
             </button>
         </div>
     </form>
@@ -1025,22 +1082,60 @@ body {
 
 @section('scripts')
 <script>
-function openShipModal(orderId) {
-    document.getElementById('shipForm').action = `/artist/orders/${orderId}/ship`;
-    document.querySelector('[name="courier"]').value = '';
-    document.querySelector('[name="tracking_number"]').value = '';
-    document.getElementById('shipBackdrop').classList.add('show');
-    document.getElementById('shipModal').classList.add('open');
+function openCancelModal() {
+    document.getElementById('cancelBackdrop').classList.add('show');
+    document.getElementById('cancelModal').classList.add('open');
     document.body.style.overflow = 'hidden';
 }
-function closeShipModal() {
-    document.getElementById('shipBackdrop').classList.remove('show');
-    document.getElementById('shipModal').classList.remove('open');
+function closeCancelModal() {
+    document.getElementById('cancelBackdrop').classList.remove('show');
+    document.getElementById('cancelModal').classList.remove('open');
     document.body.style.overflow = '';
 }
-function toggleRejectForm(orderId) {
-    var f = document.getElementById('rejectForm-' + orderId);
-    f.style.display = f.style.display === 'none' || f.style.display === '' ? 'block' : 'none';
+
+function openRefundModal(orderId, orderName, orderAmount, isAuto) {
+    document.getElementById('refundFormEl').action = '/refund/order/' + orderId;
+    document.getElementById('refundAutoInput').value = isAuto ? '1' : '0';
+    document.getElementById('refundSubtitle').textContent = '\u201c' + orderName + '\u201d \u2022 ' + orderAmount;
+    document.getElementById('refundReasonInput').value = '';
+    document.getElementById('refundInfoText').innerHTML = isAuto
+        ? 'The seller has not accepted your order yet. Your refund will be processed <strong>automatically</strong> and returned to your original payment method within <strong>3\u20135 business days</strong>.'
+        : 'The seller will review your request. If approved, the refund returns to your original payment method within <strong>3\u20135 business days</strong>.';
+    document.getElementById('refundBackdrop').style.display = 'block';
+    document.getElementById('refundModalEl').style.display  = 'block';
+    document.body.style.overflow = 'hidden';
 }
+function closeRefundModal() {
+    document.getElementById('refundBackdrop').style.display = 'none';
+    document.getElementById('refundModalEl').style.display  = 'none';
+    document.body.style.overflow = '';
+}
+function pickReason(text) { document.getElementById('refundReasonInput').value = text; }
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { closeCancelModal(); closeRefundModal(); }
+});
+
+@if(session('success'))
+(function(){
+    // reuse success toast if available from layout
+    var el = document.getElementById('successPopup');
+    if (el) {
+        document.getElementById('successMessage').textContent = @json(session('success'));
+        el.classList.add('show');
+        setTimeout(function(){ el.classList.add('hide'); setTimeout(function(){ el.classList.remove('show','hide'); }, 300); }, 3000);
+    }
+})();
+@endif
+@if(session('error'))
+(function(){
+    var el = document.getElementById('errorPopup');
+    if (el) {
+        document.getElementById('errorMessage').textContent = @json(session('error'));
+        el.classList.add('show');
+        setTimeout(function(){ el.classList.add('hide'); setTimeout(function(){ el.classList.remove('show','hide'); }, 300); }, 3000);
+    }
+})();
+@endif
 </script>
 @endsection

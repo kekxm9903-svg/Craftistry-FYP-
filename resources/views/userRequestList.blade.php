@@ -32,13 +32,17 @@
 
     {{-- Page header --}}
     @php
-        $totalPending = $requests->getCollection()->filter(fn($r) =>
+        $customPending = $requests->getCollection()->filter(fn($r) =>
+            $r->status === 'pending' ||
             ($r->isRefused() && $r->hasCounterPrice() && is_null($r->buyer_response)) ||
             ($r->isAccepted() && !$r->order_id)
-        )->count()
-        + $bulkOrders->getCollection()->filter(fn($b) =>
+        )->count();
+
+        $bulkPending = $bulkOrders->getCollection()->filter(fn($b) =>
             $b->status === 'accepted' && !$b->order_id
         )->count();
+
+        $totalPending = $customPending + $bulkPending;
     @endphp
 
     <div class="page-header-card">
@@ -54,16 +58,7 @@
     </div>
 
     {{-- Tab bar --}}
-    @php
-        $activeTab = request('tab', 'custom');
-        $customPending = $requests->getCollection()->filter(fn($r) =>
-            ($r->isRefused() && $r->hasCounterPrice() && is_null($r->buyer_response)) ||
-            ($r->isAccepted() && !$r->order_id)
-        )->count();
-        $bulkPending = $bulkOrders->getCollection()->filter(fn($b) =>
-            $b->status === 'accepted' && !$b->order_id
-        )->count();
-    @endphp
+    @php $activeTab = request('tab', 'custom'); @endphp
 
     <div class="tab-bar">
         <a href="{{ request()->fullUrlWithQuery(['tab' => 'custom']) }}"
@@ -140,20 +135,24 @@
                                     <i class="fas fa-clock"></i>
                                     {{ $req->created_at->diffForHumans() }}
                                 </span>
-                                @if($req->isRefused() && $req->hasCounterPrice() && is_null($req->buyer_response))
-                                <span class="meta-urgent">
-                                    <i class="fas fa-exclamation-circle"></i> Action needed
-                                </span>
-                                @endif
-                                @if($req->isAccepted() && !$req->order_id)
-                                <span class="meta-payment">
-                                    <i class="fas fa-credit-card"></i> Awaiting payment
-                                </span>
-                                @endif
-                                @if($req->order_id && $order)
-                                <span class="order-status-chip order-status-{{ $order->status }}">
-                                    <i class="fas fa-box"></i> {{ ucfirst(str_replace('_', ' ', $order->status)) }}
-                                </span>
+
+                                {{-- Status chips --}}
+                                @if($req->status === 'pending')
+                                    <span class="meta-pending">
+                                        <i class="fas fa-hourglass-half"></i> Waiting for seller
+                                    </span>
+                                @elseif($req->isRefused() && $req->hasCounterPrice() && is_null($req->buyer_response))
+                                    <span class="meta-urgent">
+                                        <i class="fas fa-exclamation-circle"></i> Counter-offer received
+                                    </span>
+                                @elseif($req->isAccepted() && !$req->order_id)
+                                    <span class="meta-payment">
+                                        <i class="fas fa-credit-card"></i> Awaiting payment
+                                    </span>
+                                @elseif($req->order_id && $order)
+                                    <span class="order-status-chip order-status-{{ $order->status }}">
+                                        <i class="fas fa-box"></i> {{ ucfirst(str_replace('_', ' ', $order->status)) }}
+                                    </span>
                                 @endif
                             </div>
                             @if($req->description)
@@ -164,7 +163,9 @@
                         {{-- Right --}}
                         <div class="request-right">
                             <div class="request-price">RM {{ number_format($req->finalPrice(), 2) }}</div>
+
                             @if($req->order_id && $order)
+                                {{-- Paid — show order status + link --}}
                                 <span class="order-status-chip order-status-{{ $order->status }}">
                                     {{ ucfirst(str_replace('_', ' ', $order->status)) }}
                                 </span>
@@ -178,11 +179,11 @@
                                     {{ $req->statusLabel() }}
                                 </span>
                                 @if($req->isAccepted())
-                                <a href="{{ route('custom-orders.pay', $req->id) }}"
-                                   class="pay-btn"
-                                   onclick="event.stopPropagation()">
-                                    <i class="fas fa-credit-card"></i> Pay Now
-                                </a>
+                                    <a href="{{ route('custom-orders.pay', $req->id) }}"
+                                       class="pay-btn"
+                                       onclick="event.stopPropagation()">
+                                        <i class="fas fa-credit-card"></i> Pay Now
+                                    </a>
                                 @endif
                             @endif
                         </div>
@@ -270,15 +271,18 @@
                                     <i class="fas fa-clock"></i>
                                     {{ $bulk->created_at->diffForHumans() }}
                                 </span>
-                                @if($bulk->status === 'accepted' && !$bulk->order_id)
-                                <span class="meta-payment">
-                                    <i class="fas fa-credit-card"></i> Awaiting payment
-                                </span>
-                                @endif
-                                @if($bulk->order_id && $order)
-                                <span class="order-status-chip order-status-{{ $order->status }}">
-                                    <i class="fas fa-box"></i> {{ ucfirst(str_replace('_', ' ', $order->status)) }}
-                                </span>
+                                @if($bulk->status === 'pending')
+                                    <span class="meta-pending">
+                                        <i class="fas fa-hourglass-half"></i> Waiting for seller
+                                    </span>
+                                @elseif($bulk->status === 'accepted' && !$bulk->order_id)
+                                    <span class="meta-payment">
+                                        <i class="fas fa-credit-card"></i> Awaiting payment
+                                    </span>
+                                @elseif($bulk->order_id && $order)
+                                    <span class="order-status-chip order-status-{{ $order->status }}">
+                                        <i class="fas fa-box"></i> {{ ucfirst(str_replace('_', ' ', $order->status)) }}
+                                    </span>
                                 @endif
                             </div>
                             @if($bulk->description)
@@ -290,7 +294,9 @@
                         <div class="request-right">
                             <div class="request-price">RM {{ number_format($total, 2) }}</div>
                             <div class="bulk-qty-note">RM {{ number_format($price, 2) }} × {{ $bulk->quantity }}</div>
+
                             @if($bulk->order_id && $order)
+                                {{-- Paid — show order status + link --}}
                                 <span class="order-status-chip order-status-{{ $order->status }}">
                                     {{ ucfirst(str_replace('_', ' ', $order->status)) }}
                                 </span>
@@ -316,11 +322,11 @@
                                 @endphp
                                 <span class="status-badge {{ $bulkColor }}">{{ $bulkLabel }}</span>
                                 @if($bulk->status === 'accepted' && !$bulk->order_id)
-                                <a href="{{ route('bulk-orders.pay', $bulk->id) }}"
-                                   class="pay-btn"
-                                   onclick="event.stopPropagation()">
-                                    <i class="fas fa-credit-card"></i> Pay Now
-                                </a>
+                                    <a href="{{ route('bulk-orders.pay', $bulk->id) }}"
+                                       class="pay-btn"
+                                       onclick="event.stopPropagation()">
+                                        <i class="fas fa-credit-card"></i> Pay Now
+                                    </a>
                                 @endif
                             @endif
                         </div>
