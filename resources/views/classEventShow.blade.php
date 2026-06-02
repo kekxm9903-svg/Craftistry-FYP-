@@ -6,6 +6,228 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="{{ asset('css/classEventShow.css') }}">
+<style>
+/* ── Form Modal ── */
+.form-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s;
+}
+
+.form-modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.form-modal {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    overflow: hidden;
+    transform: translateY(20px);
+    transition: transform .25s;
+}
+
+.form-modal-overlay.open .form-modal {
+    transform: translateY(0);
+}
+
+.form-modal-header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.form-modal-header h3 {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-modal-close {
+    background: rgba(255,255,255,.2);
+    border: none;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: background .15s;
+}
+
+.form-modal-close:hover { background: rgba(255,255,255,.35); }
+
+.form-modal-body {
+    padding: 24px;
+}
+
+.form-modal-body p {
+    font-size: 13px;
+    color: #6b6b8a;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.form-modal-body strong {
+    color: #1a1a2e;
+}
+
+.form-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.form-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: #f8f7ff;
+    border-radius: 10px;
+    border: 1px solid #e0e0ee;
+}
+
+.form-step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.form-step-text {
+    font-size: 13px;
+    color: #1a1a2e;
+    line-height: 1.4;
+    padding-top: 3px;
+}
+
+.form-modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-open-form {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: opacity .15s;
+}
+
+.btn-open-form:hover { opacity: .88; }
+
+.btn-confirm-enroll {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: opacity .15s;
+    opacity: .45;
+    pointer-events: none;
+}
+
+.btn-confirm-enroll.enabled {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.btn-confirm-enroll:hover { opacity: .88; }
+
+.form-confirm-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #f0fdf4;
+    border: 1.5px solid #bbf7d0;
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.form-confirm-check input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    cursor: pointer;
+    accent-color: #16a34a;
+}
+
+.form-confirm-check label {
+    font-size: 12px;
+    color: #166534;
+    font-weight: 600;
+    cursor: pointer;
+    line-height: 1.4;
+}
+
+.btn-cancel-modal {
+    width: 100%;
+    padding: 10px;
+    background: none;
+    border: 1.5px solid #e0e0ee;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #6b6b8a;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s, color .15s;
+}
+
+.btn-cancel-modal:hover {
+    border-color: #667eea;
+    color: #667eea;
+}
+</style>
 @endsection
 
 @section('content')
@@ -57,7 +279,7 @@
                 </span>
             </div>
 
-            {{-- ── Social Links — only shown if at least one link is set ── --}}
+            {{-- Social Links --}}
             @if($classEvent->instagram_url || $classEvent->facebook_url || $classEvent->x_url)
             <div class="sp-card" style="margin-top:16px;">
                 <div class="sp-card-header">
@@ -332,6 +554,7 @@
                                 data-event-id="{{ $classEvent->id }}"
                                 data-enrolled="{{ $isEnrolled ? 'true' : 'false' }}"
                                 data-form-url="{{ $classEvent->enrollment_form_url ?? '' }}"
+                                data-require-form="{{ $classEvent->require_form ? 'true' : 'false' }}"
                                 data-cancellation-open="{{ $classEvent->is_cancellation_open ? 'true' : 'false' }}"
                                 data-cancellation-deadline="{{ $classEvent->formatted_cancellation_deadline ?? '' }}"
                                 data-is-paid="{{ $classEvent->is_paid && $classEvent->price > 0 ? 'true' : 'false' }}"
@@ -342,15 +565,21 @@
                                 @elseif($classEvent->is_paid && $classEvent->price > 0)
                                     <i class="fas fa-lock" id="enrollIcon"></i>
                                     <span id="enrollText">Pay & Enroll — RM {{ number_format($classEvent->price, 2) }}</span>
+                                @elseif($classEvent->require_form && $classEvent->enrollment_form_url)
+                                    <i class="fas fa-wpforms" id="enrollIcon"></i>
+                                    <span id="enrollText">Fill Form & Enroll</span>
                                 @else
                                     <i class="fas fa-user-plus" id="enrollIcon"></i>
-                                    <span id="enrollText">
-                                        @if($classEvent->requires_form) Enroll via Form @else Enroll Now @endif
-                                    </span>
+                                    <span id="enrollText">Enroll Now</span>
                                 @endif
                             </button>
-                            @if(!$isEnrolled && $classEvent->requires_form && !($classEvent->is_paid && $classEvent->price > 0))
-                            <p class="form-hint"><i class="fas fa-info-circle"></i> An enrollment form will open in a new tab after you enroll.</p>
+
+                            {{-- Form required hint --}}
+                            @if(!$isEnrolled && $classEvent->require_form && $classEvent->enrollment_form_url && !($classEvent->is_paid && $classEvent->price > 0))
+                            <p class="form-hint">
+                                <i class="fas fa-info-circle"></i>
+                                An enrollment form is required. You must fill it before your enrollment is confirmed.
+                            </p>
                             @endif
                         @endif
                     </div>
@@ -364,12 +593,64 @@
 
 </div>{{-- /show-page --}}
 
+{{-- ══ Form Required Modal ══ --}}
+<div class="form-modal-overlay" id="formModalOverlay">
+    <div class="form-modal">
+        <div class="form-modal-header">
+            <h3><i class="fas fa-wpforms"></i> Enrollment Form Required</h3>
+            <button class="form-modal-close" onclick="closeFormModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="form-modal-body">
+            <p>The instructor requires you to <strong>fill in the enrollment form</strong> before enrolling in this class. Please complete the form first, then confirm your enrollment below.</p>
+
+            <div class="form-steps">
+                <div class="form-step">
+                    <div class="form-step-num">1</div>
+                    <div class="form-step-text">Click <strong>Open Form</strong> to open the enrollment form in a new tab.</div>
+                </div>
+                <div class="form-step">
+                    <div class="form-step-num">2</div>
+                    <div class="form-step-text">Fill in and <strong>submit</strong> the form completely.</div>
+                </div>
+                <div class="form-step">
+                    <div class="form-step-num">3</div>
+                    <div class="form-step-text">Come back here, tick the confirmation box, and click <strong>Confirm Enrollment</strong>.</div>
+                </div>
+            </div>
+
+            <div class="form-modal-actions">
+
+                <button class="btn-open-form" id="btnOpenForm" onclick="openEnrollForm()">
+                    <i class="fas fa-external-link-alt"></i> Open Enrollment Form
+                </button>
+
+                <div class="form-confirm-check" id="formConfirmCheck" style="display:none;">
+                    <input type="checkbox" id="formFilledCheck" onchange="toggleConfirmBtn(this)">
+                    <label for="formFilledCheck">I have filled in and submitted the enrollment form.</label>
+                </div>
+
+                <button class="btn-confirm-enroll" id="btnConfirmEnroll" onclick="confirmEnrollAfterForm()">
+                    <i class="fas fa-check-circle"></i> Confirm Enrollment
+                </button>
+
+                <button class="btn-cancel-modal" onclick="closeFormModal()">
+                    Cancel
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 const EVENT_ID     = {{ $classEvent->id }};
 const CSRF_TOKEN   = '{{ csrf_token() }}';
 const ENROLL_URL   = '{{ route("class.event.enroll", $classEvent->id) }}';
 const UNENROLL_URL = '{{ route("class.event.unenroll", $classEvent->id) }}';
 
+// ── Toast ──────────────────────────────────────────────────────────────
 function showToast(message, type) {
     const existing = document.getElementById('ceShowToast');
     if (existing) existing.remove();
@@ -404,17 +685,58 @@ function showToast(message, type) {
     }, 4000);
 }
 
-async function handleEnroll() {
+// ── Form Modal ─────────────────────────────────────────────────────────
+function openFormModal() {
+    const overlay = document.getElementById('formModalOverlay');
+    // Reset state
+    document.getElementById('formFilledCheck').checked = false;
+    document.getElementById('formConfirmCheck').style.display = 'none';
+    document.getElementById('btnConfirmEnroll').classList.remove('enabled');
+    overlay.classList.add('open');
+}
+
+function closeFormModal() {
+    document.getElementById('formModalOverlay').classList.remove('open');
+}
+
+function openEnrollForm() {
+    const btn = document.getElementById('enrollBtn');
+    const formUrl = btn.dataset.formUrl;
+    window.open(formUrl, '_blank');
+    // Show the confirmation checkbox after they click open form
+    document.getElementById('formConfirmCheck').style.display = 'flex';
+}
+
+function toggleConfirmBtn(checkbox) {
+    const confirmBtn = document.getElementById('btnConfirmEnroll');
+    if (checkbox.checked) {
+        confirmBtn.classList.add('enabled');
+    } else {
+        confirmBtn.classList.remove('enabled');
+    }
+}
+
+// Close modal when clicking overlay background
+document.getElementById('formModalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeFormModal();
+});
+
+// ── Main enroll handler ────────────────────────────────────────────────
+function handleEnroll() {
     const btn         = document.getElementById('enrollBtn');
-    const iconEl      = document.getElementById('enrollIcon');
-    const textEl      = document.getElementById('enrollText');
     const isEnrolled  = btn.dataset.enrolled === 'true';
     const isPaid      = btn.dataset.isPaid === 'true';
-    const checkoutUrl = btn.dataset.checkoutUrl || '';
+    const requireForm = btn.dataset.requireForm === 'true';
     const formUrl     = btn.dataset.formUrl || '';
+    const checkoutUrl = btn.dataset.checkoutUrl || '';
 
-    if (isPaid && !isEnrolled) { window.location.href = checkoutUrl; return; }
+    // ── Paid class → go to checkout
+    if (isPaid && !isEnrolled) {
+        window.location.href = checkoutUrl;
+        return;
+    }
 
+    // ── Cancel enrollment
     if (isEnrolled) {
         const cancellationOpen     = btn.dataset.cancellationOpen !== 'false';
         const cancellationDeadline = btn.dataset.cancellationDeadline || '';
@@ -426,41 +748,67 @@ async function handleEnroll() {
             const confirmed = confirm('Are you sure you want to cancel?\n\nA refund will be issued to your original payment method.');
             if (!confirmed) return;
         }
+        doEnrollRequest(true, false, '');
+        return;
     }
+
+    // ── Free enroll with required form → show modal first
+    if (requireForm && formUrl) {
+        openFormModal();
+        return;
+    }
+
+    // ── Normal free enroll (no form required)
+    doEnrollRequest(false, false, '');
+}
+
+// Called when user ticks checkbox and clicks Confirm Enrollment in modal
+async function confirmEnrollAfterForm() {
+    closeFormModal();
+    await doEnrollRequest(false, true, document.getElementById('enrollBtn').dataset.formUrl);
+}
+
+// ── Core enroll/unenroll fetch ─────────────────────────────────────────
+async function doEnrollRequest(isUnenroll, hasForm, formUrl) {
+    const btn    = document.getElementById('enrollBtn');
+    const iconEl = document.getElementById('enrollIcon');
+    const textEl = document.getElementById('enrollText');
+    const isPaid = btn.dataset.isPaid === 'true';
 
     btn.disabled       = true;
     iconEl.className   = 'fas fa-spinner fa-spin';
-    textEl.textContent = isEnrolled ? 'Cancelling...' : 'Enrolling...';
+    textEl.textContent = isUnenroll ? 'Cancelling...' : 'Enrolling...';
 
     try {
-        const response = await fetch(isEnrolled ? UNENROLL_URL : ENROLL_URL, {
-            method: isEnrolled ? 'DELETE' : 'POST',
+        const response = await fetch(isUnenroll ? UNENROLL_URL : ENROLL_URL, {
+            method: isUnenroll ? 'DELETE' : 'POST',
             headers: {
-                'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json',
-                'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN'    : CSRF_TOKEN,
+                'Accept'          : 'application/json',
+                'Content-Type'    : 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
             },
         });
 
         const data = await response.json();
 
-        if (data.requires_payment && data.redirect) { window.location.href = data.redirect; return; }
+        if (data.requires_payment && data.redirect) {
+            window.location.href = data.redirect;
+            return;
+        }
 
         if (data.success) {
             const nowEnrolled = data.is_enrolled;
-            setEnrollButton(nowEnrolled, !!formUrl, isPaid);
+            setEnrollButton(nowEnrolled, hasForm, isPaid);
             updateParticipantCount(data.participant_count);
-            if (nowEnrolled && formUrl) {
-                showToast('Enrolled! Please complete the enrollment form that just opened.', 'success');
-                setTimeout(() => window.open(formUrl, '_blank'), 400);
-            } else {
-                showToast(data.message, 'success');
-            }
+            showToast(data.message, 'success');
         } else {
-            setEnrollButton(isEnrolled, !!formUrl, isPaid);
+            // Restore button state
+            setEnrollButton(isUnenroll ? true : false, hasForm, isPaid);
             showToast(data.message || 'Something went wrong. Please try again.', 'error');
         }
     } catch (err) {
-        setEnrollButton(isEnrolled, !!formUrl, isPaid);
+        setEnrollButton(isUnenroll ? true : false, hasForm, isPaid);
         showToast('Network error. Please check your connection and try again.', 'error');
     } finally {
         btn.disabled = false;
@@ -472,29 +820,31 @@ function setEnrollButton(enrolled, hasForm, isPaid) {
     const iconEl = document.getElementById('enrollIcon');
     const textEl = document.getElementById('enrollText');
     if (!btn) return;
+
     btn.dataset.enrolled = enrolled ? 'true' : 'false';
+
     if (enrolled) {
-        btn.className = 'btn-enroll btn-enrolled';
+        btn.className    = 'btn-enroll btn-enrolled';
         iconEl.className = 'fas fa-user-check';
         textEl.textContent = 'Enrolled — Cancel';
     } else if (isPaid) {
-        btn.className = 'btn-enroll btn-paid';
+        btn.className    = 'btn-enroll btn-paid';
         iconEl.className = 'fas fa-lock';
         textEl.textContent = 'Pay & Enroll';
+    } else if (hasForm) {
+        btn.className    = 'btn-enroll';
+        iconEl.className = 'fas fa-wpforms';
+        textEl.textContent = 'Fill Form & Enroll';
     } else {
-        btn.className = 'btn-enroll';
+        btn.className    = 'btn-enroll';
         iconEl.className = 'fas fa-user-plus';
-        textEl.textContent = hasForm ? 'Enroll via Form' : 'Enroll Now';
+        textEl.textContent = 'Enroll Now';
     }
 }
 
 function updateParticipantCount(count) {
     const el = document.getElementById('participantCountDisplay');
     if (el) el.textContent = count + ' participant' + (count !== 1 ? 's' : '') + ' enrolled';
-}
-
-function handleContact() {
-    alert('Contact feature coming soon!');
 }
 </script>
 
