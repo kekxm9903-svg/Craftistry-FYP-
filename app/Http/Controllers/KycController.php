@@ -106,45 +106,35 @@ class KycController extends Controller
 
     private function compareFaces(string $icPath, string $selfiePath): array
     {
-        $scriptPath = base_path('compare_faces.py');
+        $apiKey    = config('services.facepp.key');
+        $apiSecret = config('services.facepp.secret');
 
-        if (!file_exists($scriptPath)) {
-            return ['success' => false, 'error' => 'KYC script not found. Please contact support.'];
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, 'https://api-us.faceplusplus.com/facepp/v3/compare');
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, [
+            'api_key'     => $apiKey,
+            'api_secret'  => $apiSecret,
+            'image_file1' => new \CURLFile($icPath),
+            'image_file2' => new \CURLFile($selfiePath),
+        ]);
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        Log::debug('KYC Face++ raw response', ['response' => $response]);
+
+        $data = json_decode($response, true);
+
+        if (isset($data['error_message'])) {
+            return ['success' => false, 'error' => $data['error_message']];
         }
 
-        $command = "\"C:\\laragon\\bin\\python\\python-3.10\\python.exe\" "
-                 . escapeshellarg($scriptPath) . ' '
-                 . escapeshellarg($icPath)     . ' '
-                 . escapeshellarg($selfiePath) . ' 2>&1';
-
-        $output = shell_exec($command);
-
-        Log::debug('KYC Python output', ['output' => $output]);
-
-        if (empty($output)) {
-            return ['success' => false, 'error' => 'Face verification service unavailable. Please try again.'];
-        }
-
-        $json = null;
-        foreach (array_reverse(explode("\n", trim($output))) as $line) {
-            $line = trim($line);
-            if (str_starts_with($line, '{')) {
-                $json = $line;
-                break;
-            }
-        }
-
-        if (!$json) {
-            Log::error('KYC: No JSON in Python output', ['output' => $output]);
+        if (!isset($data['confidence'])) {
             return ['success' => false, 'error' => 'Face verification failed. Please try again.'];
         }
 
-        $data = json_decode($json, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return ['success' => false, 'error' => 'Face verification failed. Please try again.'];
-        }
-
-        return $data;
+        return ['success' => true, 'similarity' => $data['confidence']];
     }
 }
