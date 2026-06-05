@@ -283,12 +283,31 @@ class ClassEventController extends Controller
             try {
                 \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
 
-                $session       = \Stripe\Checkout\Session::retrieve($booking->stripe_session_id);
+                // Retrieve session with payment_intent expanded including latest_charge
+                $session = \Stripe\Checkout\Session::retrieve([
+                    'id'     => $booking->stripe_session_id,
+                    'expand' => ['payment_intent', 'payment_intent.latest_charge'],
+                ]);
+
                 $paymentIntent = $session->payment_intent;
 
-                if ($paymentIntent) {
+                if (!$paymentIntent) {
+                    throw new \Exception('No payment intent found. Please contact support for a manual refund.');
+                }
+
+                // Get the charge ID — works for both card and GrabPay
+                if (is_object($paymentIntent) && isset($paymentIntent->latest_charge)) {
+                    $charge   = $paymentIntent->latest_charge;
+                    $chargeId = is_string($charge) ? $charge : $charge->id;
                     \Stripe\Refund::create([
-                        'payment_intent' => $paymentIntent,
+                        'charge' => $chargeId,
+                        'reason' => 'requested_by_customer',
+                    ]);
+                } else {
+                    // Fallback: refund via payment_intent ID
+                    $piId = is_object($paymentIntent) ? $paymentIntent->id : $paymentIntent;
+                    \Stripe\Refund::create([
+                        'payment_intent' => $piId,
                         'reason'         => 'requested_by_customer',
                     ]);
                 }

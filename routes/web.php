@@ -299,6 +299,3 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/custom-orders/{customOrder}',                 [CustomOrderController::class, 'show'])         ->name('custom-orders.show');
     Route::get('/custom-orders',                               [CustomOrderController::class, 'index'])        ->name('custom-orders.index');
 });
-
-// --- STRIPE WEBHOOK (outside auth) ---
-Route::post('/webhook/stripe', [ClassCheckoutController::class, 'webhook'])->name('stripe.webhook');

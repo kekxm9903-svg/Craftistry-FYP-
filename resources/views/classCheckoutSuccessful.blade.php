@@ -560,38 +560,6 @@ body {
     </div>
     @endif
 
-    {{-- ══ WHAT'S NEXT ══ --}}
-    @if($booking && $booking->classEvent && $booking->classEvent->enrollment_form_url)
-    <div class="next-strip">
-        <div class="next-strip-icon">
-            <i class="fas fa-wpforms"></i>
-        </div>
-        <div class="next-strip-body">
-            <div class="next-strip-title">Complete Your Enrollment Form</div>
-            <div class="next-strip-desc">
-                The instructor has attached an enrollment form. Please fill it in before the class starts.
-                <br>
-                <a href="{{ $booking->classEvent->enrollment_form_url }}" target="_blank"
-                   style="color:var(--primary);font-weight:600;font-size:12px;">
-                    Fill Enrollment Form <i class="fas fa-external-link-alt" style="font-size:10px;"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-    @else
-    <div class="next-strip">
-        <div class="next-strip-icon">
-            <i class="fas fa-bell"></i>
-        </div>
-        <div class="next-strip-body">
-            <div class="next-strip-title">What Happens Next?</div>
-            <div class="next-strip-desc">
-                Check <strong>My Classes</strong> for class details. The instructor may share platform links or venue info closer to the date.
-            </div>
-        </div>
-    </div>
-    @endif
-
     {{-- ══ ACTION BUTTONS ══ --}}
     <div class="action-row">
         <a href="{{ route('my.classes') }}" class="btn-primary">

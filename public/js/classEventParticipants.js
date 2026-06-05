@@ -7,7 +7,6 @@
 // ── Open modal & fetch participants ─────────────────────────────────────────
 
 function viewParticipants(eventId, eventTitle) {
-    // Reset state
     document.getElementById('participantsEventTitle').textContent     = eventTitle;
     document.getElementById('participantsTotalCount').textContent      = '0';
     document.getElementById('participantsLoading').style.display       = 'block';
@@ -16,14 +15,11 @@ function viewParticipants(eventId, eventTitle) {
     document.getElementById('participantsTableBody').innerHTML         = '';
     document.getElementById('participantsEmptyMsg').textContent        = 'No one has booked this class/event yet.';
 
-    // Store current event ID on modal element for drop function
     document.getElementById('participantsModal').dataset.eventId = eventId;
 
-    // Open Bootstrap modal
     var bsModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('participantsModal'));
     bsModal.show();
 
-    // Fetch from controller
     fetch(`${participantsBaseRoute}/${eventId}/participants`, {
         method: 'GET',
         headers: {
@@ -85,7 +81,7 @@ function renderParticipants(data) {
                 '</td>' +
                 '<td class="participants-action-cell">' +
                     '<button class="btn-drop-participant" ' +
-                        'onclick="dropParticipant(' + p.booking_id + ', \'' + escapeHtml(p.name) + '\')" ' +
+                        'onclick="openDropConfirmModal(' + p.booking_id + ', \'' + escapeHtml(p.name) + '\')" ' +
                         'title="Remove participant">' +
                         '<i class="bi bi-person-dash-fill"></i>' +
                     '</button>' +
@@ -95,45 +91,51 @@ function renderParticipants(data) {
     }).join('');
 }
 
-// ── Close modal ──────────────────────────────────────────────────────────────
+// ── Close participants modal ──────────────────────────────────────────────────
 
 function closeParticipantsModal() {
     var bsModal = bootstrap.Modal.getInstance(document.getElementById('participantsModal'));
     if (bsModal) bsModal.hide();
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Drop Participant Custom Modal ─────────────────────────────────────────────
 
-function getInitials(name) {
-    if (!name) return '?';
-    var parts = name.trim().split(' ');
-    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+let _pendingDropBookingId = null;
+let _pendingDropEventId   = null;
+
+function openDropConfirmModal(bookingId, participantName) {
+    _pendingDropBookingId = bookingId;
+    _pendingDropEventId   = document.getElementById('participantsModal').dataset.eventId;
+
+    document.getElementById('dropParticipantName').textContent = participantName;
+    const modal = document.getElementById('dropConfirmModal');
+    modal.style.display = 'flex';
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-        .replace(/&/g,  '&amp;')
-        .replace(/</g,  '&lt;')
-        .replace(/>/g,  '&gt;')
-        .replace(/"/g,  '&quot;')
-        .replace(/'/g,  '&#39;');
+function closeDropConfirmModal() {
+    document.getElementById('dropConfirmModal').style.display = 'none';
+    _pendingDropBookingId = null;
+    _pendingDropEventId   = null;
 }
 
-// ── Drop a participant (artist only) ────────────────────────────────────────
+function confirmDropParticipant() {
+    const bookingId = _pendingDropBookingId;
+    const eventId   = _pendingDropEventId;
+    closeDropConfirmModal();
+    if (bookingId && eventId) {
+        executeDrop(bookingId, eventId);
+    }
+}
 
-async function dropParticipant(bookingId, participantName) {
-    if (!confirm('Remove ' + participantName + ' from this class/event?')) return;
+// ── Execute drop after confirm ────────────────────────────────────────────────
 
-    const modal   = document.getElementById('participantsModal');
-    const eventId = modal.dataset.eventId;
-    const row     = document.getElementById('participant-row-' + bookingId);
-    const btn     = row ? row.querySelector('.btn-drop-participant') : null;
+async function executeDrop(bookingId, eventId) {
+    const row = document.getElementById('participant-row-' + bookingId);
+    const btn = row ? row.querySelector('.btn-drop-participant') : null;
 
     if (btn) {
         btn.disabled  = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
     }
 
     try {
@@ -156,20 +158,16 @@ async function dropParticipant(bookingId, participantName) {
                 row.style.transform  = 'translateX(20px)';
                 setTimeout(function() {
                     row.remove();
-                    // Re-number remaining rows
                     document.querySelectorAll('#participantsTableBody tr').forEach(function(r, i) {
                         var numCell = r.querySelector('.participants-row-number');
                         if (numCell) numCell.textContent = i + 1;
                     });
-                    // Update total count
                     document.getElementById('participantsTotalCount').textContent = data.participant_count;
-                    // Show empty state if none left
                     if (data.participant_count === 0) {
                         document.getElementById('participantsTableWrapper').style.display = 'none';
                         document.getElementById('participantsEmpty').style.display        = 'block';
                         document.getElementById('participantsEmptyMsg').textContent       = 'No one has booked this class/event yet.';
                     }
-                    // Update participant badge on the card
                     var card = document.querySelector('.class-card[data-id="' + eventId + '"]');
                     if (card) {
                         var badge = card.querySelector('.participant-count-badge span');
@@ -197,6 +195,28 @@ async function dropParticipant(bookingId, participantName) {
     }
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function getInitials(name) {
+    if (!name) return '?';
+    var parts = name.trim().split(' ');
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g,  '&amp;')
+        .replace(/</g,  '&lt;')
+        .replace(/>/g,  '&gt;')
+        .replace(/"/g,  '&quot;')
+        .replace(/'/g,  '&#39;');
+}
+
 // Export
-window.viewParticipants       = viewParticipants;
-window.closeParticipantsModal = closeParticipantsModal;
+window.viewParticipants         = viewParticipants;
+window.closeParticipantsModal   = closeParticipantsModal;
+window.openDropConfirmModal     = openDropConfirmModal;
+window.closeDropConfirmModal    = closeDropConfirmModal;
+window.confirmDropParticipant   = confirmDropParticipant;

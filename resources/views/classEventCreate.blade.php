@@ -389,12 +389,12 @@
                         <div class="ce-radio-opt">
                             <input type="radio" id="requireFormNo" name="require_form" value="0"
                                    {{ old('require_form','0') == '0' ? 'checked' : '' }}>
-                            <label for="requireFormNo"><i class="bi bi-x-circle-fill" style="color:var(--muted);"></i> No — direct enroll</label>
+                            <label for="requireFormNo">No — direct enroll</label>
                         </div>
                         <div class="ce-radio-opt">
                             <input type="radio" id="requireFormYes" name="require_form" value="1"
                                    {{ old('require_form') == '1' ? 'checked' : '' }}>
-                            <label for="requireFormYes"><i class="bi bi-file-earmark-text-fill" style="color:var(--primary);"></i> Yes — Google Form</label>
+                            <label for="requireFormYes">Yes — Google Form</label>
                         </div>
                     </div>
                     <div class="ce-conditional {{ old('require_form') == '1' ? 'active' : '' }}" id="formUrlField">

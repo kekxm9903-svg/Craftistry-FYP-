@@ -29,7 +29,6 @@
                         {{ strtoupper(substr($artist->user->fullname, 0, 1)) }}
                     </div>
                 @endif
-
             </div>
 
             <div class="artist-info">
@@ -280,11 +279,12 @@
                         </div>
                     </div>
                     <div class="artwork-info">
+                        {{-- Price block: show promo price if active, else regular price --}}
                         @if($artwork->promotion_price !== null)
                         <div class="price-block promo-active">
                             <div class="price-row">
                                 <span class="price-promo">{{ $artwork->formatted_promotion_price }}</span>
-                                <span class="price-discount-badge">-{{ $artwork->promotion_discount }}%</span>
+                                <span class="price-discount-badge">-{{ number_format($artwork->promotion_discount, 0) }}%</span>
                             </div>
                             <div class="price-original">{{ $artwork->formatted_price }}</div>
                         </div>
@@ -490,6 +490,7 @@
                     <textarea id="editProductDescription" name="product_description" rows="4" maxlength="2000"></textarea>
                     <span class="char-count" id="editSellDescCount">0 / 2000 characters</span>
                 </div>
+
                 {{-- BULK SELL --}}
                 <div class="form-group bulk-sell-box">
                     <label class="radio-label" style="margin-bottom:0;">
@@ -514,13 +515,56 @@
                                 <input type="number" id="editBulkDiscount" name="bulk_sell_discount" placeholder="e.g. 10" min="1" max="99" step="0.1" style="padding-right:36px;">
                                 <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#718096;font-weight:600;font-size:0.9rem;">%</span>
                             </div>
-                            <small style="color:#718096;font-size:0.78rem;margin-top:4px;display:block;">Percentage off the unit price</small>
                         </div>
                     </div>
                     <div id="editBulkSellPreview" style="display:none;margin-top:12px;padding:10px 14px;background:#ede9fe;border-radius:6px;font-size:0.82rem;color:#5b21b6;">
                         <i class="fas fa-tag"></i> <span id="editBulkSellPreviewText"></span>
                     </div>
                 </div>
+
+                {{-- ── PROMOTION ── --}}
+                <div class="form-group bulk-sell-box" style="margin-top:16px;">
+                    <label class="radio-label" style="margin-bottom:0;">
+                        <input type="checkbox" id="editPromoEnabled" name="promotion_enabled" value="1"
+                               onchange="toggleEditPromoFields(this)">
+                        <span class="bulk-sell-label"><i class="fas fa-fire"></i> Enable Promotion</span>
+                    </label>
+                    <small style="color:#718096;font-size:0.8rem;margin-top:4px;display:block;margin-left:23px;">
+                        Set a promotional discount with an optional time period
+                    </small>
+                </div>
+                <div id="editPromoFields" style="display:none;border:1px solid #fde68a;border-radius:8px;padding:16px;margin-top:-8px;background:#fffbeb;">
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label for="editPromoDiscount">Promotion Discount (%) <span class="required">*</span></label>
+                        <div style="position:relative;">
+                            <input type="number" id="editPromoDiscount" name="promotion_discount"
+                                   placeholder="e.g. 15" min="1" max="99" step="0.1"
+                                   style="padding-right:36px;"
+                                   oninput="updateEditPromoPreview()">
+                            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#718096;font-weight:600;font-size:0.9rem;">%</span>
+                        </div>
+                    </div>
+                    <div id="editPromoPricePreview" style="display:none;margin-bottom:12px;padding:10px 14px;background:#fef3c7;border-radius:6px;font-size:0.85rem;color:#92400e;">
+                        <i class="fas fa-tag"></i>
+                        <span id="editPromoOriginalPrice" style="text-decoration:line-through;margin-right:6px;"></span>
+                        <i class="fas fa-arrow-right" style="font-size:11px;margin-right:6px;"></i>
+                        <strong id="editPromoFinalPrice"></strong>
+                        <span id="editPromoSaving" style="margin-left:8px;color:#b45309;font-size:0.78rem;"></span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="editPromoStartsAt">Start Date <span style="font-size:0.78rem;font-weight:400;color:#718096;">(Optional)</span></label>
+                            <input type="datetime-local" id="editPromoStartsAt" name="promotion_starts_at">
+                            <small style="color:#718096;font-size:0.78rem;margin-top:4px;display:block;">Leave blank to start immediately</small>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="editPromoEndsAt">End Date <span style="font-size:0.78rem;font-weight:400;color:#718096;">(Optional)</span></label>
+                            <input type="datetime-local" id="editPromoEndsAt" name="promotion_ends_at">
+                            <small style="color:#718096;font-size:0.78rem;margin-top:4px;display:block;">Leave blank for no expiry</small>
+                        </div>
+                    </div>
+                </div>
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" onclick="closeEditSellModal()">Cancel</button>
@@ -639,12 +683,45 @@ function updateBulkPreview(qtyId, discountId, previewId, previewTextId) {
     }
 }
 
+// ── Promotion toggle for edit modal ──
+function toggleEditPromoFields(checkbox) {
+    const fields = document.getElementById('editPromoFields');
+    fields.style.display = checkbox.checked ? 'block' : 'none';
+    if (!checkbox.checked) {
+        document.getElementById('editPromoDiscount').value = '';
+        document.getElementById('editPromoStartsAt').value = '';
+        document.getElementById('editPromoEndsAt').value   = '';
+        document.getElementById('editPromoPricePreview').style.display = 'none';
+    }
+}
+
+// ── Promo price live preview in edit modal ──
+function updateEditPromoPreview() {
+    const price    = parseFloat(document.getElementById('editProductPrice').value) || 0;
+    const discount = parseFloat(document.getElementById('editPromoDiscount').value) || 0;
+    const preview  = document.getElementById('editPromoPricePreview');
+
+    if (price > 0 && discount > 0 && discount < 100) {
+        const finalPrice = price * (1 - discount / 100);
+        const saving     = price - finalPrice;
+        document.getElementById('editPromoOriginalPrice').textContent = 'RM ' + price.toFixed(2);
+        document.getElementById('editPromoFinalPrice').textContent    = 'RM ' + finalPrice.toFixed(2);
+        document.getElementById('editPromoSaving').textContent        = '(Save RM ' + saving.toFixed(2) + ')';
+        preview.style.display = 'block';
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     ['editBulkMinQty', 'editBulkDiscount'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', () =>
             updateBulkPreview('editBulkMinQty', 'editBulkDiscount', 'editBulkSellPreview', 'editBulkSellPreviewText')
         );
     });
+
+    // Re-run promo preview if price changes while promo panel is open
+    document.getElementById('editProductPrice')?.addEventListener('input', updateEditPromoPreview);
 
     @if(session('success'))
         showSuccessPopup('{{ session('success') }}');

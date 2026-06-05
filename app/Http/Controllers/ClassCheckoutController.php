@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ClassEvent;
 use App\Models\Booking;
+use App\Services\NotificationService;
 use Stripe\Stripe;
 use Stripe\Checkout\Session;
+use Stripe\Refund;
 
 class ClassCheckoutController extends Controller
 {
@@ -21,19 +23,14 @@ class ClassCheckoutController extends Controller
                           ->where('user_id', $user->id)
                           ->first();
 
-        if ($booking && $booking->isPaid()) {
-            return redirect()->route('my.classes')
+        if ($booking && $booking->payment_status === 'paid') {
+            return redirect()->route('class.event.show', $classEventId)
                              ->with('info', 'You are already enrolled in this class.');
         }
 
-        // Free class — enroll directly, skip checkout
+        // Free class — should not reach here, but guard anyway
         if (!$classEvent->is_paid || !$classEvent->price) {
-            Booking::firstOrCreate(
-                ['class_event_id' => $classEvent->id, 'user_id' => $user->id],
-                ['payment_status' => 'free', 'booked_at' => now()]
-            );
-            return redirect()->route('my.classes')
-                             ->with('success', 'You have successfully enrolled in ' . $classEvent->title . '!');
+            return redirect()->route('class.event.show', $classEventId);
         }
 
         return view('classCheckout', compact('classEvent'));
@@ -47,16 +44,22 @@ class ClassCheckoutController extends Controller
 
         Stripe::setApiKey(config('services.stripe.secret'));
 
-        // Create pending booking
+        // Create or update pending booking
         $booking = Booking::firstOrCreate(
             ['class_event_id' => $classEvent->id, 'user_id' => $user->id],
             ['payment_status' => 'pending', 'booked_at' => now()]
         );
 
+        // If booking exists but was cancelled/pending, reset it
+        if ($booking->payment_status !== 'paid') {
+            $booking->update(['payment_status' => 'pending']);
+        }
+
         // Create Stripe session
+        // Note: do NOT include 'fpx' — it causes card to disappear in sandbox
         $session = Session::create([
             'payment_method_types' => ['card', 'fpx', 'grabpay'],
-            'line_items' => [[
+            'line_items'           => [[
                 'price_data' => [
                     'currency'     => 'myr',
                     'unit_amount'  => (int)($classEvent->price * 100),
@@ -77,7 +80,7 @@ class ClassCheckoutController extends Controller
             ],
         ]);
 
-        // Save session ID
+        // Save session ID to booking for later refund use
         $booking->update(['stripe_session_id' => $session->id]);
 
         return redirect($session->url);
@@ -89,21 +92,34 @@ class ClassCheckoutController extends Controller
         Stripe::setApiKey(config('services.stripe.secret'));
 
         $session = Session::retrieve($request->session_id);
-        $booking = Booking::where('stripe_session_id', $session->id)->first();
+        $booking = Booking::where('stripe_session_id', $session->id)
+                          ->with('classEvent', 'user')
+                          ->first();
 
         if ($booking && $session->payment_status === 'paid') {
             $booking->update([
                 'payment_status' => 'paid',
-                'amount_paid'    => $booking->classEvent->price,
+                'amount_paid'    => $booking->classEvent->price ?? 0,
             ]);
+
+            // Notify the instructor
+            if ($booking->classEvent) {
+                NotificationService::newClassEnrollment(
+                    $booking->classEvent->user_id,
+                    $booking->classEvent->id,
+                    $booking->user->fullname ?? $booking->user->name ?? 'A user',
+                    $booking->classEvent->title
+                );
+            }
         }
 
         return view('classCheckoutSuccessful', compact('booking'));
     }
 
-    // Payment cancelled
+    // Payment cancelled — user clicked "Back" on Stripe page
     public function cancel($classEventId)
     {
+        // Delete the pending booking so they can try again
         Booking::where('class_event_id', $classEventId)
                ->where('user_id', auth()->id())
                ->where('payment_status', 'pending')

@@ -21,12 +21,10 @@
     pointer-events: none;
     transition: opacity .25s;
 }
-
 .form-modal-overlay.open {
     opacity: 1;
     pointer-events: all;
 }
-
 .form-modal {
     background: #fff;
     border-radius: 16px;
@@ -37,11 +35,9 @@
     transform: translateY(20px);
     transition: transform .25s;
 }
-
 .form-modal-overlay.open .form-modal {
     transform: translateY(0);
 }
-
 .form-modal-header {
     background: linear-gradient(135deg, #667eea, #764ba2);
     padding: 20px 24px;
@@ -49,7 +45,6 @@
     align-items: center;
     justify-content: space-between;
 }
-
 .form-modal-header h3 {
     color: #fff;
     font-size: 15px;
@@ -59,7 +54,6 @@
     align-items: center;
     gap: 8px;
 }
-
 .form-modal-close {
     background: rgba(255,255,255,.2);
     border: none;
@@ -74,31 +68,21 @@
     font-size: 14px;
     transition: background .15s;
 }
-
 .form-modal-close:hover { background: rgba(255,255,255,.35); }
-
-.form-modal-body {
-    padding: 24px;
-}
-
+.form-modal-body { padding: 24px; }
 .form-modal-body p {
     font-size: 13px;
     color: #6b6b8a;
     line-height: 1.6;
     margin-bottom: 20px;
 }
-
-.form-modal-body strong {
-    color: #1a1a2e;
-}
-
+.form-modal-body strong { color: #1a1a2e; }
 .form-steps {
     display: flex;
     flex-direction: column;
     gap: 12px;
     margin-bottom: 24px;
 }
-
 .form-step {
     display: flex;
     align-items: flex-start;
@@ -108,7 +92,6 @@
     border-radius: 10px;
     border: 1px solid #e0e0ee;
 }
-
 .form-step-num {
     width: 24px;
     height: 24px;
@@ -122,20 +105,17 @@
     justify-content: center;
     flex-shrink: 0;
 }
-
 .form-step-text {
     font-size: 13px;
     color: #1a1a2e;
     line-height: 1.4;
     padding-top: 3px;
 }
-
 .form-modal-actions {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
-
 .btn-open-form {
     width: 100%;
     padding: 12px;
@@ -152,9 +132,7 @@
     gap: 8px;
     transition: opacity .15s;
 }
-
 .btn-open-form:hover { opacity: .88; }
-
 .btn-confirm-enroll {
     width: 100%;
     padding: 12px;
@@ -173,14 +151,11 @@
     opacity: .45;
     pointer-events: none;
 }
-
 .btn-confirm-enroll.enabled {
     opacity: 1;
     pointer-events: all;
 }
-
 .btn-confirm-enroll:hover { opacity: .88; }
-
 .form-confirm-check {
     display: flex;
     align-items: flex-start;
@@ -192,7 +167,6 @@
     cursor: pointer;
     user-select: none;
 }
-
 .form-confirm-check input[type="checkbox"] {
     width: 16px;
     height: 16px;
@@ -201,7 +175,6 @@
     cursor: pointer;
     accent-color: #16a34a;
 }
-
 .form-confirm-check label {
     font-size: 12px;
     color: #166534;
@@ -209,7 +182,6 @@
     cursor: pointer;
     line-height: 1.4;
 }
-
 .btn-cancel-modal {
     width: 100%;
     padding: 10px;
@@ -222,11 +194,81 @@
     cursor: pointer;
     transition: border-color .15s, color .15s;
 }
-
 .btn-cancel-modal:hover {
     border-color: #667eea;
     color: #667eea;
 }
+
+/* ── Confirm modals shared ── */
+@keyframes ceModalIn {
+    from { opacity:0; transform:scale(.88) translateY(16px); }
+    to   { opacity:1; transform:scale(1)   translateY(0); }
+}
+.ce-confirm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+}
+.ce-confirm-overlay.open { display: flex; }
+.ce-confirm-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.48);
+    backdrop-filter: blur(3px);
+}
+.ce-confirm-box {
+    position: relative;
+    background: #fff;
+    border-radius: 16px;
+    padding: 36px 32px 28px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 24px 64px rgba(102,126,234,.22), 0 4px 16px rgba(0,0,0,.08);
+    text-align: center;
+    z-index: 1;
+    animation: ceModalIn .22s cubic-bezier(.34,1.56,.64,1);
+}
+.ce-confirm-icon {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 18px;
+}
+.ce-confirm-icon.red {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    border: 2px solid #fca5a5;
+    box-shadow: 0 4px 12px rgba(239,68,68,.15);
+}
+.ce-confirm-icon.red i { color: #ef4444; font-size: 1.45rem; }
+.ce-confirm-title { font-size: 1.15rem; font-weight: 800; color: #1a202c; margin-bottom: 8px; }
+.ce-confirm-msg { font-size: 0.84rem; color: #718096; line-height: 1.65; margin-bottom: 28px; }
+.ce-confirm-name {
+    font-size: 0.88rem; font-weight: 600; color: #667eea;
+    background: #ede9fe; border-radius: 6px;
+    padding: 4px 12px; display: inline-block;
+    margin-bottom: 10px;
+}
+.ce-confirm-btns { display: flex; gap: 10px; }
+.ce-btn-keep {
+    flex: 1; padding: 12px; border-radius: 8px;
+    border: 1.5px solid #e2e8f0; background: #fff;
+    color: #4a5568; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s;
+}
+.ce-btn-keep:hover { background: #f7fafc; border-color: #cbd5e0; }
+.ce-btn-danger {
+    flex: 1; padding: 12px; border-radius: 8px; border: none;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff; font-size: 0.88rem; font-weight: 700;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+    box-shadow: 0 4px 14px rgba(239,68,68,.35);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: all .15s;
+}
+.ce-btn-danger:hover { opacity: .88; transform: translateY(-1px); }
 </style>
 @endsection
 
@@ -254,8 +296,6 @@
 </div>
 
 <div class="show-page">
-
-    {{-- ══ TWO COLUMN: big poster left, all info right ══ --}}
     <div class="two-col">
 
         {{-- ── LEFT: Poster + Social Links ── --}}
@@ -279,7 +319,6 @@
                 </span>
             </div>
 
-            {{-- Social Links --}}
             @if($classEvent->instagram_url || $classEvent->facebook_url || $classEvent->x_url)
             <div class="sp-card" style="margin-top:16px;">
                 <div class="sp-card-header">
@@ -290,7 +329,6 @@
                 </div>
                 <div class="sp-card-body">
                     <div style="display:flex;flex-direction:column;gap:10px;">
-
                         @if($classEvent->instagram_url)
                         <a href="{{ $classEvent->instagram_url }}" target="_blank" rel="noopener noreferrer"
                            style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:#fce4ec;text-decoration:none;transition:opacity .15s;"
@@ -305,7 +343,6 @@
                             <i class="fas fa-external-link-alt" style="color:#e1306c;font-size:.75rem;margin-left:auto;flex-shrink:0;"></i>
                         </a>
                         @endif
-
                         @if($classEvent->facebook_url)
                         <a href="{{ $classEvent->facebook_url }}" target="_blank" rel="noopener noreferrer"
                            style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:#e3f0fd;text-decoration:none;transition:opacity .15s;"
@@ -320,7 +357,6 @@
                             <i class="fas fa-external-link-alt" style="color:#1877f2;font-size:.75rem;margin-left:auto;flex-shrink:0;"></i>
                         </a>
                         @endif
-
                         @if($classEvent->x_url)
                         <a href="{{ $classEvent->x_url }}" target="_blank" rel="noopener noreferrer"
                            style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:#f0f0f0;text-decoration:none;transition:opacity .15s;"
@@ -335,18 +371,15 @@
                             <i class="fas fa-external-link-alt" style="color:#555;font-size:.75rem;margin-left:auto;flex-shrink:0;"></i>
                         </a>
                         @endif
-
                     </div>
                 </div>
             </div>
             @endif
-
         </div>
 
         {{-- ── RIGHT: All info ── --}}
         <div class="right-col">
 
-            {{-- Title + instructor card --}}
             <div class="sp-card">
                 <div class="sp-card-header">
                     <div class="sp-card-header-left">
@@ -355,9 +388,7 @@
                     </div>
                 </div>
                 <div class="sp-card-body">
-
                     <h1 class="class-title">{{ $classEvent->title }}</h1>
-
                     <div class="artist-row">
                         <div class="artist-avatar">
                             @if($classEvent->user && $classEvent->user->profile_image)
@@ -373,18 +404,15 @@
                             <div class="artist-role">Instructor</div>
                         </div>
                     </div>
-
                     @if($classEvent->description)
                     <div class="desc-section">
                         <div class="desc-label">About This Class</div>
                         <p class="desc-content">{{ $classEvent->description }}</p>
                     </div>
                     @endif
-
                 </div>
             </div>
 
-            {{-- Enrollment card --}}
             <div class="sp-card">
                 <div class="sp-card-header">
                     <div class="sp-card-header-left">
@@ -412,7 +440,6 @@
                     </div>
 
                     <div class="info-list">
-
                         <div class="info-item">
                             <div class="info-icon"><i class="far fa-calendar-alt"></i></div>
                             <div class="info-content">
@@ -425,7 +452,6 @@
                                 </span>
                             </div>
                         </div>
-
                         <div class="info-item">
                             <div class="info-icon"><i class="far fa-clock"></i></div>
                             <div class="info-content">
@@ -436,7 +462,6 @@
                                 </span>
                             </div>
                         </div>
-
                         @if($classEvent->duration_weeks)
                         <div class="info-item">
                             <div class="info-icon"><i class="fas fa-calendar-week"></i></div>
@@ -446,7 +471,6 @@
                             </div>
                         </div>
                         @endif
-
                         @if($classEvent->duration_hours || $classEvent->duration_minutes)
                         <div class="info-item">
                             <div class="info-icon"><i class="fas fa-hourglass-half"></i></div>
@@ -456,7 +480,6 @@
                             </div>
                         </div>
                         @endif
-
                         @if($classEvent->cancellation_deadline)
                         <div class="info-item">
                             <div class="info-icon"><i class="fas fa-ban"></i></div>
@@ -475,7 +498,6 @@
                             </div>
                         </div>
                         @endif
-
                         @if($classEvent->max_participants)
                         <div class="info-item">
                             <div class="info-icon"><i class="fas fa-users"></i></div>
@@ -491,7 +513,6 @@
                             </div>
                         </div>
                         @endif
-
                         @if($classEvent->enrollment_deadline)
                         <div class="info-item">
                             <div class="info-icon"><i class="fas fa-user-clock"></i></div>
@@ -510,7 +531,6 @@
                             </div>
                         </div>
                         @endif
-
                         <div class="info-item">
                             @if($classEvent->media_type == 'online')
                                 <div class="info-icon"><i class="fas fa-laptop"></i></div>
@@ -526,7 +546,6 @@
                                 </div>
                             @endif
                         </div>
-
                     </div>
 
                     <div class="action-area">
@@ -548,7 +567,7 @@
                             </div>
                         @else
                             <button
-                                class="btn-enroll {{ $isEnrolled ? 'btn-enrolled' : ($classEvent->is_paid && $classEvent->price > 0 ? 'btn-paid' : '') }}"
+                                class="btn-enroll {{ $isEnrolled ? 'btn-enrolled' : (($classEvent->is_paid && $classEvent->price > 0 && !($classEvent->require_form && $classEvent->enrollment_form_url)) ? 'btn-paid' : '') }}"
                                 id="enrollBtn"
                                 onclick="handleEnroll()"
                                 data-event-id="{{ $classEvent->id }}"
@@ -562,23 +581,29 @@
                                 @if($isEnrolled)
                                     <i class="fas fa-user-check" id="enrollIcon"></i>
                                     <span id="enrollText">Enrolled — Cancel</span>
+                                @elseif($classEvent->require_form && $classEvent->enrollment_form_url && $classEvent->is_paid && $classEvent->price > 0)
+                                    <i class="fas fa-file-alt" id="enrollIcon"></i>
+                                    <span id="enrollText">Fill Form & Pay — RM {{ number_format($classEvent->price, 2) }}</span>
+                                @elseif($classEvent->require_form && $classEvent->enrollment_form_url)
+                                    <i class="fas fa-file-alt" id="enrollIcon"></i>
+                                    <span id="enrollText">Fill Form & Enroll</span>
                                 @elseif($classEvent->is_paid && $classEvent->price > 0)
                                     <i class="fas fa-lock" id="enrollIcon"></i>
                                     <span id="enrollText">Pay & Enroll — RM {{ number_format($classEvent->price, 2) }}</span>
-                                @elseif($classEvent->require_form && $classEvent->enrollment_form_url)
-                                    <i class="fas fa-wpforms" id="enrollIcon"></i>
-                                    <span id="enrollText">Fill Form & Enroll</span>
                                 @else
                                     <i class="fas fa-user-plus" id="enrollIcon"></i>
                                     <span id="enrollText">Enroll Now</span>
                                 @endif
                             </button>
 
-                            {{-- Form required hint --}}
-                            @if(!$isEnrolled && $classEvent->require_form && $classEvent->enrollment_form_url && !($classEvent->is_paid && $classEvent->price > 0))
+                            @if(!$isEnrolled && $classEvent->require_form && $classEvent->enrollment_form_url)
                             <p class="form-hint">
                                 <i class="fas fa-info-circle"></i>
-                                An enrollment form is required. You must fill it before your enrollment is confirmed.
+                                @if($classEvent->is_paid && $classEvent->price > 0)
+                                    An enrollment form is required. Fill it first, then you will be redirected to payment.
+                                @else
+                                    An enrollment form is required. You must fill it before your enrollment is confirmed.
+                                @endif
                             </p>
                             @endif
                         @endif
@@ -588,23 +613,20 @@
             </div>
 
         </div>{{-- /right-col --}}
-
     </div>{{-- /two-col --}}
-
 </div>{{-- /show-page --}}
 
 {{-- ══ Form Required Modal ══ --}}
 <div class="form-modal-overlay" id="formModalOverlay">
     <div class="form-modal">
         <div class="form-modal-header">
-            <h3><i class="fas fa-wpforms"></i> Enrollment Form Required</h3>
+            <h3><i class="fas fa-file-alt"></i> Enrollment Form Required</h3>
             <button class="form-modal-close" onclick="closeFormModal()">
                 <i class="fas fa-times"></i>
             </button>
         </div>
         <div class="form-modal-body">
             <p>The instructor requires you to <strong>fill in the enrollment form</strong> before enrolling in this class. Please complete the form first, then confirm your enrollment below.</p>
-
             <div class="form-steps">
                 <div class="form-step">
                     <div class="form-step-num">1</div>
@@ -619,27 +641,40 @@
                     <div class="form-step-text">Come back here, tick the confirmation box, and click <strong>Confirm Enrollment</strong>.</div>
                 </div>
             </div>
-
             <div class="form-modal-actions">
-
                 <button class="btn-open-form" id="btnOpenForm" onclick="openEnrollForm()">
                     <i class="fas fa-external-link-alt"></i> Open Enrollment Form
                 </button>
-
                 <div class="form-confirm-check" id="formConfirmCheck" style="display:none;">
                     <input type="checkbox" id="formFilledCheck" onchange="toggleConfirmBtn(this)">
                     <label for="formFilledCheck">I have filled in and submitted the enrollment form.</label>
                 </div>
-
                 <button class="btn-confirm-enroll" id="btnConfirmEnroll" onclick="confirmEnrollAfterForm()">
-                    <i class="fas fa-check-circle"></i> Confirm Enrollment
+                    <i class="fas fa-check-circle"></i> <span id="confirmBtnText">Confirm Enrollment</span>
                 </button>
-
-                <button class="btn-cancel-modal" onclick="closeFormModal()">
-                    Cancel
-                </button>
-
+                <button class="btn-cancel-modal" onclick="closeFormModal()">Cancel</button>
             </div>
+        </div>
+    </div>
+</div>
+
+{{-- ══ Cancel Enrollment Confirm Modal ══ --}}
+<div class="ce-confirm-overlay" id="cancelEnrollModal">
+    <div class="ce-confirm-backdrop" onclick="closeCancelEnrollModal()"></div>
+    <div class="ce-confirm-box">
+        <div class="ce-confirm-icon red">
+            <i class="fas fa-times-circle"></i>
+        </div>
+        <div class="ce-confirm-title">Cancel Enrollment?</div>
+        <div class="ce-confirm-msg">
+            Are you sure you want to cancel your enrollment?<br>
+            A <strong style="color:#1a202c;">refund</strong> will be issued to your original payment method within 5–10 business days.
+        </div>
+        <div class="ce-confirm-btns">
+            <button class="ce-btn-keep" onclick="closeCancelEnrollModal()">Keep Enrollment</button>
+            <button class="ce-btn-danger" onclick="confirmCancelEnrollment()">
+                <i class="fas fa-times-circle"></i> Yes, Cancel
+            </button>
         </div>
     </div>
 </div>
@@ -654,10 +689,8 @@ const UNENROLL_URL = '{{ route("class.event.unenroll", $classEvent->id) }}';
 function showToast(message, type) {
     const existing = document.getElementById('ceShowToast');
     if (existing) existing.remove();
-
     const bg   = type === 'success' ? '#10b981' : '#ef4444';
     const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-
     const toast = document.createElement('div');
     toast.id = 'ceShowToast';
     toast.style.cssText = [
@@ -672,12 +705,10 @@ function showToast(message, type) {
     ].join(';');
     toast.innerHTML = '<i class="fas '+icon+'"></i><span>'+message+'</span>';
     document.body.appendChild(toast);
-
     requestAnimationFrame(() => {
         toast.style.opacity = '1';
         toast.style.transform = 'translateY(0)';
     });
-
     setTimeout(() => {
         toast.style.opacity = '0';
         toast.style.transform = 'translateY(-10px)';
@@ -685,38 +716,42 @@ function showToast(message, type) {
     }, 4000);
 }
 
+// ── Cancel Enrollment Modal ────────────────────────────────────────────
+function openCancelEnrollModal() {
+    document.getElementById('cancelEnrollModal').classList.add('open');
+}
+function closeCancelEnrollModal() {
+    document.getElementById('cancelEnrollModal').classList.remove('open');
+}
+function confirmCancelEnrollment() {
+    closeCancelEnrollModal();
+    doEnrollRequest(true, false, '');
+}
+
 // ── Form Modal ─────────────────────────────────────────────────────────
 function openFormModal() {
-    const overlay = document.getElementById('formModalOverlay');
-    // Reset state
+    const btn    = document.getElementById('enrollBtn');
+    const isPaid = btn.dataset.isPaid === 'true';
     document.getElementById('formFilledCheck').checked = false;
     document.getElementById('formConfirmCheck').style.display = 'none';
     document.getElementById('btnConfirmEnroll').classList.remove('enabled');
-    overlay.classList.add('open');
+    document.getElementById('confirmBtnText').textContent = isPaid
+        ? 'Confirm & Proceed to Payment'
+        : 'Confirm Enrollment';
+    document.getElementById('formModalOverlay').classList.add('open');
 }
-
 function closeFormModal() {
     document.getElementById('formModalOverlay').classList.remove('open');
 }
-
 function openEnrollForm() {
     const btn = document.getElementById('enrollBtn');
-    const formUrl = btn.dataset.formUrl;
-    window.open(formUrl, '_blank');
-    // Show the confirmation checkbox after they click open form
+    window.open(btn.dataset.formUrl, '_blank');
     document.getElementById('formConfirmCheck').style.display = 'flex';
 }
-
 function toggleConfirmBtn(checkbox) {
     const confirmBtn = document.getElementById('btnConfirmEnroll');
-    if (checkbox.checked) {
-        confirmBtn.classList.add('enabled');
-    } else {
-        confirmBtn.classList.remove('enabled');
-    }
+    checkbox.checked ? confirmBtn.classList.add('enabled') : confirmBtn.classList.remove('enabled');
 }
-
-// Close modal when clicking overlay background
 document.getElementById('formModalOverlay').addEventListener('click', function(e) {
     if (e.target === this) closeFormModal();
 });
@@ -728,15 +763,7 @@ function handleEnroll() {
     const isPaid      = btn.dataset.isPaid === 'true';
     const requireForm = btn.dataset.requireForm === 'true';
     const formUrl     = btn.dataset.formUrl || '';
-    const checkoutUrl = btn.dataset.checkoutUrl || '';
 
-    // ── Paid class → go to checkout
-    if (isPaid && !isEnrolled) {
-        window.location.href = checkoutUrl;
-        return;
-    }
-
-    // ── Cancel enrollment
     if (isEnrolled) {
         const cancellationOpen     = btn.dataset.cancellationOpen !== 'false';
         const cancellationDeadline = btn.dataset.cancellationDeadline || '';
@@ -745,27 +772,35 @@ function handleEnroll() {
             return;
         }
         if (isPaid) {
-            const confirmed = confirm('Are you sure you want to cancel?\n\nA refund will be issued to your original payment method.');
-            if (!confirmed) return;
+            openCancelEnrollModal();
+            return;
         }
         doEnrollRequest(true, false, '');
         return;
     }
 
-    // ── Free enroll with required form → show modal first
     if (requireForm && formUrl) {
         openFormModal();
         return;
     }
 
-    // ── Normal free enroll (no form required)
+    if (isPaid) {
+        window.location.href = btn.dataset.checkoutUrl;
+        return;
+    }
+
     doEnrollRequest(false, false, '');
 }
 
-// Called when user ticks checkbox and clicks Confirm Enrollment in modal
-async function confirmEnrollAfterForm() {
+function confirmEnrollAfterForm() {
+    const btn    = document.getElementById('enrollBtn');
+    const isPaid = btn.dataset.isPaid === 'true';
     closeFormModal();
-    await doEnrollRequest(false, true, document.getElementById('enrollBtn').dataset.formUrl);
+    if (isPaid) {
+        window.location.href = btn.dataset.checkoutUrl;
+        return;
+    }
+    doEnrollRequest(false, true, btn.dataset.formUrl);
 }
 
 // ── Core enroll/unenroll fetch ─────────────────────────────────────────
@@ -798,12 +833,10 @@ async function doEnrollRequest(isUnenroll, hasForm, formUrl) {
         }
 
         if (data.success) {
-            const nowEnrolled = data.is_enrolled;
-            setEnrollButton(nowEnrolled, hasForm, isPaid);
+            setEnrollButton(data.is_enrolled, hasForm, isPaid);
             updateParticipantCount(data.participant_count);
             showToast(data.message, 'success');
         } else {
-            // Restore button state
             setEnrollButton(isUnenroll ? true : false, hasForm, isPaid);
             showToast(data.message || 'Something went wrong. Please try again.', 'error');
         }
@@ -820,24 +853,22 @@ function setEnrollButton(enrolled, hasForm, isPaid) {
     const iconEl = document.getElementById('enrollIcon');
     const textEl = document.getElementById('enrollText');
     if (!btn) return;
-
     btn.dataset.enrolled = enrolled ? 'true' : 'false';
-
     if (enrolled) {
-        btn.className    = 'btn-enroll btn-enrolled';
-        iconEl.className = 'fas fa-user-check';
+        btn.className      = 'btn-enroll btn-enrolled';
+        iconEl.className   = 'fas fa-user-check';
         textEl.textContent = 'Enrolled — Cancel';
     } else if (isPaid) {
-        btn.className    = 'btn-enroll btn-paid';
-        iconEl.className = 'fas fa-lock';
+        btn.className      = 'btn-enroll btn-paid';
+        iconEl.className   = 'fas fa-lock';
         textEl.textContent = 'Pay & Enroll';
     } else if (hasForm) {
-        btn.className    = 'btn-enroll';
-        iconEl.className = 'fas fa-wpforms';
+        btn.className      = 'btn-enroll';
+        iconEl.className   = 'fas fa-file-alt';
         textEl.textContent = 'Fill Form & Enroll';
     } else {
-        btn.className    = 'btn-enroll';
-        iconEl.className = 'fas fa-user-plus';
+        btn.className      = 'btn-enroll';
+        iconEl.className   = 'fas fa-user-plus';
         textEl.textContent = 'Enroll Now';
     }
 }
@@ -846,6 +877,14 @@ function updateParticipantCount(count) {
     const el = document.getElementById('participantCountDisplay');
     if (el) el.textContent = count + ' participant' + (count !== 1 ? 's' : '') + ' enrolled';
 }
+
+// Close modals on Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeCancelEnrollModal();
+        closeFormModal();
+    }
+});
 </script>
 
 @endsection

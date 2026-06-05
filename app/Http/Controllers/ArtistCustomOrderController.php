@@ -31,9 +31,7 @@ class ArtistCustomOrderController extends Controller
     public function show(CustomOrderRequest $customOrder)
     {
         abort_if($customOrder->seller_id !== Auth::id(), 403);
-
         $customOrder->load('buyer', 'order');
-
         return view('artistRequestDetails', compact('customOrder'));
     }
 
@@ -49,21 +47,28 @@ class ArtistCustomOrderController extends Controller
             ->with('success', 'You accepted this custom order request.');
     }
 
-    /* ── Seller: refuse (with optional counter-price) ── */
+    /* ── Seller: refuse (reason OR counter price, at least one required) ── */
     public function refuse(Request $request, CustomOrderRequest $customOrder)
     {
         abort_if($customOrder->seller_id !== Auth::id(), 403);
         abort_if($customOrder->status !== 'pending', 403);
 
-        $data = $request->validate([
-            'seller_reason' => 'required|string|max:1000',
+        $request->validate([
+            'seller_reason' => 'nullable|string|max:1000',
             'counter_price' => 'nullable|numeric|min:1|max:99999',
         ]);
 
+        // At least one must be provided
+        if (!$request->filled('seller_reason') && !$request->filled('counter_price')) {
+            return back()
+                ->withErrors(['seller_reason' => 'Please provide a refusal reason or a counter price — at least one is required.'])
+                ->withInput();
+        }
+
         $customOrder->update([
             'status'        => 'refused',
-            'seller_reason' => $data['seller_reason'],
-            'counter_price' => $data['counter_price'] ?? null,
+            'seller_reason' => $request->input('seller_reason') ?: null,
+            'counter_price' => $request->filled('counter_price') ? $request->input('counter_price') : null,
         ]);
 
         return redirect()->route('artist.custom-orders.show', $customOrder)

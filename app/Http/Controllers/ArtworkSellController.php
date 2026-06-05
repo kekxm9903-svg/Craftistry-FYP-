@@ -108,7 +108,6 @@ class ArtworkSellController extends Controller
 
             $newDemo = null;
             if ($request->has('also_demo')) {
-                // Copy main image to demo-artworks folder (own separate copy)
                 $demoPath = null;
                 if ($path) {
                     $demoFilename = time() . '_' . uniqid() . '_demo.' . pathinfo($path, PATHINFO_EXTENSION);
@@ -116,7 +115,6 @@ class ArtworkSellController extends Controller
                     Storage::disk('public')->copy($path, $demoPath);
                 }
 
-                // Copy extra images to demo-artworks folder (own separate copies)
                 $demoExtraPaths = [];
                 foreach ($extraPaths as $ep) {
                     $demoExtraFilename = time() . '_' . uniqid() . '_demo.' . pathinfo($ep, PATHINFO_EXTENSION);
@@ -187,19 +185,29 @@ class ArtworkSellController extends Controller
                     'success' => true,
                     'message' => 'Artwork listed successfully!',
                     'artwork' => [
-                        'id'                 => $artworkSell->id,
-                        'product_name'       => $artworkSell->product_name,
-                        'formatted_price'    => $artworkSell->formatted_price,
-                        'shipping_fee'       => $artworkSell->shipping_fee,
-                        'image_url'          => $artworkSell->image_url,
-                        'status'             => $artworkSell->status,
-                        'status_label'       => $artworkSell->status_label,
-                        'available_stock'    => $artworkSell->available_stock,
-                        'artwork_type'       => $artworkSell->artwork_type,
-                        'product_category'   => $artworkSell->product_category,
-                        'bulk_sell_enabled'  => $artworkSell->bulk_sell_enabled,
-                        'bulk_sell_min_qty'  => $artworkSell->bulk_sell_min_qty,
-                        'bulk_sell_discount' => $artworkSell->bulk_sell_discount,
+                        'id'                        => $artworkSell->id,
+                        'product_name'              => $artworkSell->product_name,
+                        'product_price'             => $artworkSell->product_price,
+                        'formatted_price'           => $artworkSell->formatted_price,
+                        'shipping_fee'              => $artworkSell->shipping_fee,
+                        'image_url'                 => $artworkSell->image_url,
+                        'status'                    => $artworkSell->status,
+                        'status_label'              => $artworkSell->status_label,
+                        'available_stock'           => $artworkSell->available_stock,
+                        'artwork_type'              => $artworkSell->artwork_type,
+                        'product_category'          => $artworkSell->product_category,
+                        'bulk_sell_enabled'         => $artworkSell->bulk_sell_enabled,
+                        'bulk_sell_min_qty'         => $artworkSell->bulk_sell_min_qty,
+                        'bulk_sell_discount'        => $artworkSell->bulk_sell_discount,
+                        // ── Promotion fields ──
+                        'promotion_enabled'         => (bool) $artworkSell->promotion_enabled,
+                        'promotion_discount'        => $artworkSell->promotion_discount,
+                        'promotion_starts_at'       => $artworkSell->promotion_starts_at?->format('Y-m-d'),
+                        'promotion_ends_at'         => $artworkSell->promotion_ends_at?->format('Y-m-d'),
+                        'is_on_promotion'           => $artworkSell->is_on_promotion,
+                        'promotion_price'           => $artworkSell->promotion_price,
+                        'formatted_promotion_price' => $artworkSell->formatted_promotion_price,
+                        'effective_price'           => $artworkSell->effective_price,
                     ]
                 ]);
             }
@@ -259,6 +267,11 @@ class ArtworkSellController extends Controller
                 'bulk_sell_enabled'   => (bool) $artwork->bulk_sell_enabled,
                 'bulk_sell_min_qty'   => $artwork->bulk_sell_min_qty,
                 'bulk_sell_discount'  => $artwork->bulk_sell_discount,
+                // ── Promotion fields ──
+                'promotion_enabled'   => (bool) $artwork->promotion_enabled,
+                'promotion_discount'  => $artwork->promotion_discount,
+                'promotion_starts_at' => $artwork->promotion_starts_at?->format('Y-m-d\TH:i'),
+                'promotion_ends_at'   => $artwork->promotion_ends_at?->format('Y-m-d\TH:i'),
             ]);
         } catch (\Exception $e) {
             Log::error('Edit fetch error: ' . $e->getMessage());
@@ -381,25 +394,38 @@ class ArtworkSellController extends Controller
             $artwork->save();
             DB::commit();
 
+            // Re-fresh to get accurate accessor values after save
+            $artwork->refresh();
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Artwork updated successfully!',
                     'artwork' => [
-                        'id'                  => $artwork->id,
-                        'product_name'        => $artwork->product_name,
-                        'product_description' => $artwork->product_description,
-                        'formatted_price'     => $artwork->formatted_price,
-                        'shipping_fee'        => $artwork->shipping_fee,
-                        'image_url'           => $artwork->image_url,
-                        'artwork_type'        => $artwork->artwork_type,
-                        'product_category'    => $artwork->product_category,
-                        'status'              => $artwork->status,
-                        'status_label'        => $artwork->status_label,
-                        'available_stock'     => $artwork->available_stock,
-                        'bulk_sell_enabled'   => $artwork->bulk_sell_enabled,
-                        'bulk_sell_min_qty'   => $artwork->bulk_sell_min_qty,
-                        'bulk_sell_discount'  => $artwork->bulk_sell_discount,
+                        'id'                        => $artwork->id,
+                        'product_name'              => $artwork->product_name,
+                        'product_description'       => $artwork->product_description,
+                        'product_price'             => $artwork->product_price,
+                        'formatted_price'           => $artwork->formatted_price,
+                        'shipping_fee'              => $artwork->shipping_fee,
+                        'image_url'                 => $artwork->image_url,
+                        'artwork_type'              => $artwork->artwork_type,
+                        'product_category'          => $artwork->product_category,
+                        'status'                    => $artwork->status,
+                        'status_label'              => $artwork->status_label,
+                        'available_stock'           => $artwork->available_stock,
+                        'bulk_sell_enabled'         => $artwork->bulk_sell_enabled,
+                        'bulk_sell_min_qty'         => $artwork->bulk_sell_min_qty,
+                        'bulk_sell_discount'        => $artwork->bulk_sell_discount,
+                        // ── Promotion fields ──
+                        'promotion_enabled'         => (bool) $artwork->promotion_enabled,
+                        'promotion_discount'        => $artwork->promotion_discount,
+                        'promotion_starts_at'       => $artwork->promotion_starts_at?->format('Y-m-d\TH:i'),
+                        'promotion_ends_at'         => $artwork->promotion_ends_at?->format('Y-m-d\TH:i'),
+                        'is_on_promotion'           => $artwork->is_on_promotion,
+                        'promotion_price'           => $artwork->promotion_price,
+                        'formatted_promotion_price' => $artwork->formatted_promotion_price,
+                        'effective_price'           => $artwork->effective_price,
                     ]
                 ]);
             }
@@ -444,7 +470,6 @@ class ArtworkSellController extends Controller
 
             DB::beginTransaction();
 
-            // Unlink from demo — keep demo record and its own image intact
             if ($artworkSell->is_cross_posted && $artworkSell->crossPostedFrom) {
                 $demo                     = $artworkSell->crossPostedFrom;
                 $demo->is_cross_posted    = false;
@@ -452,7 +477,6 @@ class ArtworkSellController extends Controller
                 $demo->save();
             }
 
-            // Only delete files in artwork-sells folder, never touch demo-artworks files
             if ($artworkSell->image_path && str_starts_with($artworkSell->image_path, 'artwork-sells/') && Storage::disk('public')->exists($artworkSell->image_path)) {
                 Storage::disk('public')->delete($artworkSell->image_path);
             }

@@ -203,7 +203,6 @@
                             @endif
                         </div>
 
-                        {{-- Social links — only rendered if at least one is set --}}
                         @if($event->instagram_url || $event->facebook_url || $event->x_url)
                         <div class="ce-social-row">
                             @if($event->instagram_url)
@@ -271,6 +270,34 @@
                     <i class="bi bi-trash-fill"></i> Delete
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+
+{{-- ══ DROP PARTICIPANT CONFIRM MODAL ══ --}}
+<div id="dropConfirmModal"
+     style="display:none;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;">
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,.48);backdrop-filter:blur(3px);"
+         onclick="closeDropConfirmModal()"></div>
+    <div style="position:relative;background:#fff;border-radius:16px;padding:36px 32px 28px;
+                max-width:400px;width:90%;text-align:center;z-index:1;
+                box-shadow:0 24px 64px rgba(102,126,234,.22),0 4px 16px rgba(0,0,0,.08);
+                animation:ceDeleteIn .22s cubic-bezier(.34,1.56,.64,1);">
+        <div class="delete-modal-icon-wrap">
+            <i class="bi bi-person-dash-fill"></i>
+        </div>
+        <h3 class="delete-modal-title">Remove Participant?</h3>
+        <div class="delete-modal-name" id="dropParticipantName"></div>
+        <p class="delete-modal-warning">
+            This will remove this participant from the class/event.<br>
+            This action cannot be undone.
+        </p>
+        <div class="delete-modal-btns">
+            <button class="delete-btn-cancel" onclick="closeDropConfirmModal()">Cancel</button>
+            <button class="delete-btn-confirm" onclick="confirmDropParticipant()">
+                <i class="bi bi-person-dash-fill"></i> Yes, Remove
+            </button>
         </div>
     </div>
 </div>
@@ -349,7 +376,7 @@
 
 @section('scripts')
     <script>
-    // ── Popup helpers — exact same pattern as artistProfile.js ──
+    // ── Popup helpers ──
     function showSuccessPopup(message) {
         const popup     = document.getElementById('successPopup');
         const messageEl = document.getElementById('successMessage');
@@ -383,6 +410,11 @@
         @if(session('error'))
             showDeletePopup(@json(session('error')));
         @endif
+    });
+
+    // Close dropConfirmModal on Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeDropConfirmModal();
     });
     </script>
     <script>

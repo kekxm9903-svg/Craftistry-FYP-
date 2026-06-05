@@ -241,7 +241,30 @@ function openEditArtworkModal(id) {
             if (bulkEnabled) {
                 document.getElementById('editBulkMinQty').value   = data.bulk_sell_min_qty || '';
                 document.getElementById('editBulkDiscount').value = data.bulk_sell_discount || '';
+            } else {
+                document.getElementById('editBulkMinQty').value   = '';
+                document.getElementById('editBulkDiscount').value = '';
             }
+
+            // ── Promotion ──────────────────────────────────────────
+            const promoEnabled   = !!data.promotion_enabled;
+            const promoCheckbox  = document.getElementById('editPromoEnabled');
+            const promoFields    = document.getElementById('editPromoFields');
+            promoCheckbox.checked = promoEnabled;
+            promoFields.style.display = promoEnabled ? 'block' : 'none';
+
+            if (promoEnabled) {
+                document.getElementById('editPromoDiscount').value  = data.promotion_discount  ?? '';
+                document.getElementById('editPromoStartsAt').value  = data.promotion_starts_at ?? '';
+                document.getElementById('editPromoEndsAt').value    = data.promotion_ends_at   ?? '';
+                updateEditPromoPreview();
+            } else {
+                document.getElementById('editPromoDiscount').value  = '';
+                document.getElementById('editPromoStartsAt').value  = '';
+                document.getElementById('editPromoEndsAt').value    = '';
+                document.getElementById('editPromoPricePreview').style.display = 'none';
+            }
+            // ───────────────────────────────────────────────────────
 
             const descLength = (data.product_description || '').length;
             document.getElementById('editSellDescCount').textContent = `${descLength} / 2000 characters`;
@@ -262,6 +285,9 @@ function closeEditSellModal() {
         modal.classList.remove('active');
         document.body.style.overflow = '';
         document.getElementById('editSellForm').reset();
+        // Reset promotion UI state
+        document.getElementById('editPromoFields').style.display    = 'none';
+        document.getElementById('editPromoPricePreview').style.display = 'none';
         removeEditSellImage();
     }
 }
