@@ -9,7 +9,9 @@
 @section('content')
 <div class="container">
     <div class="form-card">
-        <img src="{{ asset('images/Logo.png') }}" alt="Craftistry" class="logo">
+        <a href="{{ route('welcome') }}">
+            <img src="{{ asset('images/Logo.png') }}" alt="Craftistry" class="logo">
+        </a>
 
         <h1>Welcome Back!</h1>
         <p class="subtitle">Login to continue</p>

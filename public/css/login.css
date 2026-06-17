@@ -30,6 +30,7 @@ body {
   display: block;
   height: 36px;
   margin: 0 auto 24px;
+  cursor: pointer;
 }
 
 h1 {
