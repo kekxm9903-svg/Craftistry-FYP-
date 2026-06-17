@@ -4,6 +4,39 @@
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/userProfileShow.css') }}">
+
+<style>
+/* ── Override success-toast to match the light pastel green style used across the app ── */
+.success-toast {
+    position: fixed;
+    top: 80px;
+    right: var(--sp-lg, 20px);
+    z-index: 999;
+    background: #d1fae5;
+    border: 1px solid #6ee7b7;
+    border-radius: 10px;
+    padding: 16px 20px;
+    box-shadow: 0 4px 12px rgba(16,185,129,.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 280px;
+    color: #065f46;
+    font-size: 13px;
+    font-weight: 600;
+    animation: slideInRight .3s ease-out;
+}
+.success-toast i {
+    font-size: 15px;
+    color: #065f46;
+    flex-shrink: 0;
+}
+@keyframes slideInRight  { from { opacity:0; transform:translateX(360px); } to { opacity:1; transform:translateX(0); } }
+@keyframes slideOutRight { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(360px); } }
+@media (max-width: 768px) {
+    .success-toast { top:10px; right:10px; left:10px; min-width:auto; }
+}
+</style>
 @endsection
 
 @section('content')
