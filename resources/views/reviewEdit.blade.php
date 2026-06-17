@@ -181,7 +181,7 @@
             </form>
 
             {{-- Delete Section --}}
-            <div style="margin-top:24px;padding:20px;background:#fff5f5;border:1px solid #fecaca;border-radius:12px;">
+            <div style="margin-top:24px;padding:20px;background:#fff5f5;border:1px solid #fecaca;border-radius:12px;text-align:center;">
                 <h4 style="font-size:14px;font-weight:600;color:#dc2626;margin-bottom:6px;">
                     <i class="fas fa-trash"></i> Delete Review
                 </h4>
@@ -192,7 +192,7 @@
                     @csrf
                     @method('DELETE')
                 </form>
-                <div style="text-align:center;">
+                <div>
                     <button type="button" onclick="openDeleteReviewModal()"
                             style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:6px;">
                         <i class="fas fa-trash"></i> Delete Review
