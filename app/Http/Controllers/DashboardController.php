@@ -39,28 +39,17 @@ class DashboardController extends Controller
                                     ->count();
 
         // ── Badge: Custom Orders ──
-        // Show noti when:
-        //   1. pending   — waiting for seller to respond
-        //   2. refused + counter_price + no buyer_response — seller sent counter-offer
-        //   3. accepted + no order_id — seller accepted, buyer hasn't paid yet
-        // No noti when:
-        //   - refused with no counter (outright rejected)
-        //   - completed (paid, order created)
-        //   - cancelled
         $customOrdersPending = CustomOrderRequest::where('buyer_id', $user->id)
             ->where(function ($q) {
-                // Waiting for seller to respond
                 $q->where('status', 'pending');
             })
             ->orWhere(function ($q) use ($user) {
-                // Seller sent counter-offer, buyer hasn't responded
                 $q->where('buyer_id', $user->id)
                   ->where('status', 'refused')
                   ->whereNotNull('counter_price')
                   ->whereNull('buyer_response');
             })
             ->orWhere(function ($q) use ($user) {
-                // Seller accepted, buyer hasn't paid yet
                 $q->where('buyer_id', $user->id)
                   ->where('status', 'accepted')
                   ->whereNull('order_id');
@@ -88,12 +77,25 @@ class DashboardController extends Controller
             ->get();
 
         // ── On Sale ──
+        // Only include products whose promotion is currently ACTIVE:
+        // enabled, discount > 0, original price > 0, and within the
+        // promotion_starts_at / promotion_ends_at window (if set).
         $onSaleProducts = ArtworkSell::with(['artist.user'])
             ->whereHas('artist.user')
             ->whereNotNull('image_path')
             ->whereNotIn('status', ['sold', 'sold_out'])
             ->where('promotion_enabled', true)
             ->whereNotNull('promotion_discount')
+            ->where('promotion_discount', '>', 0)
+            ->where('product_price', '>', 0)
+            ->where(function ($q) {
+                $q->whereNull('promotion_starts_at')
+                  ->orWhere('promotion_starts_at', '<=', now());
+            })
+            ->where(function ($q) {
+                $q->whereNull('promotion_ends_at')
+                  ->orWhere('promotion_ends_at', '>=', now());
+            })
             ->orderByDesc('created_at')
             ->take(18)
             ->get();
