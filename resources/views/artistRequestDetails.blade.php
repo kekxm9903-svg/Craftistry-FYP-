@@ -66,6 +66,68 @@
         display: flex; align-items: center; justify-content: center; gap: 6px;
     }
     .refuse-btn-confirm:hover { opacity: .88; transform: translateY(-1px); }
+
+    /* ── Accept Confirm Modal (matches refuse/logout modal style) ── */
+    #acceptConfirmModal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        align-items: center;
+        justify-content: center;
+    }
+    #acceptConfirmModal.open { display: flex; }
+    #acceptConfirmBackdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,.48);
+        backdrop-filter: blur(3px);
+    }
+    #acceptConfirmBox {
+        position: relative;
+        background: #fff;
+        border-radius: 16px;
+        padding: 36px 32px 28px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 24px 64px rgba(102,126,234,.22), 0 4px 16px rgba(0,0,0,.08);
+        text-align: center;
+        z-index: 1;
+        animation: acceptModalIn .22s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes acceptModalIn {
+        from { opacity: 0; transform: scale(.88) translateY(16px); }
+        to   { opacity: 1; transform: scale(1)  translateY(0); }
+    }
+    .accept-modal-icon {
+        width: 60px; height: 60px;
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 18px;
+        border: 2px solid #6ee7b7;
+        box-shadow: 0 4px 12px rgba(16,185,129,.18);
+    }
+    .accept-modal-icon i { color: #059669; font-size: 1.45rem; }
+    .accept-modal-title  { font-size: 1.15rem; font-weight: 800; color: #1a202c; margin-bottom: 8px; }
+    .accept-modal-msg    { font-size: 0.84rem; color: #718096; line-height: 1.65; margin-bottom: 28px; }
+    .accept-modal-btns   { display: flex; gap: 10px; }
+    .accept-btn-cancel {
+        flex: 1; padding: 12px; border-radius: 8px;
+        border: 1.5px solid #e2e8f0; background: #fff;
+        color: #4a5568; font-size: 0.88rem; font-weight: 600;
+        cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s;
+    }
+    .accept-btn-cancel:hover { background: #f7fafc; border-color: #cbd5e0; }
+    .accept-btn-confirm {
+        flex: 1; padding: 12px; border-radius: 8px; border: none;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff; font-size: 0.88rem; font-weight: 700;
+        cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s;
+        box-shadow: 0 4px 14px rgba(16,185,129,.35);
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .accept-btn-confirm:hover { opacity: .88; transform: translateY(-1px); }
 </style>
 @endsection
 
@@ -176,14 +238,14 @@
                     Accepting will notify the buyer to complete payment at
                     <strong style="color:var(--ink);">RM {{ number_format($customOrder->buyer_price, 2) }}</strong>.
                 </p>
-                <form action="{{ route('artist.custom-orders.accept', $customOrder->id) }}" method="POST">
+                <form id="acceptForm" action="{{ route('artist.custom-orders.accept', $customOrder->id) }}" method="POST">
                     @csrf
-                    <button type="submit" class="btn btn-success"
-                            style="width:100%;justify-content:center;"
-                            onclick="return confirm('Accept this custom order at RM {{ number_format($customOrder->buyer_price, 2) }}?')">
-                        <i class="fas fa-check"></i> Accept Order
-                    </button>
                 </form>
+                <button type="button" class="btn btn-success"
+                        style="width:100%;justify-content:center;"
+                        onclick="openAcceptConfirm()">
+                    <i class="fas fa-check"></i> Accept Order
+                </button>
             </div>
 
             <div style="height:1px;background:var(--divider);"></div>
@@ -371,6 +433,30 @@
 
 </div>
 
+{{-- ══ ACCEPT CONFIRM MODAL ══ --}}
+<div id="acceptConfirmModal" role="dialog" aria-modal="true" aria-labelledby="acceptModalTitle">
+    <div id="acceptConfirmBackdrop" onclick="closeAcceptConfirm()"></div>
+    <div id="acceptConfirmBox">
+        <div class="accept-modal-icon">
+            <i class="fas fa-check"></i>
+        </div>
+        <div class="accept-modal-title" id="acceptModalTitle">Accept This Order?</div>
+        <div class="accept-modal-msg">
+            You're accepting this custom order at
+            <strong style="color:#1a202c;">RM {{ number_format($customOrder->buyer_price, 2) }}</strong>.
+            The buyer will be notified to complete payment.
+        </div>
+        <div class="accept-modal-btns">
+            <button class="accept-btn-cancel" onclick="closeAcceptConfirm()">
+                Go Back
+            </button>
+            <button class="accept-btn-confirm" onclick="document.getElementById('acceptForm').submit()">
+                <i class="fas fa-check"></i> Yes, Accept
+            </button>
+        </div>
+    </div>
+</div>
+
 {{-- ══ REFUSE CONFIRM MODAL ══ --}}
 <div id="refuseConfirmModal" role="dialog" aria-modal="true" aria-labelledby="refuseModalTitle">
     <div id="refuseConfirmBackdrop" onclick="closeRefuseConfirm()"></div>
@@ -397,6 +483,15 @@
 
 @section('scripts')
 <script>
+// ── Accept confirm modal ──
+function openAcceptConfirm() {
+    document.getElementById('acceptConfirmModal').classList.add('open');
+}
+
+function closeAcceptConfirm() {
+    document.getElementById('acceptConfirmModal').classList.remove('open');
+}
+
 // ── Refuse panel show/hide ──
 function showRefuse() {
     document.getElementById('refuse-panel').style.display      = 'block';
@@ -452,7 +547,10 @@ function submitRefuse() {
 
 // Close on Escape
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeRefuseConfirm();
+    if (e.key === 'Escape') {
+        closeAcceptConfirm();
+        closeRefuseConfirm();
+    }
 });
 
 // Auto-open refuse panel if server validation failed
