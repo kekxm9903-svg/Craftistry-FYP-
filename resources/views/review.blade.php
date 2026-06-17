@@ -26,15 +26,33 @@
         $artistName    = $order->artist->user->fullname ?? $order->artist->name ?? 'Unknown Artist';
         $artistInitial = strtoupper(substr($artistName, 0, 1));
         $artistAvatar  = $order->artist->user->profile_image ?? null;
-        $productName   = $order->artwork->product_name ?? $order->title ?? 'Artwork Order';
-        $productPrice  = $order->total ?? $order->price ?? 0;
-        $orderImage    = $order->artwork->image_path ?? null;
+
+        // ── Resolve first item the same way myOrders.blade.php does ──
+        $firstItem   = $order->items?->first();
+        $isCustom    = $firstItem?->artwork_sell_id === null;
+        $thumbArtwork = $firstItem?->artwork;
+
+        $productName  = $firstItem?->name ?? $order->title ?? 'Artwork Order';
+        $productPrice = $order->total ?? $order->price ?? 0;
+
+        // For custom orders, fall back to the original request's reference image
+        $customRefImage = null;
+        if ($isCustom) {
+            $customRefImage = \App\Models\CustomOrderRequest::where('order_id', $order->id)
+                ->value('reference_image');
+        }
+
+        $orderImage = $thumbArtwork?->image_path
+            ?? $customRefImage
+            ?? ($isCustom ? $firstItem?->image_path : null);
     @endphp
 
     <div class="order-summary-card">
         <div class="osc-thumb">
             @if($orderImage)
                 <img src="{{ asset('storage/' . $orderImage) }}" alt="{{ $productName }}">
+            @elseif($isCustom)
+                <i class="fas fa-paint-brush" style="font-size:22px;color:#b0a8e0;"></i>
             @else
                 <div class="thumb-placeholder">
                     <i class="fas fa-palette"></i>
