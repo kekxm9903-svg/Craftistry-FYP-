@@ -478,13 +478,10 @@
                             </a>
                         @endif
                         @if($order->status === 'shipped')
-                            <form action="{{ route('orders.complete', $order->id) }}" method="POST" style="display:inline;"
-                                  onsubmit="return confirm('Confirm that you have received this order?')">
-                                @csrf
-                                <button type="submit" class="btn-craft btn-craft-success">
-                                    <i class="fas fa-check-circle"></i> Order Received
-                                </button>
-                            </form>
+                            <button type="button" class="btn-craft btn-craft-success"
+                                onclick="openConfirmReceive('{{ route('orders.complete', $order->id) }}', '{{ addslashes($order->items->first()?->name ?? 'this order') }}')">
+                                <i class="fas fa-check-circle"></i> Order Received
+                            </button>
                         @endif
                         @if($order->status === 'pending_payment')
                             <a href="{{ route('order.checkout.repay', $order->id) }}" class="btn-craft btn-craft-primary">
@@ -648,6 +645,45 @@
     </div>
 </div>
 
+{{-- Confirm Receive Modal --}}
+<div id="confirmReceiveModal" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center;">
+    <div style="position:absolute; inset:0; background:rgba(0,0,0,.48); backdrop-filter:blur(3px);" onclick="closeConfirmReceive()"></div>
+    <div id="confirmReceiveInner"
+         style="position:relative; background:#fff; border-radius:16px; padding:36px 32px 28px;
+                max-width:420px; width:90%;
+                box-shadow:0 24px 64px rgba(102,126,234,.22), 0 4px 16px rgba(0,0,0,.08);
+                text-align:center; z-index:1;">
+        <div style="width:60px; height:60px; background:linear-gradient(135deg,#d1fae5,#a7f3d0);
+                    border-radius:50%; display:flex; align-items:center; justify-content:center;
+                    margin:0 auto 18px; border:2px solid #6ee7b7; box-shadow:0 4px 12px rgba(16,185,129,.18);">
+            <i class="fas fa-check-circle" style="color:#059669; font-size:1.45rem;"></i>
+        </div>
+        <h3 style="font-size:1.15rem; font-weight:800; color:#1a202c; margin-bottom:8px;">Confirm Receipt?</h3>
+        <p style="font-size:0.84rem; color:#718096; line-height:1.65; margin-bottom:28px;">
+            Please confirm you've received <strong id="confirmReceiveOrderName" style="color:#4a5568;"></strong>.
+            Once confirmed, this order will be marked as completed.
+        </p>
+        <div style="display:flex; gap:10px;">
+            <button onclick="closeConfirmReceive()"
+                style="flex:1; padding:12px; border-radius:8px; border:1.5px solid #e2e8f0;
+                       background:#fff; color:#4a5568; font-size:0.88rem; font-weight:600; cursor:pointer; font-family:inherit;"
+                onmouseover="this.style.background='#f7fafc';" onmouseout="this.style.background='#fff';">
+                Not Yet
+            </button>
+            <button onclick="executeConfirmReceive()"
+                style="flex:1; padding:12px; border-radius:8px; border:none;
+                       background:linear-gradient(135deg,#10b981,#059669);
+                       color:#fff; font-size:0.88rem; font-weight:700; cursor:pointer; font-family:inherit;
+                       box-shadow:0 4px 14px rgba(16,185,129,.35);
+                       display:flex; align-items:center; justify-content:center; gap:6px;"
+                onmouseover="this.style.opacity='.88';" onmouseout="this.style.opacity='1';">
+                <i class="fas fa-check-circle"></i> Yes, I've Received It
+            </button>
+        </div>
+    </div>
+</div>
+<form id="confirmReceiveForm" method="POST" style="display:none;">@csrf</form>
+
 <style>
 @keyframes cancelModalIn {
     from { opacity:0; transform:scale(.88) translateY(16px); }
@@ -689,8 +725,20 @@ window.openRefundModal = function (orderId, orderName, orderAmount, isAuto) {
 window.closeRefundModal = function () { document.getElementById('refundModal').style.display = 'none'; };
 window.pickReason       = function (text) { document.getElementById('refundReasonInput').value = text; };
 
+window.openConfirmReceive = function (actionUrl, orderName) {
+    var modal = document.getElementById('confirmReceiveModal');
+    var form  = document.getElementById('confirmReceiveForm');
+    var inner = document.getElementById('confirmReceiveInner');
+    form.action = actionUrl;
+    document.getElementById('confirmReceiveOrderName').textContent = '\u201c' + orderName + '\u201d';
+    modal.style.display = 'flex';
+    if (inner) { inner.style.animation = 'none'; void inner.offsetWidth; inner.style.animation = 'cancelModalIn .22s cubic-bezier(.34,1.56,.64,1)'; }
+};
+window.closeConfirmReceive   = function () { document.getElementById('confirmReceiveModal').style.display = 'none'; };
+window.executeConfirmReceive = function () { document.getElementById('confirmReceiveForm').submit(); };
+
 document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { window.closeCancelConfirm(); window.closeRefundModal(); }
+    if (e.key === 'Escape') { window.closeCancelConfirm(); window.closeRefundModal(); window.closeConfirmReceive(); }
 });
 </script>
 
