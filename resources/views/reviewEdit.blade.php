@@ -188,14 +188,14 @@
                 <p style="font-size:13px;color:#6b7280;margin-bottom:14px;">
                     Once deleted, you can submit a new review for this order.
                 </p>
-                <form action="{{ route('reviews.destroy', $review->id) }}" method="POST"
-                      onsubmit="return confirm('Are you sure you want to delete this review? This cannot be undone.')">
+                <form id="deleteReviewForm" action="{{ route('reviews.destroy', $review->id) }}" method="POST" style="display:none;">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:6px;">
-                        <i class="fas fa-trash"></i> Delete Review
-                    </button>
                 </form>
+                <button type="button" onclick="openDeleteReviewModal()"
+                        style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:6px;">
+                    <i class="fas fa-trash"></i> Delete Review
+                </button>
             </div>
 
         </div>
@@ -216,6 +216,54 @@
 
 </div>
 </main>
+
+{{-- ══ DELETE REVIEW CONFIRM MODAL ══ --}}
+<div id="deleteReviewModal" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center;">
+    <div style="position:absolute; inset:0; background:rgba(0,0,0,.48); backdrop-filter:blur(3px);" onclick="closeDeleteReviewModal()"></div>
+    <div id="deleteReviewModalInner"
+         style="position:relative; background:#fff; border-radius:16px; padding:36px 32px 28px;
+                max-width:420px; width:90%;
+                box-shadow:0 24px 64px rgba(102,126,234,.22), 0 4px 16px rgba(0,0,0,.08);
+                text-align:center; z-index:1; animation:deleteReviewModalIn .22s cubic-bezier(.34,1.56,.64,1);">
+        <div style="width:60px; height:60px; background:linear-gradient(135deg,#fff5f5,#fed7d7);
+                    border-radius:50%; display:flex; align-items:center; justify-content:center;
+                    margin:0 auto 18px; border:2px solid #fca5a5; box-shadow:0 4px 12px rgba(239,68,68,.15);">
+            <i class="fas fa-trash-alt" style="color:#ef4444; font-size:1.45rem;"></i>
+        </div>
+        <h3 style="font-size:1.15rem; font-weight:800; color:#1a202c; margin-bottom:8px;">Delete Review?</h3>
+        <p style="font-size:0.84rem; color:#718096; line-height:1.65; margin-bottom:28px;">
+            Once deleted, you can submit a new review for this order. This action cannot be undone.
+        </p>
+        <div style="display:flex; gap:10px;">
+            <button onclick="closeDeleteReviewModal()"
+                style="flex:1; padding:12px; border-radius:8px; border:1.5px solid #e2e8f0;
+                       background:#fff; color:#4a5568; font-size:0.88rem; font-weight:600;
+                       cursor:pointer; font-family:inherit; transition:all .15s;"
+                onmouseover="this.style.background='#f7fafc'; this.style.borderColor='#cbd5e0';"
+                onmouseout="this.style.background='#fff'; this.style.borderColor='#e2e8f0';">
+                Keep Review
+            </button>
+            <button onclick="document.getElementById('deleteReviewForm').submit()"
+                style="flex:1; padding:12px; border-radius:8px; border:none;
+                       background:linear-gradient(135deg,#ef4444,#dc2626);
+                       color:#fff; font-size:0.88rem; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s;
+                       box-shadow:0 4px 14px rgba(239,68,68,.35);
+                       display:flex; align-items:center; justify-content:center; gap:6px;"
+                onmouseover="this.style.opacity='.88'; this.style.transform='translateY(-1px)';"
+                onmouseout="this.style.opacity='1'; this.style.transform='translateY(0)';">
+                <i class="fas fa-trash-alt"></i> Yes, Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes deleteReviewModalIn {
+    from { opacity:0; transform:scale(.88) translateY(16px); }
+    to   { opacity:1; transform:scale(1) translateY(0); }
+}
+</style>
+
 @endsection
 
 @section('scripts')
@@ -270,6 +318,17 @@ document.addEventListener('DOMContentLoaded', function () {
         submitBtn.disabled  = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     });
+});
+
+// ── Delete review confirm modal ──
+function openDeleteReviewModal() {
+    document.getElementById('deleteReviewModal').style.display = 'flex';
+}
+function closeDeleteReviewModal() {
+    document.getElementById('deleteReviewModal').style.display = 'none';
+}
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeDeleteReviewModal();
 });
 </script>
 @endsection
