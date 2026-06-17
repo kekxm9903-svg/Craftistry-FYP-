@@ -4,6 +4,41 @@
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/userProfileUpdate.css') }}">
+
+<style>
+.success-popup,
+.delete-popup {
+    display: none;
+    position: fixed;
+    top: 80px;
+    right: var(--sp-lg, 20px);
+    z-index: 999;
+}
+.success-popup.show,
+.delete-popup.show { display: block; animation: slideInRight .3s ease-out; }
+.success-popup.hide,
+.delete-popup.hide { animation: slideOutRight .3s ease-out forwards; }
+.success-content {
+    background: #d1fae5; border: 1px solid #6ee7b7; border-radius: 10px;
+    padding: 16px 20px; box-shadow: 0 4px 12px rgba(16,185,129,.15);
+    display: flex; align-items: center; gap: 10px; min-width: 280px;
+}
+.delete-content {
+    background: #fee2e2; border: 1px solid #fca5a5; border-radius: 10px;
+    padding: 16px 20px; box-shadow: 0 4px 12px rgba(239,68,68,.15);
+    display: flex; align-items: center; gap: 10px; min-width: 280px;
+}
+.success-icon { font-size: 15px; color: #065f46; flex-shrink: 0; }
+.delete-icon  { font-size: 15px; color: #991b1b; flex-shrink: 0; }
+.success-content p { font-size: 13px; font-weight: 600; color: #065f46; margin: 0; }
+.delete-content  p { font-size: 13px; font-weight: 600; color: #991b1b; margin: 0; }
+@keyframes slideInRight  { from { opacity:0; transform:translateX(360px); } to { opacity:1; transform:translateX(0); } }
+@keyframes slideOutRight { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(360px); } }
+@media (max-width: 768px) {
+    .success-popup, .delete-popup { top:10px; right:10px; left:10px; }
+    .success-content, .delete-content { min-width:auto; }
+}
+</style>
 @endsection
 
 @section('content')
@@ -31,13 +66,7 @@
 
 <div class="profile-page">
 
-    {{-- Alerts --}}
-    @if(session('success'))
-        <div class="alert alert-success"><i class="fas fa-check-circle"></i> {{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> {{ session('error') }}</div>
-    @endif
+    {{-- Validation errors stay inline next to the form --}}
     @if($errors->any())
         <div class="alert alert-danger">
             <i class="fas fa-exclamation-circle"></i>
@@ -190,6 +219,23 @@
 
     </form>
 </div>
+
+{{-- Success Toast --}}
+<div class="success-popup" id="successPopup">
+    <div class="success-content">
+        <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+        <div><p id="successMessage">Success!</p></div>
+    </div>
+</div>
+
+{{-- Error Toast --}}
+<div class="delete-popup" id="errorPopup">
+    <div class="delete-content">
+        <div class="delete-icon"><i class="fas fa-exclamation-circle"></i></div>
+        <div><p id="errorMessage">Something went wrong.</p></div>
+    </div>
+</div>
+
 @endsection
 
 @section('scripts')
@@ -228,5 +274,29 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
+// ── Success / Error toast ──
+(function () {
+    function showSuccessPopup(msg) {
+        var p = document.getElementById('successPopup');
+        var m = document.getElementById('successMessage');
+        if (!p || !m) return;
+        m.textContent = msg;
+        p.classList.add('show');
+        setTimeout(function () { p.classList.add('hide'); setTimeout(function () { p.classList.remove('show','hide'); }, 300); }, 3000);
+    }
+    function showErrorPopup(msg) {
+        var p = document.getElementById('errorPopup');
+        var m = document.getElementById('errorMessage');
+        if (!p || !m) return;
+        m.textContent = msg;
+        p.classList.add('show');
+        setTimeout(function () { p.classList.add('hide'); setTimeout(function () { p.classList.remove('show','hide'); }, 300); }, 3000);
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        @if(session('success')) showSuccessPopup(@json(session('success'))); @endif
+        @if(session('error'))   showErrorPopup(@json(session('error')));     @endif
+    });
+})();
 </script>
 @endsection
